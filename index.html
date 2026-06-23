@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-SG">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Harry Xin · 莘欣</title>
+<meta name="author" content="Harry Xin" />
+<meta name="description" content="Harry Xin (莘欣) — IB student at Shanghai Pinghe, FRC 6941 IronPulse, builder of small hardware & open-source tools, and video essayist. Physics, math, and things that work." />
+<meta property="og:title" content="Harry Xin · 莘欣" />
+<meta property="og:description" content="IB student · FRC 6941 IronPulse · builder & video essayist. Physics, math, and things that work." />
+<meta property="og:url" content="https://harryxin.com/" />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#0d0e11" />
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Spline+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     harryxin.com — editorial / engineer's-notebook aesthetic
+     Warm ink + paper, blueprint grid, amber signal accent.
+     Single file. No build step. Edit SOCIAL LINKS below ↓↓↓
+     ============================================================ */
+  :root{
+    --ink:#0d0e11;          /* near-black, warm */
+    --ink-2:#13151a;
+    --paper:#ece6d8;        /* warm off-white text */
+    --paper-dim:#9a968c;    /* muted captions */
+    --line:#2a2d34;         /* hairlines */
+    --amber:#eba24b;        /* signal amber accent */
+    --cyan:#6fb6c4;         /* blueprint cyan secondary */
+    --maxw:1060px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--ink); color:var(--paper);
+    font-family:"Spline Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:17px; line-height:1.65; letter-spacing:.01em;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  /* blueprint grid + grain atmosphere */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(var(--line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:44px 44px;
+    -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 0%,transparent 78%);
+            mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 0%,transparent 78%);
+    opacity:.5;
+  }
+  body::after{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding:0 28px}
+  a{color:inherit}
+
+  /* ---------- top meta bar ---------- */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:"Spline Sans Mono",monospace; font-size:12.5px;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--paper-dim);
+    padding:22px 0; border-bottom:1px solid var(--line);
+  }
+  .topbar .dot{color:var(--amber)}
+
+  /* ---------- hero ---------- */
+  .hero{padding:88px 0 64px}
+  .eyebrow{
+    font-family:"Spline Sans Mono",monospace; font-size:13px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--amber); margin:0 0 22px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .eyebrow::before{content:""; width:34px; height:1px; background:var(--amber); display:inline-block}
+  h1{
+    font-family:"Playfair Display",serif; font-weight:600;
+    font-size:clamp(46px,9vw,108px); line-height:.98; letter-spacing:-.015em;
+    margin:0 0 6px;
+  }
+  h1 .zh{font-weight:500; font-style:italic; color:var(--paper)}
+  .pron{font-family:"Spline Sans Mono",monospace; font-size:14px; color:var(--paper-dim); margin:0 0 30px; letter-spacing:.04em}
+  .lede{font-size:clamp(19px,2.4vw,23px); max-width:62ch; color:#d8d2c5; margin:0 0 38px}
+  .lede b{color:var(--paper); font-weight:600}
+
+  /* ---------- social row ---------- */
+  .socials{display:flex; flex-wrap:wrap; gap:12px; margin:0 0 8px}
+  .social{
+    display:inline-flex; align-items:center; gap:11px;
+    padding:11px 17px 11px 15px; border:1px solid var(--line); border-radius:999px;
+    text-decoration:none; color:var(--paper); background:rgba(255,255,255,.012);
+    font-size:14.5px; font-weight:500; letter-spacing:.01em;
+    transition:border-color .25s ease, transform .25s ease, background .25s ease, color .25s ease;
+  }
+  .social svg{width:19px; height:19px; flex:none}
+  .social .h{font-family:"Spline Sans Mono",monospace; font-size:12.5px; color:var(--paper-dim); transition:color .25s ease}
+  .social:hover{transform:translateY(-3px); border-color:var(--amber); background:rgba(235,162,75,.06)}
+  .social:hover .h{color:var(--paper)}
+  .social.gh:hover{border-color:var(--paper)}
+  .social.bili:hover{border-color:#5fbfea; background:rgba(95,191,234,.07)}
+  .social.yt:hover{border-color:#ff5b5b; background:rgba(255,91,91,.07)}
+  .social.ig:hover{border-color:#e36caf; background:rgba(227,108,175,.07)}
+
+  /* ---------- sections ---------- */
+  section{padding:64px 0; border-top:1px solid var(--line)}
+  .shead{
+    display:flex; align-items:baseline; gap:16px; margin:0 0 34px;
+    font-family:"Spline Sans Mono",monospace; text-transform:uppercase; letter-spacing:.12em;
+    font-size:13px; color:var(--paper-dim);
+  }
+  .shead .num{color:var(--amber)}
+  .shead .ln{flex:1; height:1px; background:var(--line)}
+  .prose{max-width:64ch; font-size:18px; color:#d3cdc0}
+  .prose p{margin:0 0 18px}
+  .prose b{color:var(--paper); font-weight:600}
+  .prose a{color:var(--cyan); text-decoration:none; border-bottom:1px solid rgba(111,182,196,.4); transition:border-color .2s}
+  .prose a:hover{border-color:var(--cyan)}
+
+  /* facts grid */
+  .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line)}
+  .fact{background:var(--ink); padding:24px 22px}
+  .fact .k{font-family:"Spline Sans Mono",monospace; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); margin:0 0 9px}
+  .fact .v{font-size:16px; color:var(--paper); line-height:1.5}
+  .fact .v small{color:var(--paper-dim); font-size:13.5px}
+
+  /* project cards */
+  .projects{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px}
+  .card{
+    display:block; text-decoration:none; border:1px solid var(--line); border-radius:14px;
+    padding:22px 22px 20px; background:rgba(255,255,255,.012);
+    transition:border-color .25s ease, transform .25s ease, background .25s ease;
+    position:relative; overflow:hidden;
+  }
+  .card:hover{transform:translateY(-4px); border-color:var(--amber); background:rgba(235,162,75,.04)}
+  .card .pt{font-family:"Playfair Display",serif; font-weight:600; font-size:21px; margin:0 0 6px; letter-spacing:-.01em}
+  .card .pd{font-size:14.5px; color:var(--paper-dim); line-height:1.5; margin:0 0 16px}
+  .card .pm{font-family:"Spline Sans Mono",monospace; font-size:11.5px; letter-spacing:.06em; color:var(--cyan); display:flex; align-items:center; gap:8px}
+  .card .pm .arr{margin-left:auto; color:var(--paper-dim); transition:transform .25s ease, color .25s ease}
+  .card:hover .pm .arr{transform:translate(3px,-3px); color:var(--amber)}
+
+  /* footer */
+  footer{padding:56px 0 80px; border-top:1px solid var(--line)}
+  .foot-grid{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:24px}
+  .sig{font-family:"Playfair Display",serif; font-style:italic; font-size:28px}
+  .foot-meta{font-family:"Spline Sans Mono",monospace; font-size:12px; letter-spacing:.06em; color:var(--paper-dim); line-height:1.8; text-align:right}
+  .foot-meta a{color:var(--paper-dim); text-decoration:none}
+  .foot-meta a:hover{color:var(--amber)}
+
+  /* entrance animation */
+  .rise{opacity:0; transform:translateY(22px); animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rise{to{opacity:1; transform:none}}
+  .d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.27s}
+  .d4{animation-delay:.4s}.d5{animation-delay:.55s}.d6{animation-delay:.7s}
+  @media (prefers-reduced-motion:reduce){.rise{animation:none; opacity:1; transform:none}}
+
+  @media (max-width:600px){
+    body{font-size:16px}
+    .hero{padding:56px 0 48px}
+    .topbar .right{display:none}
+    .foot-meta{text-align:left}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <span><span class="dot">◆</span>&nbsp; HARRY&nbsp;XIN — 莘欣</span>
+    <span class="right">SHANGHAI · 31°N &nbsp;/&nbsp; EST. 2009</span>
+  </div>
+
+  <!-- ===================== HERO ===================== -->
+  <header class="hero">
+    <p class="eyebrow rise d1">Personal index</p>
+    <h1 class="rise d1">Harry&nbsp;Xin <span class="zh">莘欣</span></h1>
+    <p class="pron rise d2">/ˈhæri ʃin/ · he/him · based in Shanghai 🇨🇳</p>
+    <p class="lede rise d2">
+      IB student at <b>Shanghai Pinghe</b>, building toward physics &amp; engineering.
+      Core member of <b>FRC 6941 IronPulse</b>. I make <b>small hardware</b>,
+      <b>open-source tools</b>, and <b>video essays</b> — things that work, explained plainly.
+    </p>
+
+    <!-- ============================================================
+         SOCIAL LINKS — edit the 4 hrefs below.
+         GitHub is set. Replace the 3 marked « REPLACE » placeholders
+         with your real Bilibili / YouTube / Instagram URLs.
+         ============================================================ -->
+    <nav class="socials rise d3" aria-label="Social links">
+
+      <!-- Bilibili -->
+      <a class="social bili" href="https://space.bilibili.com/REPLACE_BILIBILI_UID" target="_blank" rel="me noopener">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="6" width="19" height="14" rx="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M7 3l3 3M17 3l-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 11v3M16 11v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        Bilibili <span class="h">@REPLACE</span>
+      </a>
+
+      <!-- YouTube -->
+      <a class="social yt" href="https://youtube.com/@REPLACE_YOUTUBE_HANDLE" target="_blank" rel="me noopener">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.3" y="5.5" width="19.4" height="13" rx="4" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.2l5 2.8-5 2.8V9.2z" fill="currentColor"/></svg>
+        YouTube <span class="h">@REPLACE</span>
+      </a>
+
+      <!-- Instagram -->
+      <a class="social ig" href="https://instagram.com/REPLACE_INSTAGRAM_HANDLE" target="_blank" rel="me noopener">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"/></svg>
+        Instagram <span class="h">@REPLACE</span>
+      </a>
+
+      <!-- GitHub -->
+      <a class="social gh" href="https://github.com/HarryXin0919" target="_blank" rel="me noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5A10.5 10.5 0 0 0 8.68 22c.52.1.71-.23.71-.5v-1.96c-2.9.63-3.52-1.24-3.52-1.24-.48-1.2-1.16-1.53-1.16-1.53-.95-.65.07-.64.07-.64 1.05.07 1.6 1.08 1.6 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.31-.26-4.74-1.16-4.74-5.14 0-1.13.4-2.06 1.07-2.78-.11-.27-.46-1.32.1-2.76 0 0 .87-.28 2.85 1.06a9.9 9.9 0 0 1 5.2 0c1.97-1.34 2.84-1.06 2.84-1.06.57 1.44.21 2.49.11 2.76.67.72 1.07 1.65 1.07 2.78 0 3.99-2.44 4.87-4.76 5.13.38.32.71.96.71 1.94v2.87c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5z"/></svg>
+        GitHub <span class="h">@HarryXin0919</span>
+      </a>
+
+    </nav>
+  </header>
+
+  <!-- ===================== ABOUT ===================== -->
+  <section id="about">
+    <div class="shead"><span class="num">01</span> About <span class="ln"></span></div>
+    <div class="prose rise">
+      <p>
+        I'm a Grade 11 student at <b>Shanghai Pinghe Bilingual School</b> (Class of 2027),
+        taking IB with <b>HL Mathematics AA, Physics, and English B</b>. I'm aiming for the
+        Stanford / UC&nbsp;Berkeley track in <b>physics, math, or engineering</b> — and one day,
+        work that ships, somewhere like Apple or DJI.
+      </p>
+      <p>
+        Most of what I do starts as a question and ends as something you can hold or run:
+        an <b>electrochemistry experiment</b>, a <b>seating-optimization model</b>, a
+        <b>storage gadget</b> that lights up the part you're looking for, or a small
+        command-line tool. I also make <b>literary &amp; documentary videos</b> — close readings,
+        reflections, things worth slowing down for.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== NOW / FACTS ===================== -->
+  <section id="now">
+    <div class="shead"><span class="num">02</span> Currently <span class="ln"></span></div>
+    <div class="facts rise">
+      <div class="fact"><p class="k">Studying</p><p class="v">IB Diploma · Class of 2027<br><small>HL Math AA · Physics · English&nbsp;B</small></p></div>
+      <div class="fact"><p class="k">Robotics</p><p class="v">FRC 6941 IronPulse<br><small>Shanghai Regional Champions → Houston Worlds</small></p></div>
+      <div class="fact"><p class="k">Research</p><p class="v">Physics &amp; Math IAs<br><small>K₂Cr₂O₇–Zn cell · theatre-seating model</small></p></div>
+      <div class="fact"><p class="k">Building</p><p class="v">FindItem hardware<br><small>ESP32-C3 · open-source CLI tools</small></p></div>
+    </div>
+  </section>
+
+  <!-- ===================== BUILDING ===================== -->
+  <section id="building">
+    <div class="shead"><span class="num">03</span> Building <span class="ln"></span> <a href="https://github.com/HarryXin0919" target="_blank" rel="noopener" style="text-decoration:none;color:var(--amber)">all on GitHub →</a></div>
+    <div class="projects rise">
+
+      <a class="card" href="https://github.com/HarryXin0919/factlens" target="_blank" rel="noopener">
+        <p class="pt">factlens</p>
+        <p class="pd">Multimodal video fact-checking — transcribe, read the screen, verify claims against the web.</p>
+        <p class="pm">PYTHON <span class="arr">↗</span></p>
+      </a>
+
+      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <p class="pt">FindItem</p>
+        <p class="pd">Decentralised parts-storage hardware on ESP32-C3 — RGB strip + buzzer locate any bin.</p>
+        <p class="pm">HARDWARE · C++ <span class="arr">↗</span></p>
+      </a>
+
+      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <p class="pt">viralens</p>
+        <p class="pd">Open-source toolkit that dissects what makes a video land — metadata, subtitles, comments.</p>
+        <p class="pm">PYTHON <span class="arr">↗</span></p>
+      </a>
+
+      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <p class="pt">looming</p>
+        <p class="pd">A self-driving loop daemon that keeps an agent working toward a mission until interrupted.</p>
+        <p class="pm">NODE · CLI <span class="arr">↗</span></p>
+      </a>
+
+      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <p class="pt">skilltree</p>
+        <p class="pd">Reads your shell history and draws a command-line skill tree in the terminal.</p>
+        <p class="pm">PYTHON · TYPER <span class="arr">↗</span></p>
+      </a>
+
+      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <p class="pt">ctxtax</p>
+        <p class="pd">CLI that measures how much context budget each MCP tool actually costs you.</p>
+        <p class="pm">TYPESCRIPT <span class="arr">↗</span></p>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ===================== CREATING ===================== -->
+  <section id="creating">
+    <div class="shead"><span class="num">04</span> Creating <span class="ln"></span></div>
+    <div class="prose rise">
+      <p>
+        I make video on <b>Bilibili</b> and <b>WeChat Channels</b>, and longer essays on
+        <b>YouTube</b> — literary BookTube (<i>Of Mice and Men</i>, <i>A Raisin in the Sun</i>)
+        and short documentaries, including the <i>Empire in Decay: Echoes of the Empire</i> series
+        from our FRC trip to Istanbul. The aim is always the same: down-to-earth, human, and worth
+        the runtime.
+      </p>
+      <p style="margin-top:6px">→ Find all of it in the links up top.</p>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer>
+    <div class="foot-grid">
+      <div>
+        <p class="sig rise">— Harry</p>
+      </div>
+      <div class="foot-meta rise">
+        <a href="mailto:harryxinfirefly919@gmail.com">harryxinfirefly919@gmail.com</a><br>
+        Shanghai, China · IB ’27<br>
+        © <span id="yr">2026</span> Harry Xin · harryxin.com
+      </div>
+    </div>
+  </footer>
+
+</div>
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
