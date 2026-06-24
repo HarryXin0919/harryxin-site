@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-SG">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Harry Xin · 莘欣</title>
 <meta name="author" content="Harry Xin" />
 <meta name="description" content="Harry Xin (莘欣) — IB student at Shanghai Pinghe, FRC 6941 IronPulse, builder of small hardware & open-source tools, and video essayist. Physics, math, and things that work." />
@@ -10,7 +10,7 @@
 <meta property="og:description" content="IB student · FRC 6941 IronPulse · builder & video essayist. Physics, math, and things that work." />
 <meta property="og:url" content="https://harryxin.com/" />
 <meta property="og:type" content="website" />
-<meta name="theme-color" content="#0d0e11" />
+<meta name="theme-color" content="#0a0f0c" />
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,17 +18,29 @@
 <style>
   /* ============================================================
      harryxin.com — editorial / engineer's-notebook aesthetic
-     Warm ink + paper, blueprint grid, amber signal accent.
+     Green-black ink + paper, blueprint grid, phosphor-green signal accent.
      Single file. No build step. Edit SOCIAL LINKS below ↓↓↓
+     ------------------------------------------------------------
+     Glow-up layers (all gated by prefers-reduced-motion &
+     pointer:fine, all transform/opacity, rAF idles to 0 CPU):
+       · cursor spotlight reveals the blueprint grid
+       · amber bloom + vignette + hairline parallax
+       · scroll-reveal system (IntersectionObserver)
+       · oscilloscope scroll-rail + live section readout
+       · 莘欣 watermark · FIG.0X heads · pull-quote · marginalia
+       · card cursor-glow + 3D tilt · live Shanghai clock
      ============================================================ */
   :root{
-    --ink:#0d0e11;          /* near-black, warm */
-    --ink-2:#13151a;
-    --paper:#ece6d8;        /* warm off-white text */
-    --paper-dim:#9a968c;    /* muted captions */
-    --line:#2a2d34;         /* hairlines */
-    --amber:#eba24b;        /* signal amber accent */
-    --cyan:#6fb6c4;         /* blueprint cyan secondary */
+    --ink:#0a0f0c;          /* deep green-black */
+    --ink-2:#101512;
+    --paper:#e8ece6;        /* cool off-white text */
+    --paper-dim:#909a90;    /* muted captions */
+    --line:#262d28;         /* hairlines */
+    --amber:#3ee87b;        /* terminal-phosphor green (var name kept for stability) */
+    --cyan:#5fd9c0;         /* secondary teal-green */
+    --grid-lit:#3e5a48;                                            /* spotlight-warmed grid (fallback) */
+    --grid-lit:color-mix(in oklab, var(--line) 48%, var(--amber)); /* …upgraded where supported */
+    --ease:cubic-bezier(.2,.7,.2,1);
     --maxw:1060px;
   }
   *{box-sizing:border-box}
@@ -40,23 +52,75 @@
     -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
     overflow-x:hidden;
   }
-  /* blueprint grid + grain atmosphere */
+  /* blueprint grid — the fixed "paper" plane (kept static so the
+     cursor spotlight aligns perfectly with it) */
   body::before{
     content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
     background-image:
       linear-gradient(var(--line) 1px,transparent 1px),
       linear-gradient(90deg,var(--line) 1px,transparent 1px);
     background-size:44px 44px;
-    -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 0%,transparent 78%);
-            mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 0%,transparent 78%);
-    opacity:.5;
+    -webkit-mask-image:radial-gradient(ellipse 95% 78% at 50% -2%,#000 0%,#000 24%,transparent 88%);
+            mask-image:radial-gradient(ellipse 95% 78% at 50% -2%,#000 0%,#000 24%,transparent 88%);
+    opacity:.32;
   }
+  /* film grain — static texture */
   body::after{
     content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.035;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
+
+  /* ---------- atmosphere layers ---------- */
+  .atmo{position:fixed; inset:0; z-index:0; pointer-events:none}
+  .atmo-bloom{
+    background:radial-gradient(ellipse 72% 52% at 50% -2%, rgba(62,232,123,.17), transparent 60%);
+    will-change:transform;
+    transform:translate3d(calc(var(--px,0)*-4px), calc(var(--py,0)*-4px), 0);
+  }
+  .atmo-vignette{
+    background:radial-gradient(ellipse 120% 105% at 50% 42%, transparent 54%, rgba(0,0,0,.46));
+  }
+  /* cursor spotlight — a brighter, amber-warmed copy of the grid,
+     masked to a soft circle that trails the pointer */
+  .atmo-spot{
+    display:none;
+    background-image:
+      linear-gradient(var(--grid-lit) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid-lit) 1px,transparent 1px);
+    background-size:44px 44px;
+    -webkit-mask-image:radial-gradient(circle 320px at var(--mx,-300px) var(--my,-300px),#000 0%,rgba(0,0,0,.4) 46%,transparent 72%);
+            mask-image:radial-gradient(circle 320px at var(--mx,-300px) var(--my,-300px),#000 0%,rgba(0,0,0,.4) 46%,transparent 72%);
+    opacity:.85;
+  }
+  html.pointer-fine .atmo-spot{display:block}
+  @supports not ((mask-image:radial-gradient(#000,#000)) or (-webkit-mask-image:radial-gradient(#000,#000))){
+    .atmo-spot{display:none!important}
+  }
+
   .wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding:0 28px}
   a{color:inherit}
+
+  /* skip link */
+  .skip{position:absolute; left:-9999px; top:0; z-index:20; background:var(--amber); color:var(--ink); padding:10px 16px; border-radius:0 0 8px 0; font-family:"Spline Sans Mono",monospace; font-size:13px; font-weight:500; text-decoration:none}
+  .skip:focus{left:0}
+
+  /* visible focus affordance (keyboard) */
+  a:focus-visible, .card:focus-visible, .social:focus-visible{outline:2px solid var(--amber); outline-offset:3px}
+  .prose a:focus-visible{background-size:100% 1px}
+  .social:focus-visible{border-color:var(--amber)}
+
+  /* ---------- oscilloscope scroll rail + section readout ---------- */
+  .scope{position:fixed; left:0; top:0; width:2px; height:100vh; z-index:6; background:rgba(42,45,52,.55); pointer-events:none}
+  .scope-fill{position:absolute; left:0; top:0; width:100%; height:100%; background:var(--amber); transform:scaleY(var(--p,0)); transform-origin:top; transition:transform .12s linear}
+  .scope-fill::after{content:""; position:absolute; left:-1px; right:-1px; bottom:-1px; height:6px; background:var(--amber); border-radius:3px; box-shadow:0 0 6px 0 rgba(62,232,123,.45)}
+  .scope-tag{position:fixed; left:18px; bottom:22px; z-index:6; display:flex; align-items:center; gap:8px; font-family:"Spline Sans Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--paper-dim); pointer-events:none}
+  .scope-tag .scope-num{color:var(--amber)}
+  @media (max-width:899px){.scope-tag{display:none}}
+  @media (max-width:600px){
+    .scope{width:100%; height:2px; top:env(safe-area-inset-top,0px)}
+    .scope-fill{transform:scaleX(var(--p,0)); transform-origin:left}
+    .scope-fill::after{display:none}
+  }
 
   /* ---------- top meta bar ---------- */
   .topbar{
@@ -65,13 +129,27 @@
     letter-spacing:.08em; text-transform:uppercase; color:var(--paper-dim);
     padding:22px 0; border-bottom:1px solid var(--line);
   }
-  .topbar .dot{color:var(--amber)}
+  .topbar .dot{color:var(--amber); animation:ledpulse 2.6s ease-in-out infinite}
+  .topbar .right .clk{color:var(--paper)}
+  @keyframes ledpulse{0%,100%{opacity:1}50%{opacity:.42}}
 
   /* ---------- hero ---------- */
-  .hero{padding:88px 0 64px}
+  .hero{padding:88px 0 64px; position:relative}
+  .hero-inner{position:relative; z-index:1}
+  .watermark{
+    position:absolute; z-index:0; top:0; right:-1vw;
+    font-family:"Playfair Display",serif; font-style:italic; font-weight:500;
+    font-size:clamp(210px,36vw,440px); line-height:.78; color:var(--paper);
+    opacity:.05; pointer-events:none; user-select:none; -webkit-user-select:none;
+    -webkit-mask-image:linear-gradient(#000,transparent 86%);
+            mask-image:linear-gradient(#000,transparent 86%);
+    will-change:transform;
+    transform:translate3d(calc(var(--px,0)*-7px), calc(var(--py,0)*-5px), 0);
+  }
   .eyebrow{
     font-family:"Spline Sans Mono",monospace; font-size:13px; letter-spacing:.16em;
     text-transform:uppercase; color:var(--amber); margin:0 0 22px;
+    text-shadow:0 0 11px rgba(62,232,123,.32);
     display:flex; align-items:center; gap:12px;
   }
   .eyebrow::before{content:""; width:34px; height:1px; background:var(--amber); display:inline-block}
@@ -82,7 +160,7 @@
   }
   h1 .zh{font-weight:500; font-style:italic; color:var(--paper)}
   .pron{font-family:"Spline Sans Mono",monospace; font-size:14px; color:var(--paper-dim); margin:0 0 30px; letter-spacing:.04em}
-  .lede{font-size:clamp(19px,2.4vw,23px); max-width:62ch; color:#d8d2c5; margin:0 0 38px}
+  .lede{font-size:clamp(19px,2.4vw,23px); max-width:62ch; color:#d6dcd2; margin:0 0 38px}
   .lede b{color:var(--paper); font-weight:600}
 
   /* ---------- social row ---------- */
@@ -92,52 +170,100 @@
     padding:11px 17px 11px 15px; border:1px solid var(--line); border-radius:999px;
     text-decoration:none; color:var(--paper); background:rgba(255,255,255,.012);
     font-size:14.5px; font-weight:500; letter-spacing:.01em;
-    transition:border-color .25s ease, transform .25s ease, background .25s ease, color .25s ease;
+    transition:border-color .25s var(--ease), transform .25s var(--ease), background .25s var(--ease), color .25s var(--ease);
   }
   .social svg{width:19px; height:19px; flex:none}
   .social .h{font-family:"Spline Sans Mono",monospace; font-size:12.5px; color:var(--paper-dim); transition:color .25s ease}
-  .social:hover{transform:translateY(-3px); border-color:var(--amber); background:rgba(235,162,75,.06)}
+  .social:hover{transform:translateY(-3px); border-color:var(--amber); background:rgba(62,232,123,.06)}
   .social:hover .h{color:var(--paper)}
   .social.gh:hover{border-color:var(--paper)}
   .social.bili:hover{border-color:#5fbfea; background:rgba(95,191,234,.07)}
   .social.yt:hover{border-color:#ff5b5b; background:rgba(255,91,91,.07)}
   .social.ig:hover{border-color:#e36caf; background:rgba(227,108,175,.07)}
 
+  /* ---------- pull-quote ---------- */
+  .pull{
+    margin:8px 0 0; position:relative; max-width:18ch;
+    font-family:"Playfair Display",serif; font-style:italic; font-weight:500;
+    font-size:clamp(28px,4.6vw,54px); line-height:1.06; letter-spacing:-.012em;
+    color:var(--paper);
+  }
+  .pull::before{content:"\201C"; position:absolute; left:-.06em; top:-.34em; margin-left:-.42em; color:var(--amber); opacity:.7; font-size:1.1em}
+  .pull .hl{color:var(--amber)}
+  .pull .rule{display:block; width:64px; height:2px; background:var(--amber); margin-top:26px; opacity:.8}
+
   /* ---------- sections ---------- */
-  section{padding:64px 0; border-top:1px solid var(--line)}
+  section{padding:64px 0; border-top:1px solid var(--line); position:relative}
   .shead{
     display:flex; align-items:baseline; gap:16px; margin:0 0 34px;
-    font-family:"Spline Sans Mono",monospace; text-transform:uppercase; letter-spacing:.12em;
+    font-family:"Spline Sans Mono",monospace; text-transform:uppercase; letter-spacing:.14em;
     font-size:13px; color:var(--paper-dim);
   }
-  .shead .num{color:var(--amber)}
+  .shead h2{font:inherit; font-weight:inherit; margin:0; display:inline; letter-spacing:inherit; color:inherit}
+  .shead .num{color:var(--amber); text-shadow:0 0 9px rgba(62,232,123,.28)}
+  .shead .num::before{content:"FIG. "; color:var(--paper-dim)}
   .shead .ln{flex:1; height:1px; background:var(--line)}
-  .prose{max-width:64ch; font-size:18px; color:#d3cdc0}
+  @media (min-width:900px){
+    section::before{
+      content:""; position:absolute; left:-22px; top:0; bottom:0; width:1px;
+      background:linear-gradient(var(--amber) 0, var(--amber) 78px, var(--line) 78px, var(--line) 100%);
+      opacity:.6;
+    }
+  }
+  .prose{max-width:64ch; font-size:18px; color:#cfd6cb}
   .prose p{margin:0 0 18px}
   .prose b{color:var(--paper); font-weight:600}
-  .prose a{color:var(--cyan); text-decoration:none; border-bottom:1px solid rgba(111,182,196,.4); transition:border-color .2s}
-  .prose a:hover{border-color:var(--cyan)}
+  .prose a{
+    color:var(--cyan); text-decoration:none;
+    background-image:linear-gradient(currentColor,currentColor);
+    background-size:0% 1px; background-position:0 100%; background-repeat:no-repeat;
+    transition:background-size .3s var(--ease);
+  }
+  .prose a:hover{background-size:100% 1px}
+  .arr-link{text-decoration:none; color:var(--amber); display:inline-flex; align-items:center; gap:6px}
+  .arr-link .ar{display:inline-block; transition:transform .25s var(--ease)}
+  .arr-link:hover .ar{transform:translate(3px,-3px)}
 
   /* facts grid */
-  .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line)}
-  .fact{background:var(--ink); padding:24px 22px}
+  .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); counter-reset:fact}
+  .fact{background:var(--ink); padding:24px 22px; position:relative; counter-increment:fact}
+  .fact::after{content:"02." counter(fact,decimal-leading-zero); position:absolute; bottom:13px; right:15px; font-family:"Spline Sans Mono",monospace; font-size:10px; letter-spacing:.08em; color:var(--paper-dim); opacity:.5}
   .fact .k{font-family:"Spline Sans Mono",monospace; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); margin:0 0 9px}
   .fact .v{font-size:16px; color:var(--paper); line-height:1.5}
   .fact .v small{color:var(--paper-dim); font-size:13.5px}
 
   /* project cards */
-  .projects{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px}
+  .projects{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; counter-reset:proj; perspective:1000px}
   .card{
     display:block; text-decoration:none; border:1px solid var(--line); border-radius:14px;
     padding:22px 22px 20px; background:rgba(255,255,255,.012);
-    transition:border-color .25s ease, transform .25s ease, background .25s ease;
-    position:relative; overflow:hidden;
+    transition:border-color .25s var(--ease), transform .25s var(--ease), background .25s var(--ease);
+    position:relative; overflow:hidden; counter-increment:proj;
+    transform-style:preserve-3d;
   }
-  .card:hover{transform:translateY(-4px); border-color:var(--amber); background:rgba(235,162,75,.04)}
+  .card>*{position:relative; z-index:1}
+  /* sheen — one-pass sweep on hover-enter */
+  .card::before{
+    content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:linear-gradient(110deg, transparent 32%, rgba(62,232,123,.10) 50%, transparent 68%);
+    transform:translateX(-120%); opacity:0; transition:none;
+  }
+  .card:hover::before{transform:translateX(120%); opacity:1; transition:transform .75s var(--ease), opacity .75s var(--ease)}
+  /* follow-glow */
+  .card::after{
+    content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:radial-gradient(180px circle at var(--gx,50%) var(--gy,50%), rgba(62,232,123,.11), transparent 60%);
+    opacity:0; transition:opacity .3s ease;
+  }
+  .card:hover::after{opacity:1}
+  .card.tilting{transition:border-color .25s var(--ease), background .25s var(--ease); will-change:transform} /* track transform instantly + promote only while hovered */
+  .card:hover{transform:translateY(-4px); border-color:var(--amber); background:rgba(62,232,123,.04)}
+  .card .pidx{position:absolute; top:14px; right:16px; z-index:1; font-family:"Spline Sans Mono",monospace; font-size:10.5px; letter-spacing:.1em; color:var(--paper-dim); opacity:.5}
+  .card .pidx::before{content:"P-" counter(proj,decimal-leading-zero)}
   .card .pt{font-family:"Playfair Display",serif; font-weight:600; font-size:21px; margin:0 0 6px; letter-spacing:-.01em}
   .card .pd{font-size:14.5px; color:var(--paper-dim); line-height:1.5; margin:0 0 16px}
   .card .pm{font-family:"Spline Sans Mono",monospace; font-size:11.5px; letter-spacing:.06em; color:var(--cyan); display:flex; align-items:center; gap:8px}
-  .card .pm .arr{margin-left:auto; color:var(--paper-dim); transition:transform .25s ease, color .25s ease}
+  .card .pm .arr{margin-left:auto; color:var(--paper-dim); transition:transform .25s var(--ease), color .25s var(--ease)}
   .card:hover .pm .arr{transform:translate(3px,-3px); color:var(--amber)}
 
   /* footer */
@@ -145,76 +271,113 @@
   .foot-grid{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:24px}
   .sig{font-family:"Playfair Display",serif; font-style:italic; font-size:28px}
   .foot-meta{font-family:"Spline Sans Mono",monospace; font-size:12px; letter-spacing:.06em; color:var(--paper-dim); line-height:1.8; text-align:right}
-  .foot-meta a{color:var(--paper-dim); text-decoration:none}
-  .foot-meta a:hover{color:var(--amber)}
+  .foot-meta a{
+    color:var(--paper-dim); text-decoration:none;
+    background-image:linear-gradient(var(--amber),var(--amber));
+    background-size:0% 1px; background-position:0 100%; background-repeat:no-repeat;
+    transition:background-size .3s var(--ease), color .2s ease;
+  }
+  .foot-meta a:hover{color:var(--paper); background-size:100% 1px}
 
-  /* entrance animation */
-  .rise{opacity:0; transform:translateY(22px); animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  /* entrance — no-JS / fallback default: animate on load */
+  .rise{opacity:0; transform:translateY(22px); animation:rise .9s var(--ease) forwards}
   @keyframes rise{to{opacity:1; transform:none}}
   .d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.27s}
   .d4{animation-delay:.4s}.d5{animation-delay:.55s}.d6{animation-delay:.7s}
-  @media (prefers-reduced-motion:reduce){.rise{animation:none; opacity:1; transform:none}}
+  /* when JS is present + motion allowed, reveals are scroll-driven */
+  html.js-reveal .rise{
+    animation:none; opacity:0; transform:translateY(22px);
+    transition:opacity .85s var(--ease), transform .85s var(--ease);
+    transition-delay:calc(var(--i,0)*70ms);
+  }
+  html.js-reveal .rise.in{opacity:1; transform:none}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .rise{animation:none; opacity:1; transform:none}
+    .topbar .dot{animation:none}
+    .scope-fill{transition:none}
+    .atmo-bloom,.watermark{transform:none}
+  }
 
   @media (max-width:600px){
     body{font-size:16px}
     .hero{padding:56px 0 48px}
     .topbar .right{display:none}
+    .watermark{opacity:.035; font-size:clamp(150px,42vw,250px); top:-.06em; right:-6vw}
     .foot-meta{text-align:left}
   }
 </style>
 </head>
 <body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- atmosphere (decorative, behind content) -->
+<div class="atmo atmo-bloom" aria-hidden="true"></div>
+<div class="atmo atmo-vignette" aria-hidden="true"></div>
+<div class="atmo atmo-spot" aria-hidden="true"></div>
+
+<!-- oscilloscope scroll rail + section readout -->
+<div class="scope" aria-hidden="true"><span class="scope-fill"></span></div>
+<div class="scope-tag" aria-hidden="true"><span class="scope-num">00</span><span>·</span><span class="scope-name">INDEX</span></div>
+
 <div class="wrap">
 
   <div class="topbar">
-    <span><span class="dot">◆</span>&nbsp; HARRY&nbsp;XIN — 莘欣</span>
-    <span class="right">SHANGHAI · 31°N &nbsp;/&nbsp; EST. 2009</span>
+    <span><span class="dot" aria-hidden="true">◆</span>&nbsp; HARRY&nbsp;XIN — <span lang="zh-Hans">莘欣</span></span>
+    <span class="right">SHANGHAI · 31°N &nbsp;·&nbsp; <span class="clk" id="clk">--:--</span> CST &nbsp;·&nbsp; EST. 2009</span>
   </div>
 
+  <main id="main">
+
   <!-- ===================== HERO ===================== -->
-  <header class="hero">
-    <p class="eyebrow rise d1">Personal index</p>
-    <h1 class="rise d1">Harry&nbsp;Xin <span class="zh">莘欣</span></h1>
-    <p class="pron rise d2">/ˈhæri ʃin/ · he/him · based in Shanghai 🇨🇳</p>
-    <p class="lede rise d2">
-      IB student at <b>Shanghai Pinghe</b>, building toward physics &amp; engineering.
-      Core member of <b>FRC 6941 IronPulse</b>. I make <b>small hardware</b>,
-      <b>open-source tools</b>, and <b>video essays</b> — things that work, explained plainly.
-    </p>
+  <header class="hero" data-num="00" data-name="INDEX">
+    <span class="watermark" aria-hidden="true">莘欣</span>
+    <div class="hero-inner">
+      <p class="eyebrow rise d1">Personal index</p>
+      <h1 class="rise d1">Harry&nbsp;Xin <span class="zh" lang="zh-Hans">莘欣</span></h1>
+      <p class="pron rise d2">/ˈhæri ʃin/ · he/him · based in Shanghai 🇨🇳</p>
+      <p class="lede rise d2">
+        IB student at <b>Shanghai Pinghe</b>, building toward physics &amp; engineering.
+        Core member of <b>FRC 6941 IronPulse</b>. I make <b>small hardware</b>,
+        <b>open-source tools</b>, and <b>video essays</b> — things that work, explained plainly.
+      </p>
 
-    <!-- ============================================================
-         SOCIAL LINKS — Bilibili / Instagram / GitHub are live.
-         YouTube pill removed until a channel URL is provided; to
-         re-add, copy the Instagram <a> block and swap icon + href.
-         ============================================================ -->
-    <nav class="socials rise d3" aria-label="Social links">
+      <!-- ============================================================
+           SOCIAL LINKS — Bilibili / Instagram / GitHub are live.
+           YouTube pill removed until a channel URL is provided; to
+           re-add, copy the Instagram <a> block and swap icon + href.
+           ============================================================ -->
+      <nav class="socials" aria-label="Social links">
 
-      <!-- Bilibili -->
-      <a class="social bili" href="https://space.bilibili.com/3546972787051483" target="_blank" rel="me noopener">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="6" width="19" height="14" rx="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M7 3l3 3M17 3l-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 11v3M16 11v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-        Bilibili <span class="h">主页</span>
-      </a>
+        <!-- Bilibili -->
+        <a class="social bili rise" href="https://space.bilibili.com/3546972787051483" target="_blank" rel="me noopener">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="6" width="19" height="14" rx="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M7 3l3 3M17 3l-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 11v3M16 11v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          Bilibili <span class="h">主页</span>
+        </a>
 
-      <!-- YouTube — pending channel URL, re-add when provided -->
+        <!-- YouTube — pending channel URL, re-add when provided -->
 
-      <!-- Instagram -->
-      <a class="social ig" href="https://www.instagram.com/harryalexanderxin/" target="_blank" rel="me noopener">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"/></svg>
-        Instagram <span class="h">@harryalexanderxin</span>
-      </a>
+        <!-- Instagram -->
+        <a class="social ig rise" href="https://www.instagram.com/harryalexanderxin/" target="_blank" rel="me noopener">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"/></svg>
+          Instagram <span class="h">@harryalexanderxin</span>
+        </a>
 
-      <!-- GitHub -->
-      <a class="social gh" href="https://github.com/HarryXin0919" target="_blank" rel="me noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5A10.5 10.5 0 0 0 8.68 22c.52.1.71-.23.71-.5v-1.96c-2.9.63-3.52-1.24-3.52-1.24-.48-1.2-1.16-1.53-1.16-1.53-.95-.65.07-.64.07-.64 1.05.07 1.6 1.08 1.6 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.31-.26-4.74-1.16-4.74-5.14 0-1.13.4-2.06 1.07-2.78-.11-.27-.46-1.32.1-2.76 0 0 .87-.28 2.85 1.06a9.9 9.9 0 0 1 5.2 0c1.97-1.34 2.84-1.06 2.84-1.06.57 1.44.21 2.49.11 2.76.67.72 1.07 1.65 1.07 2.78 0 3.99-2.44 4.87-4.76 5.13.38.32.71.96.71 1.94v2.87c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5z"/></svg>
-        GitHub <span class="h">@HarryXin0919</span>
-      </a>
+        <!-- GitHub -->
+        <a class="social gh rise" href="https://github.com/HarryXin0919" target="_blank" rel="me noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5A10.5 10.5 0 0 0 8.68 22c.52.1.71-.23.71-.5v-1.96c-2.9.63-3.52-1.24-3.52-1.24-.48-1.2-1.16-1.53-1.16-1.53-.95-.65.07-.64.07-.64 1.05.07 1.6 1.08 1.6 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.31-.26-4.74-1.16-4.74-5.14 0-1.13.4-2.06 1.07-2.78-.11-.27-.46-1.32.1-2.76 0 0 .87-.28 2.85 1.06a9.9 9.9 0 0 1 5.2 0c1.97-1.34 2.84-1.06 2.84-1.06.57 1.44.21 2.49.11 2.76.67.72 1.07 1.65 1.07 2.78 0 3.99-2.44 4.87-4.76 5.13.38.32.71.96.71 1.94v2.87c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5z"/></svg>
+          GitHub <span class="h">@HarryXin0919</span>
+        </a>
 
-    </nav>
+      </nav>
+    </div>
   </header>
 
   <!-- ===================== ABOUT ===================== -->
-  <section id="about">
-    <div class="shead"><span class="num">01</span> About <span class="ln"></span></div>
+  <section id="about" data-num="01" data-name="ABOUT">
+    <div class="shead"><span class="num" aria-hidden="true">01</span> <h2>About</h2> <span class="ln" aria-hidden="true"></span></div>
     <div class="prose rise">
       <p>
         I'm a Grade 11 student at <b>Shanghai Pinghe Bilingual School</b> (Class of 2027),
@@ -230,55 +393,64 @@
         reflections, things worth slowing down for.
       </p>
     </div>
+
+    <!-- editorial pull-quote (verbatim phrase promoted from the lede) -->
+    <blockquote class="pull rise">things that work, explained <span class="hl">plainly</span>.<span class="rule"></span></blockquote>
   </section>
 
   <!-- ===================== NOW / FACTS ===================== -->
-  <section id="now">
-    <div class="shead"><span class="num">02</span> Currently <span class="ln"></span></div>
-    <div class="facts rise">
-      <div class="fact"><p class="k">Studying</p><p class="v">IB Diploma · Class of 2027<br><small>HL Math AA · Physics · English&nbsp;B</small></p></div>
-      <div class="fact"><p class="k">Robotics</p><p class="v">FRC 6941 IronPulse<br><small>Shanghai Regional Champions → Houston Worlds</small></p></div>
-      <div class="fact"><p class="k">Research</p><p class="v">Physics &amp; Math IAs<br><small>K₂Cr₂O₇–Zn cell · theatre-seating model</small></p></div>
-      <div class="fact"><p class="k">Building</p><p class="v">FindItem hardware<br><small>ESP32-C3 · open-source CLI tools</small></p></div>
+  <section id="now" data-num="02" data-name="CURRENTLY">
+    <div class="shead"><span class="num" aria-hidden="true">02</span> <h2>Currently</h2> <span class="ln" aria-hidden="true"></span></div>
+    <div class="facts">
+      <div class="fact rise"><p class="k">Studying</p><p class="v">IB Diploma · Class of 2027<br><small>HL Math AA · Physics · English&nbsp;B</small></p></div>
+      <div class="fact rise"><p class="k">Robotics</p><p class="v">FRC 6941 IronPulse<br><small>Shanghai Regional Champions → Houston Worlds</small></p></div>
+      <div class="fact rise"><p class="k">Research</p><p class="v">Physics &amp; Math IAs<br><small>K₂Cr₂O₇–Zn cell · theatre-seating model</small></p></div>
+      <div class="fact rise"><p class="k">Building</p><p class="v">FindItem hardware<br><small>ESP32-C3 · open-source CLI tools</small></p></div>
     </div>
   </section>
 
   <!-- ===================== BUILDING ===================== -->
-  <section id="building">
-    <div class="shead"><span class="num">03</span> Building <span class="ln"></span> <a href="https://github.com/HarryXin0919" target="_blank" rel="noopener" style="text-decoration:none;color:var(--amber)">all on GitHub →</a></div>
-    <div class="projects rise">
+  <section id="building" data-num="03" data-name="BUILDING">
+    <div class="shead"><span class="num" aria-hidden="true">03</span> <h2>Building</h2> <span class="ln" aria-hidden="true"></span> <a class="arr-link" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">all on GitHub <span class="ar">↗</span></a></div>
+    <div class="projects">
 
-      <a class="card" href="https://github.com/HarryXin0919/factlens" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919/factlens" target="_blank" rel="noopener">
+        <span class="pidx" aria-hidden="true"></span>
         <p class="pt">factlens</p>
         <p class="pd">Multimodal video fact-checking — transcribe, read the screen, verify claims against the web.</p>
         <p class="pm">PYTHON <span class="arr">↗</span></p>
       </a>
 
-      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <span class="pidx" aria-hidden="true"></span>
         <p class="pt">FindItem</p>
         <p class="pd">Decentralised parts-storage hardware on ESP32-C3 — RGB strip + buzzer locate any bin.</p>
         <p class="pm">HARDWARE · C++ <span class="arr">↗</span></p>
       </a>
 
-      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <span class="pidx" aria-hidden="true"></span>
         <p class="pt">viralens</p>
         <p class="pd">Open-source toolkit that dissects what makes a video land — metadata, subtitles, comments.</p>
         <p class="pm">PYTHON <span class="arr">↗</span></p>
       </a>
 
-      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <span class="pidx" aria-hidden="true"></span>
         <p class="pt">looming</p>
         <p class="pd">A self-driving loop daemon that keeps an agent working toward a mission until interrupted.</p>
         <p class="pm">NODE · CLI <span class="arr">↗</span></p>
       </a>
 
-      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <span class="pidx" aria-hidden="true"></span>
         <p class="pt">skilltree</p>
         <p class="pd">Reads your shell history and draws a command-line skill tree in the terminal.</p>
         <p class="pm">PYTHON · TYPER <span class="arr">↗</span></p>
       </a>
 
-      <a class="card" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+        <span class="pidx" aria-hidden="true"></span>
         <p class="pt">ctxtax</p>
         <p class="pd">CLI that measures how much context budget each MCP tool actually costs you.</p>
         <p class="pm">TYPESCRIPT <span class="arr">↗</span></p>
@@ -288,8 +460,8 @@
   </section>
 
   <!-- ===================== CREATING ===================== -->
-  <section id="creating">
-    <div class="shead"><span class="num">04</span> Creating <span class="ln"></span></div>
+  <section id="creating" data-num="04" data-name="CREATING">
+    <div class="shead"><span class="num" aria-hidden="true">04</span> <h2>Creating</h2> <span class="ln" aria-hidden="true"></span></div>
     <div class="prose rise">
       <p>
         I make video on <b>Bilibili</b> and <b>WeChat Channels</b>, and longer essays on
@@ -301,6 +473,8 @@
       <p style="margin-top:6px">→ Find all of it in the links up top.</p>
     </div>
   </section>
+
+  </main>
 
   <!-- ===================== FOOTER ===================== -->
   <footer>
@@ -318,7 +492,137 @@
 
 </div>
 <script>
-  document.getElementById('yr').textContent = new Date().getFullYear();
+(function(){
+  var root = document.documentElement;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var fine   = window.matchMedia && matchMedia('(pointer:fine)').matches;
+
+  /* year */
+  var yr = document.getElementById('yr');
+  if (yr) yr.textContent = new Date().getFullYear();
+
+  /* live Shanghai clock (informational — runs even under reduced motion) */
+  var clk = document.getElementById('clk');
+  if (clk) {
+    var fmt = null;
+    try { fmt = new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}); } catch(e){}
+    var last = '';
+    var tick = function(){
+      if (!fmt) return;
+      var v; try { v = fmt.format(new Date()); } catch(e){ return; }
+      if (v !== last) { last = v; clk.textContent = v; }
+    };
+    tick();
+    /* only keep a timer alive when the clock is actually visible (hidden on mobile) */
+    if (fmt && clk.offsetParent !== null) setInterval(tick, 15000);
+  }
+
+  /* everything below is motion enhancement — bail to the static, fully
+     visible state when the user prefers reduced motion */
+  if (reduce) return;
+
+  root.classList.add('js-reveal');
+  if (fine) root.classList.add('pointer-fine');
+
+  /* per-child stagger indices (capped so groups finish < .5s) */
+  var stagger = function(sel){
+    var els = document.querySelectorAll(sel), i;
+    for (i=0;i<els.length;i++) els[i].style.setProperty('--i', Math.min(i,6));
+  };
+  stagger('.facts .fact');
+  stagger('.projects .card');
+
+  /* scroll-reveal: hero reveals immediately (always in view), the rest on scroll */
+  var hero = document.querySelector('.hero');
+  requestAnimationFrame(function(){
+    if (!hero) return;
+    var hr = hero.querySelectorAll('.rise'), i;
+    for (i=0;i<hr.length;i++){ hr[i].style.setProperty('--i', Math.min(i,6)); hr[i].classList.add('in'); }
+  });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, {threshold:0, rootMargin:'0px 0px -8% 0px'});
+    var rest = document.querySelectorAll('.rise'), j;
+    for (j=0;j<rest.length;j++){ if (!(hero && hero.contains(rest[j]))) io.observe(rest[j]); }
+  } else {
+    var all = document.querySelectorAll('.rise'), k;
+    for (k=0;k<all.length;k++) all[k].classList.add('in');
+  }
+
+  /* single rAF scroll tick: progress rail + parallax drivers */
+  var ticking = false;
+  var onScroll = function(){ if (!ticking){ ticking = true; requestAnimationFrame(updateScroll); } };
+  var updateScroll = function(){
+    ticking = false;
+    var sy = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    var p = max > 0 ? Math.min(1, Math.max(0, sy / max)) : 0;
+    root.style.setProperty('--p', p.toFixed(4));
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', updateScroll, {passive:true});
+  updateScroll();
+
+  /* live section readout (fires at viewport centre) */
+  if ('IntersectionObserver' in window) {
+    var sNum = document.querySelector('.scope-num');
+    var sName = document.querySelector('.scope-name');
+    var secObs = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if (e.isIntersecting){
+          if (sNum)  sNum.textContent  = e.target.getAttribute('data-num')  || '';
+          if (sName) sName.textContent = e.target.getAttribute('data-name') || '';
+        }
+      });
+    }, {rootMargin:'-45% 0px -45% 0px', threshold:0});
+    var secs = document.querySelectorAll('header.hero, section'), s;
+    for (s=0;s<secs.length;s++) secObs.observe(secs[s]);
+  }
+
+  /* pointer-driven effects — fine pointers only */
+  if (fine) {
+    /* cursor spotlight + pointer parallax (lerped, idles to 0 CPU) */
+    var tx = window.innerWidth/2, ty = window.innerHeight/2, cx = tx, cy = ty, raf = null;
+    root.style.setProperty('--mx', cx.toFixed(1) + 'px');  /* seed centred so first paint isn't off-screen */
+    root.style.setProperty('--my', cy.toFixed(1) + 'px');
+    var loop = function(){
+      cx += (tx - cx) * 0.12; cy += (ty - cy) * 0.12;
+      root.style.setProperty('--mx', cx.toFixed(1) + 'px');
+      root.style.setProperty('--my', cy.toFixed(1) + 'px');
+      if (Math.abs(tx - cx) > 0.5 || Math.abs(ty - cy) > 0.5) raf = requestAnimationFrame(loop);
+      else raf = null;
+    };
+    window.addEventListener('pointermove', function(ev){
+      if (ev.pointerType === 'touch') return;
+      tx = ev.clientX; ty = ev.clientY;
+      root.style.setProperty('--px', ((ev.clientX/window.innerWidth - 0.5) * 2).toFixed(3));
+      root.style.setProperty('--py', ((ev.clientY/window.innerHeight - 0.5) * 2).toFixed(3));
+      if (!raf) raf = requestAnimationFrame(loop);
+    }, {passive:true});
+
+    /* project cards: follow-glow + capped 3D tilt (rect cached on enter, write rAF-throttled) */
+    var cards = document.querySelectorAll('.card'), c;
+    for (c=0;c<cards.length;c++){
+      (function(card){
+        var craf = null, rect = null;
+        card.addEventListener('pointerenter', function(){ card.classList.add('tilting'); rect = card.getBoundingClientRect(); });
+        card.addEventListener('pointermove', function(ev){
+          if (!rect) rect = card.getBoundingClientRect();
+          var lx = ev.clientX - rect.left, ly = ev.clientY - rect.top;
+          var px = lx / rect.width - 0.5, py = ly / rect.height - 0.5;
+          card.style.setProperty('--gx', lx + 'px');
+          card.style.setProperty('--gy', ly + 'px');
+          if (!craf) craf = requestAnimationFrame(function(){
+            craf = null;
+            card.style.transform = 'translateY(-4px) rotateX(' + (-py*4).toFixed(2) + 'deg) rotateY(' + (px*4).toFixed(2) + 'deg)';
+          });
+        }, {passive:true});
+        card.addEventListener('pointerleave', function(){ card.classList.remove('tilting'); card.style.transform = ''; rect = null; });
+      })(cards[c]);
+    }
+  }
+})();
 </script>
 </body>
 </html>
