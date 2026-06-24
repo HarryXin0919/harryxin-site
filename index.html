@@ -241,6 +241,8 @@
   .pull::before{content:"\201C"; position:absolute; left:-.5em; top:-.18em; margin-left:0; color:var(--amber); opacity:.7; font-size:1.15em}
   .pull .hl{color:var(--amber)}
   .pull .rule{display:block; width:64px; height:2px; background:var(--amber); margin-top:var(--sp-4); opacity:.8}
+  /* Chinese: drop the synthesized italic (slanted CJK reads badly); keep upright serif */
+  html.lang-zh .pull{font-style:normal}
 
   /* ---------- sections ---------- */
   section{padding:var(--sp-6) 0; border-top:1px solid var(--line); position:relative}
@@ -441,23 +443,19 @@
       <p>
         <span data-lang="en">I’m an <b>IB</b> student taking <b>HL Mathematics AA, Physics, and English B</b>,
         building toward <b>physics, math, or engineering</b> at university — and one day,
-        work that ships.</span><span data-lang="zh">我是个 <b>IB</b> 学生，HL 修 <b>数学 AA、物理与英语 B</b>；
-        大学想往 <b>物理、数学或工程</b> 走，日后做些真正能落地的东西。</span>
+        work that ships.</span><span data-lang="zh">我是个 <b>IB</b> 学生，HL 修<b>数学 AA、物理与英语 B</b>；大学想往<b>物理、数学或工程</b>走，日后做些真正能落地的东西。</span>
       </p>
       <p>
         <span data-lang="en">Most of what I do starts as a question and ends as something you can hold or run:
         an <b>electrochemistry experiment</b>, a <b>seating-optimization model</b>, a
         <b>storage gadget</b> that lights up the part you’re looking for, or a small
         command-line tool. I also make <b>literary &amp; documentary videos</b> — close readings,
-        reflections, things worth slowing down for.</span><span data-lang="zh">我做的事多半始于一个问题，终成一件拿得到手、跑得起来的东西：
-        一个 <b>电化学实验</b>、一个 <b>座位优化模型</b>、一个你找哪格、它就亮哪格的
-        <b>收纳盒</b>，或是一个命令行小工具。我也拍 <b>文学与纪录片</b>：细读一本书、
-        做点反思——那种值得你慢下来看的东西。</span>
+        reflections, things worth slowing down for.</span><span data-lang="zh">我做的事多半始于一个问题，终成一件拿得到手、跑得起来的东西：一个<b>电化学实验</b>、一个<b>座位优化模型</b>、一个你找哪格、它就亮哪格的<b>收纳盒</b>，或是一个命令行小工具。我也拍<b>文学与纪录片</b>：细读一本书、做点反思——那种值得你慢下来看的东西。</span>
       </p>
     </div>
 
     <!-- editorial pull-quote (verbatim phrase promoted from the lede) -->
-    <blockquote class="pull rise"><span data-lang="en">things that work, explained <span class="hl">plainly</span>.</span><span data-lang="zh">但求能用，也求<span class="hl">说得明白</span>。</span><span class="rule"></span></blockquote>
+    <blockquote class="pull rise"><span data-lang="en">things that work, explained <span class="hl">plainly</span>.</span><span data-lang="zh">但求能用，<br>也求<span class="hl">说得明白</span>。</span><span class="rule"></span></blockquote>
   </section>
 
   <!-- ===================== NOW / FACTS ===================== -->
@@ -530,10 +528,7 @@
         <b>YouTube</b> — literary BookTube (<i>Of Mice and Men</i>, <i>A Raisin in the Sun</i>)
         and short documentaries, including the <i>Empire in Decay: Echoes of the Empire</i> series
         from our FRC trip to Istanbul. The aim is always the same: down-to-earth, human, and worth
-        the runtime.</span><span data-lang="zh">我在 <b>B 站</b> 和 <b>微信视频号</b> 发视频，也在 <b>YouTube</b> 上做更长的内容——
-        文学向的 BookTube（聊《人鼠之间》《阳光下的葡萄干》），还有短纪录片，
-        比如我们 FRC 远赴伊斯坦布尔拍的《帝国余晖：帝国的回响》系列。所求始终如一：
-        接地气、有人味、值得你花时间看完。</span>
+        the runtime.</span><span data-lang="zh">我在 <b>B 站</b>和<b>微信视频号</b>发视频，也在 <b>YouTube</b> 上做更长的内容——文学向的 BookTube（聊《人鼠之间》《阳光下的葡萄干》），还有短纪录片，比如我们 FRC 远赴伊斯坦布尔拍的《帝国余晖：帝国的回响》系列。所求始终如一：接地气、有人味、值得你花时间看完。</span>
       </p>
       <p style="margin-top:6px"><span data-lang="en">→ Find all of it in the links up top.</span><span data-lang="zh">→ 都在上面的链接里。</span></p>
     </div>
