@@ -1,0 +1,17 @@
+{
+  "name": "harryxin-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-isolation=none",
+    "check": "npm test",
+    "dev:fixture": "node scripts/dev-server.js"
+  },
+  "dependencies": {
+    "@upstash/redis": "1.38.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

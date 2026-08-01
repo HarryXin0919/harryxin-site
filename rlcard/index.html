@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Harry Xin 的 RLCard Leduc Hold'em 强化学习实时训练实验。" />
+    <meta name="theme-color" content="#080b0a" />
+    <meta property="og:title" content="RLCard Leduc Lab · Harry Xin" />
+    <meta property="og:description" content="DQN、NFSP 与 CFR 的实时训练进度和评估结果。" />
+    <meta property="og:url" content="https://harryxin.com/rlcard/" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="stylesheet" href="/rlcard/styles.css" />
+    <title>RLCard Leduc Lab · Harry Xin</title>
+  </head>
+  <body>
+    <div class="scanlines" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="返回 Harry Xin 主页">
+        <span class="brand-mark">R/L</span>
+        <span><strong>LEDUC LAB</strong><small>HARRY XIN · RESEARCH LOG</small></span>
+      </a>
+      <div class="connection" aria-live="polite">
+        <i id="connectionDot"></i>
+        <span id="connectionState">CONNECTING</span>
+        <time id="clock">--:--:--</time>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero panel">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>01</span> CURRENT MISSION</p>
+          <h1 id="currentTitle">正在连接训练遥测</h1>
+          <p id="currentMeta" class="hero-meta">PUBLIC · SANITIZED TELEMETRY</p>
+          <div class="hero-metrics">
+            <div><small>进度 / PROGRESS</small><strong id="currentProgress">—</strong></div>
+            <div><small>速度 / THROUGHPUT</small><strong id="currentSpeed">—</strong></div>
+            <div><small>收益 / PAYOFF</small><strong id="currentPayoff">—</strong></div>
+            <div><small>数据年龄 / AGE</small><strong id="dataAge">—</strong></div>
+          </div>
+        </div>
+        <div class="orbit-block">
+          <div id="progressOrbit" class="progress-orbit" style="--progress: 0deg">
+            <div><strong id="overallPercent">0.0</strong><small>% TOTAL</small></div>
+          </div>
+          <div class="orbit-caption">
+            <span id="stageCount">0 / 13 PHASES</span>
+            <span id="etaText">ETA CALCULATING</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="telemetry-grid">
+        <article class="panel gpu-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow"><span>02</span> GPU TELEMETRY</p><h2>RTX 4060 Laptop</h2></div>
+            <span id="thermalState" class="chip">WAITING</span>
+          </div>
+          <div class="gpu-body">
+            <div class="temperature"><strong id="gpuTemp">--</strong><sup>°C</sup><small>CORE TEMP</small></div>
+            <div class="gauges">
+              <div class="gauge">
+                <div><span>GPU LOAD</span><strong id="gpuLoad">--%</strong></div>
+                <figure><i id="gpuLoadBar"></i></figure>
+              </div>
+              <div class="gauge">
+                <div><span>VRAM</span><strong id="gpuMemory">-- / --</strong></div>
+                <figure><i id="gpuMemoryBar"></i></figure>
+              </div>
+              <div class="power"><span>POWER DRAW</span><strong id="gpuPower">-- W</strong></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow"><span>03</span> VALIDATION SIGNAL</p><h2>平均收益与 95% CI</h2></div>
+            <span id="chartPoints" class="chip">0 POINTS</span>
+          </div>
+          <div class="chart-wrap">
+            <svg id="payoffChart" viewBox="0 0 760 260" role="img" aria-label="平均收益和置信区间曲线">
+              <g id="chartGrid"></g>
+              <path id="ciBand" class="ci-band"></path>
+              <path id="payoffLine" class="payoff-line"></path>
+              <g id="chartLabels"></g>
+              <g id="lastPoint"></g>
+            </svg>
+            <p id="emptyChart" class="empty-chart">等待评估数据</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="lower-grid">
+        <article class="panel sequence-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow"><span>04</span> SEQUENCE</p><h2>实验流水线</h2></div>
+            <span id="pipelineState" class="chip">QUEUED</span>
+          </div>
+          <div id="stageList" class="stage-list"></div>
+        </article>
+
+        <aside class="panel research-note">
+          <p class="eyebrow"><span>05</span> RESEARCH NOTE</p>
+          <h2>模型学到的，<br />究竟是什么？</h2>
+          <p>
+            当前曲线使用交换座位后对 RandomAgent 的平均收益。正收益说明策略能够利用随机对手，
+            但不等同于达到或接近纳什均衡。
+          </p>
+          <dl>
+            <div><dt>GAME</dt><dd>Leduc Hold’em</dd></div>
+            <div><dt>AGENTS</dt><dd>DQN · NFSP · CFR</dd></div>
+            <div><dt>SEEDS</dt><dd>42 · 123 · 2026</dd></div>
+            <div><dt>HARDWARE</dt><dd>RTX 4060 Laptop 8 GB</dd></div>
+          </dl>
+          <a href="/">← 返回 Harry Xin 主页</a>
+        </aside>
+      </section>
+
+      <div id="statusNotice" class="status-notice" role="status">
+        遥测数据由训练电脑主动上传；页面不会连接或控制训练设备。
+      </div>
+    </main>
+
+    <footer>
+      <span>RLCard 1.2.0 · PUBLIC RESEARCH TELEMETRY</span>
+      <span id="lastUpdated">LAST UPDATE —</span>
+    </footer>
+    <script src="/rlcard/app.js" defer></script>
+  </body>
+</html>
