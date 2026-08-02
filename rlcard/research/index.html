@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Harry Xin 的 RLCard Leduc Hold'em 奖励函数与策略稳健性研究测试界面。"
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#070a08" />
+    <meta property="og:title" content="RLCard Reward Observatory · Harry Xin" />
+    <meta
+      property="og:description"
+      content="Exploitability、NashConv、奖励实验组与研究协议的公开测试界面。"
+    />
+    <meta property="og:url" content="https://harryxin.com/rlcard/research/" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="stylesheet" href="/rlcard/research/styles.css" />
+    <title>Reward Observatory · RLCard Leduc Lab</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">跳至研究内容</a>
+    <div class="atmosphere" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="/rlcard/" aria-label="返回 RLCard Leduc Lab">
+        <span class="brand-mark">R/2</span>
+        <span class="brand-copy">
+          <strong>REWARD OBSERVATORY</strong>
+          <small>LEDUC LAB · SECOND RESEARCH PHASE</small>
+        </span>
+      </a>
+
+      <nav class="topnav" aria-label="页面导航">
+        <a href="/">HARRY XIN</a>
+        <a href="/rlcard/">LIVE LAB</a>
+        <a href="#protocol">PROTOCOL</a>
+      </nav>
+
+      <div class="system-state" aria-live="polite">
+        <i id="systemDot" class="locked"></i>
+        <span id="systemLabel">PROTOCOL LOCKED</span>
+        <time id="clock">--:--:--</time>
+      </div>
+    </header>
+
+    <main id="content">
+      <section class="hero panel reveal">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>R2—00</span> RESEARCH PREVIEW / 研究预览</p>
+          <h1><span>REWARD</span><span>STUDY<span class="hero-index">02</span></span></h1>
+          <p class="hero-question">
+            奖励塑形能否更快逼近均衡，<br />
+            <em>而不是只让曲线看起来更漂亮？</em>
+          </p>
+
+          <div class="hero-metrics">
+            <div>
+              <small>CURRENT PHASE / 当前阶段</small>
+              <strong>EXACT BR VALIDATION</strong>
+            </div>
+            <div>
+              <small>PRIMARY ENDPOINT / 主终点</small>
+              <strong>EXPLOITABILITY</strong>
+            </div>
+            <div>
+              <small>INDEPENDENT UNIT / 独立单位</small>
+              <strong>TRAINING SEED</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="phase-dial-wrap">
+          <div class="phase-dial" style="--phase-progress: 102.86deg">
+            <div class="phase-dial-core">
+              <small>PHASE</small>
+              <strong>02</strong>
+              <span>/ 07</span>
+            </div>
+          </div>
+          <div class="phase-caption">
+            <span>BASELINE FROZEN</span>
+            <span>IMPLEMENTATION ACTIVE</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="signal-rail reveal" aria-label="研究状态">
+        <div>
+          <span class="signal-code">A</span>
+          <small>BASELINE</small>
+          <strong>906fcb4 · FROZEN</strong>
+        </div>
+        <div>
+          <span class="signal-code">B</span>
+          <small>GAME TREE</small>
+          <strong>23,280 NODES</strong>
+        </div>
+        <div>
+          <span class="signal-code">C</span>
+          <small>INFO SETS</small>
+          <strong>288 × 2 SEATS</strong>
+        </div>
+        <div class="compute-signal">
+          <span class="signal-code">D</span>
+          <small>COMPUTE NODE</small>
+          <strong id="computeState">CHECKING SIGNAL</strong>
+          <span id="computeDetail">PUBLIC TELEMETRY</span>
+        </div>
+      </section>
+
+      <section class="evidence-grid">
+        <article class="panel chart-panel reveal">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow"><span>R2—01</span> BASELINE AUDIT</p>
+              <h2>策略可利用度 / Exploitability</h2>
+            </div>
+            <span class="chip verified">EXACT TREE</span>
+          </div>
+
+          <div class="chart-summary">
+            <p>
+              <strong>越低越好。</strong> 对 RandomAgent 的正收益不能代替这一指标；
+              当前 NFSP 虽能击败随机策略，但仍保留明显的最佳响应空间。
+            </p>
+            <div>
+              <small>BEST VERIFIED</small>
+              <strong>0.295</strong>
+              <span>CFR · 20K ITER</span>
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <svg
+              id="exploitabilityChart"
+              viewBox="0 0 820 330"
+              role="img"
+              aria-labelledby="chartTitle chartDescription"
+            >
+              <title id="chartTitle">不同策略的精确 exploitability</title>
+              <desc id="chartDescription">
+                RandomAgent、三个 NFSP 最终模型和 CFR 最终模型的可利用度比较，数值越低越好。
+              </desc>
+              <g id="chartGrid"></g>
+              <g id="chartBars"></g>
+              <g id="chartLabels"></g>
+            </svg>
+          </div>
+
+          <div class="chart-legend" aria-label="图例">
+            <span><i class="random"></i> RANDOM CONTROL</span>
+            <span><i class="nfsp"></i> NFSP · 300K</span>
+            <span><i class="cfr"></i> CFR REFERENCE</span>
+          </div>
+        </article>
+
+        <aside class="panel endpoint-panel reveal" id="protocol">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow"><span>R2—02</span> FROZEN ENDPOINT</p>
+              <h2>先写规则，<br />再看结果。</h2>
+            </div>
+            <span class="chip locked-chip">LOCKED</span>
+          </div>
+
+          <div class="formula" aria-label="Potential based reward shaping 公式">
+            <small>TRAINING REWARD</small>
+            <p>
+              R′ = r/7 + α
+              <span>[ γΦ(I′) − Φ(I) ]</span>
+            </p>
+          </div>
+
+          <dl class="endpoint-list">
+            <div>
+              <dt>PRIMARY</dt>
+              <dd>300K exact exploitability</dd>
+            </div>
+            <div>
+              <dt>REPLICATION</dt>
+              <dd>10 unseen paired seeds</dd>
+            </div>
+            <div>
+              <dt>SELECTION</dt>
+              <dd>Exploitability AUC</dd>
+            </div>
+            <div>
+              <dt>FORBIDDEN</dt>
+              <dd>Hidden-card reward leakage</dd>
+            </div>
+          </dl>
+
+          <p class="endpoint-note">
+            单局牌局是同一策略下的重复观测；真正的独立重复单位是一次完整、独立随机种子的训练。
+          </p>
+        </aside>
+      </section>
+
+      <section class="panel arms-panel reveal">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow"><span>R2—03</span> EXPERIMENT ARMS</p>
+            <h2>四组 Pilot，不允许赛后改名</h2>
+          </div>
+          <span class="chip">4 ARMS · 3 SEEDS</span>
+        </div>
+
+        <div class="arm-grid">
+          <article class="arm-card control">
+            <header><span>A0</span><em>CONTROL</em></header>
+            <h3>TERMINAL</h3>
+            <p>RLCard 原始终局 payoff，不做任何变换。</p>
+            <dl>
+              <div><dt>SCALE</dt><dd>1.000</dd></div>
+              <div><dt>ALPHA</dt><dd>0.00</dd></div>
+            </dl>
+            <footer><i></i> READY</footer>
+          </article>
+
+          <article class="arm-card scaled">
+            <header><span>A1</span><em>NUMERIC CONTROL</em></header>
+            <h3>SCALED</h3>
+            <p>终局 payoff 除以 7，仅改变数值尺度。</p>
+            <dl>
+              <div><dt>SCALE</dt><dd>0.143</dd></div>
+              <div><dt>ALPHA</dt><dd>0.00</dd></div>
+            </dl>
+            <footer><i></i> QUEUED</footer>
+          </article>
+
+          <article class="arm-card pbrs">
+            <header><span>A2</span><em>TEACHER INFORMED</em></header>
+            <h3>PBRS · LOW</h3>
+            <p>冻结 CFR information-state potential，弱塑形。</p>
+            <dl>
+              <div><dt>SCALE</dt><dd>0.143</dd></div>
+              <div><dt>ALPHA</dt><dd>0.10</dd></div>
+            </dl>
+            <footer><i></i> QUEUED</footer>
+          </article>
+
+          <article class="arm-card pbrs high">
+            <header><span>A3</span><em>TEACHER INFORMED</em></header>
+            <h3>PBRS · MID</h3>
+            <p>相同 CFR potential，更强探索引导。</p>
+            <dl>
+              <div><dt>SCALE</dt><dd>0.143</dd></div>
+              <div><dt>ALPHA</dt><dd>0.25</dd></div>
+            </dl>
+            <footer><i></i> QUEUED</footer>
+          </article>
+        </div>
+      </section>
+
+      <section class="lower-grid">
+        <article class="panel pipeline-panel reveal">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow"><span>R2—04</span> RESEARCH SEQUENCE</p>
+              <h2>从指标到论文证据链</h2>
+            </div>
+            <span class="chip active">02 / 07 ACTIVE</span>
+          </div>
+
+          <ol class="pipeline">
+            <li class="complete">
+              <span>01</span>
+              <div><strong>FREEZE BASELINE</strong><small>模型、数据、代码版本只读封存</small></div>
+              <em>COMPLETE</em>
+            </li>
+            <li class="active">
+              <span>02</span>
+              <div><strong>VALIDATE BEST RESPONSE</strong><small>完整博弈树与 information-set 一致性</small></div>
+              <em>ACTIVE</em>
+            </li>
+            <li>
+              <span>03</span>
+              <div><strong>BUILD REWARD LAYER</strong><small>缩放、PBRS、隐藏信息隔离测试</small></div>
+              <em>QUEUED</em>
+            </li>
+            <li>
+              <span>04</span>
+              <div><strong>RUN 50K PILOT</strong><small>4 arms × 3 exploratory seeds</small></div>
+              <em>QUEUED</em>
+            </li>
+            <li>
+              <span>05</span>
+              <div><strong>LOCK ONE CANDIDATE</strong><small>按预注册 AUC 规则晋级</small></div>
+              <em>GATED</em>
+            </li>
+            <li>
+              <span>06</span>
+              <div><strong>300K CONFIRMATION</strong><small>10 unseen paired seeds</small></div>
+              <em>GATED</em>
+            </li>
+            <li>
+              <span>07</span>
+              <div><strong>REPORT ALL OUTCOMES</strong><small>包括失败、偏差与协议修订</small></div>
+              <em>GATED</em>
+            </li>
+          </ol>
+        </article>
+
+        <aside class="panel seed-panel reveal">
+          <p class="eyebrow"><span>R2—05</span> REPLICATION MAP</p>
+          <h2>种子不是装饰。</h2>
+          <p class="seed-intro">
+            Pilot 只筛选方案；正式统计使用完全未参与调参的独立种子。
+          </p>
+
+          <div class="seed-group">
+            <header><span>PILOT</span><strong>EXPLORATORY</strong></header>
+            <div class="seed-grid">
+              <span>42</span><span>123</span><span>2026</span>
+            </div>
+          </div>
+
+          <div class="seed-group confirmatory">
+            <header><span>CONFIRM</span><strong>UNSEEN · PAIRED</strong></header>
+            <div class="seed-grid">
+              <span>31415</span><span>27182</span><span>16180</span><span>57721</span>
+              <span>65537</span><span>99991</span><span>104729</span><span>13007</span>
+              <span>17011</span><span>23003</span>
+            </div>
+          </div>
+
+          <div class="integrity-stamp">
+            <span>RESEARCH INTEGRITY</span>
+            <strong>NEGATIVE RESULTS<br />REMAIN VISIBLE</strong>
+          </div>
+        </aside>
+      </section>
+
+      <section class="disclosure reveal">
+        <span>TEST SUBPAGE / 测试子页面</span>
+        <p>
+          本页展示已核验的第一阶段基线与第二阶段预注册设计。Pilot 尚未启动；
+          页面不会把计划数据伪装成实时结果，也不会控制本地训练设备。
+        </p>
+        <a href="/rlcard/">查看第一阶段实时页面 →</a>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <span>RLCard 1.2.0 · LEDUC REWARD STUDY V1</span>
+      <span id="footerTime">SHANGHAI --:--</span>
+      <a href="/">HARRYXIN.COM</a>
+    </footer>
+
+    <script src="/rlcard/research/app.js" defer></script>
+  </body>
+</html>
