@@ -1142,6 +1142,13 @@
     outline:2px solid var(--amber);
     outline-offset:3px;
   }
+  .facts .fact-link::after{
+    top:18px;
+    right:20px;
+    bottom:auto;
+    z-index:4;
+    color:rgba(255,255,255,.58);
+  }
   .fact-icon{
     position:absolute;
     right:24px;
@@ -1169,11 +1176,11 @@
     opacity:1;
   }
   .fact-ironpulse .ironpulse-icon{
-    right:18px;
-    bottom:15px;
-    width:158px;
-    height:94px;
-    overflow:visible;
+    right:24px;
+    bottom:18px;
+    width:146px;
+    height:146px;
+    overflow:hidden;
     border:0;
     border-radius:0;
     background:transparent;
@@ -1181,7 +1188,8 @@
   }
   .fact-ironpulse .ironpulse-icon img{
     border-radius:0;
-    object-fit:contain;
+    object-fit:cover;
+    object-position:center;
     filter:drop-shadow(0 14px 22px rgba(0,0,0,.34));
   }
   .facts .fact-ironpulse .k,
@@ -1578,8 +1586,8 @@
     }
     .fact-link{padding-right:116px}
     .fact-icon{right:16px;bottom:16px;width:88px;height:88px}
-    .fact-ironpulse{padding-right:122px}
-    .fact-ironpulse .ironpulse-icon{right:10px;bottom:12px;width:108px;height:64px}
+    .fact-ironpulse{padding-right:116px}
+    .fact-ironpulse .ironpulse-icon{right:16px;bottom:16px;width:88px;height:88px}
     .fact-ironpulse .v{font-size:25px}
     .fact .v{font-size:28px}
     .card,.card:first-child{
