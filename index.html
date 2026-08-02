@@ -10,8 +10,7 @@
 <meta property="og:description" content="IB student · FRC 6941 IronPulse · builder & video essayist. Physics, math, and things that work." />
 <meta property="og:url" content="https://harryxin.com/" />
 <meta property="og:type" content="website" />
-<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#080b0a" />
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
 <style>
   /* ============================================================
@@ -730,6 +729,765 @@
     :root{--paper-dim:color-mix(in srgb,var(--paper) 78%,transparent); --glass-line:color-mix(in srgb,var(--paper) 48%,transparent)}
     .topbar,.social,.fact,.card,#about,#creating{border-color:var(--glass-line)}
   }
+  /* ============================================================
+     RLCard laboratory visual skin
+     Style-only layer: structure, content, links and behavior stay intact.
+     ============================================================ */
+  :root{
+    color-scheme:dark;
+    --ink:#080b0a;
+    --ink-2:#0e1410;
+    --paper:#e9eee9;
+    --paper-dim:#89938b;
+    --line:rgba(220,238,224,.14);
+    --amber:#9cff57;
+    --cyan:#5ce4d5;
+    --grid-lit:rgba(156,255,87,.30);
+    --glass:rgba(14,20,16,.91);
+    --glass-line:rgba(220,238,224,.14);
+    --display:"Bahnschrift Condensed","Franklin Gothic Medium","Arial Narrow",sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code","Consolas",monospace;
+    --maxw:1480px;
+  }
+
+  html{background:var(--ink)}
+  body{
+    background:
+      linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px),
+      radial-gradient(circle at 78% 3%,rgba(58,115,66,.17),transparent 32%),
+      var(--ink);
+    background-size:42px 42px,42px 42px,auto,auto;
+    color:var(--paper);
+    font-family:var(--mono);
+  }
+  body::before{
+    background:
+      linear-gradient(rgba(156,255,87,.026) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(156,255,87,.026) 1px,transparent 1px);
+    background-size:42px 42px;
+    -webkit-mask-image:radial-gradient(ellipse 105% 80% at 50% 0,#000 0%,rgba(0,0,0,.8) 45%,transparent 92%);
+            mask-image:radial-gradient(ellipse 105% 80% at 50% 0,#000 0%,rgba(0,0,0,.8) 45%,transparent 92%);
+    opacity:1;
+  }
+  body::after{
+    opacity:.18;
+    background:repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.014) 0,
+      rgba(255,255,255,.014) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+  .atmo-bloom{
+    background:radial-gradient(ellipse 70% 50% at 76% -2%,rgba(58,115,66,.19),transparent 62%);
+  }
+  .atmo-vignette{
+    background:radial-gradient(ellipse 130% 110% at 50% 36%,transparent 50%,rgba(0,0,0,.54));
+  }
+  .atmo-spot{
+    background-image:
+      linear-gradient(rgba(156,255,87,.22) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(156,255,87,.22) 1px,transparent 1px);
+    background-size:42px 42px;
+    opacity:.42;
+  }
+
+  .wrap{
+    width:min(var(--maxw),calc(100% - 48px));
+    padding:0;
+  }
+  .topbar{
+    min-height:96px;
+    margin:0;
+    padding:0;
+    border:0;
+    border-bottom:1px solid var(--line);
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    -webkit-backdrop-filter:none;
+            backdrop-filter:none;
+  }
+  html.is-scrolled .topbar{
+    margin:0;
+    border-radius:0;
+    background:rgba(8,11,10,.92);
+    box-shadow:0 1px 0 var(--line);
+    -webkit-backdrop-filter:blur(16px);
+            backdrop-filter:blur(16px);
+  }
+  .topbar-brand{
+    display:grid;
+    grid-template-columns:46px auto;
+    grid-template-rows:1fr;
+    gap:14px;
+    align-items:center;
+    color:var(--paper);
+    font:700 20px/1 var(--display);
+    letter-spacing:.075em;
+    text-transform:uppercase;
+  }
+  .topbar-brand::before{
+    content:"H/X";
+    display:grid;
+    width:46px;
+    height:46px;
+    place-items:center;
+    border:1px solid var(--amber);
+    color:var(--amber);
+    font:700 13px/1 var(--mono);
+    box-shadow:inset 0 0 22px rgba(156,255,87,.1);
+    transform:rotate(-3deg);
+  }
+  .topbar-brand .dot{display:none}
+  .site-nav{
+    gap:2px;
+    padding:0;
+    border:0;
+    background:none;
+  }
+  .site-nav a{
+    padding:9px 11px 8px;
+    border:1px solid transparent;
+    border-radius:0;
+    color:var(--paper-dim);
+    font:600 9px/1 var(--mono);
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+  .site-nav a:hover{
+    border-color:var(--line);
+    color:var(--paper);
+    background:rgba(156,255,87,.04);
+  }
+  .site-nav a[aria-current="location"]{
+    border-color:rgba(156,255,87,.28);
+    color:var(--amber);
+    background:rgba(156,255,87,.08);
+  }
+  .site-nav a[aria-current="location"]::after{display:none}
+  .right,.loc,.langsw{
+    color:var(--paper-dim);
+    font:500 9px/1 var(--mono);
+    letter-spacing:.1em;
+  }
+  .langsw button{
+    color:var(--paper-dim);
+    font:inherit;
+  }
+  .langsw button[aria-pressed="true"]{color:var(--amber);text-shadow:0 0 12px rgba(156,255,87,.25)}
+
+  .scope{
+    width:2px;
+    background:rgba(220,238,224,.08);
+  }
+  .scope-fill{background:var(--amber);box-shadow:0 0 12px rgba(156,255,87,.4)}
+  .scope-tag{
+    color:var(--paper-dim);
+    font-family:var(--mono);
+  }
+  .scope-num{color:var(--amber)}
+
+  .hero{
+    position:relative;
+    min-height:min(780px,calc(100vh - 120px));
+    margin-top:34px;
+    padding:clamp(42px,6vw,88px);
+    border:1px solid var(--line);
+    background:rgba(14,20,16,.88);
+    box-shadow:0 22px 80px rgba(0,0,0,.18);
+    overflow:hidden;
+  }
+  .hero::before,
+  section::before{
+    content:"";
+    position:absolute;
+    z-index:2;
+    top:-1px;
+    left:-1px;
+    width:34px;
+    height:34px;
+    border-top:2px solid var(--amber);
+    border-left:2px solid var(--amber);
+    opacity:.65;
+    pointer-events:none;
+  }
+  .hero::after{
+    content:"HX / PERSONAL RESEARCH INDEX";
+    position:absolute;
+    right:30px;
+    bottom:24px;
+    color:rgba(233,238,233,.18);
+    font:500 8px/1 var(--mono);
+    letter-spacing:.18em;
+  }
+  .watermark{
+    right:-.02em;
+    top:-.15em;
+    color:rgba(156,255,87,.026);
+    font-family:var(--display);
+    font-style:normal;
+    font-weight:700;
+    letter-spacing:-.08em;
+  }
+  .hero-inner{position:relative;z-index:2;max-width:1120px}
+  .eyebrow{
+    margin-bottom:22px;
+    color:var(--paper-dim);
+    font:600 9px/1 var(--mono);
+    letter-spacing:.22em;
+    text-transform:uppercase;
+  }
+  .eyebrow::before{
+    content:"00";
+    margin-right:12px;
+    color:var(--amber);
+  }
+  h1{
+    max-width:1100px;
+    margin-bottom:22px;
+    color:var(--paper);
+    font:700 clamp(76px,10vw,154px)/.82 var(--display);
+    letter-spacing:-.045em;
+    text-transform:uppercase;
+  }
+  h1 .zh{
+    color:var(--amber);
+    font-size:.55em;
+    font-style:normal;
+    letter-spacing:-.06em;
+  }
+  .pron{
+    color:var(--amber);
+    font:500 10px/1.6 var(--mono);
+    letter-spacing:.13em;
+    text-transform:uppercase;
+  }
+  .lede{
+    max-width:850px;
+    color:var(--paper-dim);
+    font:18px/1.75 Georgia,"Times New Roman",serif;
+    letter-spacing:.002em;
+  }
+  .lede b,.lede .em{color:var(--paper);font-weight:600}
+  .socials{gap:10px;margin-top:42px}
+  .social{
+    min-height:44px;
+    padding:0 14px;
+    border:1px solid var(--line);
+    border-radius:0;
+    color:var(--paper-dim);
+    background:rgba(8,11,10,.48);
+    box-shadow:none;
+    -webkit-backdrop-filter:none;
+            backdrop-filter:none;
+    font:600 9px/1 var(--mono);
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .social svg{color:var(--amber)}
+  .social:hover,
+  .social.gh:hover,
+  .social.bili:hover,
+  .social.yt:hover,
+  .social.ig:hover{
+    border-color:rgba(156,255,87,.4);
+    color:var(--paper);
+    background:rgba(156,255,87,.07);
+    transform:translateY(-2px);
+  }
+  .social .h{color:var(--paper-dim);font-weight:400}
+
+  section{
+    position:relative;
+    margin-top:18px;
+    padding:clamp(44px,5vw,72px);
+    border:1px solid var(--line);
+    background:rgba(14,20,16,.88);
+    box-shadow:0 22px 80px rgba(0,0,0,.14);
+    overflow:hidden;
+  }
+  #about,#creating{
+    padding:clamp(44px,5vw,72px);
+    border:1px solid var(--line);
+    border-radius:0;
+    background:rgba(14,20,16,.88);
+    box-shadow:0 22px 80px rgba(0,0,0,.14);
+  }
+  .shead{
+    align-items:center;
+    margin-bottom:48px;
+  }
+  .shead .num{
+    color:var(--amber);
+    font:600 9px/1 var(--mono);
+    letter-spacing:.16em;
+  }
+  .shead h2{
+    color:var(--paper);
+    font:650 clamp(34px,4vw,58px)/.9 var(--display);
+    letter-spacing:-.025em;
+    text-transform:uppercase;
+  }
+  .shead .ln{height:1px;background:var(--line)}
+  .arr-link{
+    color:var(--amber);
+    font:500 8px/1 var(--mono);
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .prose{
+    color:var(--paper-dim);
+    font:18px/1.85 Georgia,"Times New Roman",serif;
+  }
+  .prose b{color:var(--paper)}
+  .pull{
+    color:var(--paper);
+    font:650 clamp(44px,5vw,76px)/.9 var(--display);
+    letter-spacing:-.035em;
+    text-transform:uppercase;
+  }
+  .pull .hl{color:var(--amber)}
+  .pull .rule{background:var(--amber)}
+
+  .facts{gap:12px}
+  .fact{
+    position:relative;
+    min-height:220px;
+    padding:28px;
+    border:1px solid var(--line);
+    border-radius:0;
+    color:var(--paper);
+    background:rgba(8,11,10,.44);
+    box-shadow:none;
+  }
+  .fact:nth-child(3),
+  .fact:nth-child(4){
+    background:rgba(8,11,10,.44);
+  }
+  .fact::before{
+    content:"";
+    position:absolute;
+    inset:-1px auto auto -1px;
+    width:24px;
+    height:24px;
+    border-top:1px solid var(--amber);
+    border-left:1px solid var(--amber);
+    opacity:.55;
+  }
+  .fact .k,
+  .fact:nth-child(n+3) .k{
+    color:var(--amber);
+    font:600 8px/1 var(--mono);
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  .fact .v{
+    color:var(--paper);
+    font:650 clamp(24px,2.4vw,36px)/1.05 var(--display);
+    letter-spacing:-.02em;
+    text-transform:uppercase;
+  }
+  .fact .v small{
+    color:var(--paper-dim);
+    font:400 9px/1.65 var(--mono);
+    letter-spacing:.02em;
+    text-transform:none;
+  }
+
+  .projects{gap:12px}
+  .card,
+  .card:first-child{
+    min-height:300px;
+    padding:30px;
+    border:1px solid var(--line);
+    border-radius:0;
+    color:var(--paper);
+    background:rgba(8,11,10,.46);
+    box-shadow:none;
+  }
+  .card:nth-child(2),
+  .card:nth-child(4){
+    --card-bg:rgba(8,11,10,.46);
+    background:rgba(8,11,10,.46);
+  }
+  .card:first-child{
+    min-height:390px;
+    background:
+      linear-gradient(110deg,rgba(156,255,87,.09),transparent 52%),
+      rgba(8,11,10,.62);
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    z-index:2;
+    top:-1px;
+    left:-1px;
+    width:26px;
+    height:26px;
+    border-top:1px solid var(--amber);
+    border-left:1px solid var(--amber);
+    opacity:.5;
+  }
+  .card:hover{
+    border-color:rgba(156,255,87,.44);
+    background-color:rgba(156,255,87,.045);
+  }
+  .card .pidx{color:var(--amber);font:600 8px/1 var(--mono);letter-spacing:.18em}
+  .card .pt,
+  .card:first-child .pt{
+    color:var(--paper);
+    font:650 clamp(34px,4.4vw,70px)/.88 var(--display);
+    letter-spacing:-.03em;
+    text-transform:uppercase;
+  }
+  .card:first-child .pt{font-size:clamp(54px,7vw,104px)}
+  .card .pd,
+  .card:first-child .pd{
+    max-width:50ch;
+    color:var(--paper-dim);
+    font:15px/1.7 Georgia,"Times New Roman",serif;
+    letter-spacing:0;
+  }
+  .card .pm{
+    color:var(--cyan);
+    font:500 8px/1 var(--mono);
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  #creating .prose{max-width:880px}
+  footer{
+    margin-top:18px;
+    padding:42px 24px 48px;
+    border-top:1px solid var(--line);
+  }
+  .sig{
+    color:var(--paper);
+    font:650 clamp(34px,4vw,52px)/1 var(--display);
+    letter-spacing:-.025em;
+    text-transform:uppercase;
+  }
+  .foot-meta{
+    color:var(--paper-dim);
+    font:500 8px/1.8 var(--mono);
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+
+  /* homepage live signal — reads the existing public, sanitised RLCard API */
+  .lab-signal{
+    position:relative;
+    overflow:hidden;
+    margin-top:18px;
+    padding:0;
+    border:1px solid rgba(156,255,87,.28);
+    background:
+      linear-gradient(115deg,rgba(156,255,87,.075),transparent 42%),
+      rgba(5,9,7,.76);
+  }
+  .lab-signal::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:
+      linear-gradient(90deg,transparent 49.8%,rgba(156,255,87,.035) 50%,transparent 50.2%),
+      linear-gradient(transparent 49.8%,rgba(156,255,87,.035) 50%,transparent 50.2%);
+    background-size:52px 52px;
+    mask-image:linear-gradient(90deg,#000,transparent 72%);
+  }
+  .signal-head,
+  .signal-body,
+  .signal-foot{position:relative;z-index:1}
+  .signal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    min-height:52px;
+    padding:0 22px;
+    border-bottom:1px solid var(--line);
+  }
+  .signal-kicker{
+    margin:0;
+    color:var(--paper-dim);
+    font:600 8px/1 var(--mono);
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  .signal-kicker b{color:var(--amber);font-weight:600}
+  .signal-state{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--paper-dim);
+    font:600 8px/1 var(--mono);
+    letter-spacing:.14em;
+  }
+  .signal-state::before{
+    content:"";
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--paper-dim);
+    box-shadow:0 0 0 4px rgba(137,147,139,.08);
+  }
+  .lab-signal[data-state="live"] .signal-state,
+  .lab-signal[data-state="complete"] .signal-state{color:var(--amber)}
+  .lab-signal[data-state="live"] .signal-state::before,
+  .lab-signal[data-state="complete"] .signal-state::before{
+    background:var(--amber);
+    box-shadow:0 0 0 4px rgba(156,255,87,.1),0 0 14px rgba(156,255,87,.65);
+  }
+  .lab-signal[data-state="live"] .signal-state::before{animation:signal-pulse 2s ease-in-out infinite}
+  .lab-signal[data-state="delayed"] .signal-state{color:#e8b54d}
+  .lab-signal[data-state="delayed"] .signal-state::before{background:#e8b54d}
+  .lab-signal[data-state="offline"] .signal-state{color:#d06b5f}
+  .lab-signal[data-state="offline"] .signal-state::before{background:#d06b5f}
+  @keyframes signal-pulse{50%{opacity:.35;transform:scale(.72)}}
+  .signal-body{
+    display:grid;
+    grid-template-columns:minmax(0,1.5fr) minmax(220px,.72fr);
+    min-height:270px;
+  }
+  .signal-primary{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(150px,.42fr);
+    align-items:end;
+    gap:28px;
+    padding:34px 36px 32px;
+    border-right:1px solid var(--line);
+  }
+  .signal-label{
+    margin:0 0 9px;
+    color:var(--amber);
+    font:600 8px/1 var(--mono);
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  .signal-run{
+    margin:0;
+    color:var(--paper);
+    font:650 clamp(38px,5vw,74px)/.9 var(--display);
+    letter-spacing:-.025em;
+    text-transform:uppercase;
+  }
+  .signal-mode{
+    margin:13px 0 0;
+    color:var(--cyan);
+    font:500 8px/1.4 var(--mono);
+    letter-spacing:.13em;
+    text-transform:uppercase;
+  }
+  .signal-progress{text-align:right}
+  .signal-percent{
+    display:block;
+    color:var(--amber);
+    font:650 clamp(58px,7vw,104px)/.72 var(--display);
+    letter-spacing:-.04em;
+  }
+  .signal-percent small{
+    margin-left:4px;
+    color:var(--paper-dim);
+    font:600 10px/1 var(--mono);
+    letter-spacing:.1em;
+  }
+  .signal-count{
+    display:block;
+    margin-top:14px;
+    color:var(--paper-dim);
+    font:500 8px/1 var(--mono);
+    letter-spacing:.1em;
+  }
+  .signal-track{
+    grid-column:1/-1;
+    height:3px;
+    margin-top:3px;
+    overflow:hidden;
+    background:rgba(220,238,224,.1);
+  }
+  .signal-track span{
+    display:block;
+    width:0;
+    height:100%;
+    background:var(--amber);
+    box-shadow:0 0 16px rgba(156,255,87,.7);
+    transition:width .7s cubic-bezier(.2,.8,.2,1);
+  }
+  .signal-metrics{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .signal-metric{
+    display:flex;
+    min-height:135px;
+    padding:23px;
+    flex-direction:column;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line);
+  }
+  .signal-metric:nth-child(even){border-right:0}
+  .signal-metric:nth-last-child(-n+2){border-bottom:0}
+  .signal-metric span{
+    color:var(--paper-dim);
+    font:600 7px/1.3 var(--mono);
+    letter-spacing:.15em;
+    text-transform:uppercase;
+  }
+  .signal-metric strong{
+    color:var(--paper);
+    font:650 clamp(25px,3vw,38px)/1 var(--display);
+    letter-spacing:-.02em;
+  }
+  .signal-metric strong.cyan{color:var(--cyan)}
+  .signal-foot{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    min-height:60px;
+    padding:10px 22px;
+    border-top:1px solid var(--line);
+  }
+  .signal-updated{
+    margin:0;
+    color:var(--paper-dim);
+    font:500 7px/1.5 var(--mono);
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .signal-link{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    color:var(--amber);
+    font:600 8px/1 var(--mono);
+    letter-spacing:.14em;
+    text-decoration:none;
+    text-transform:uppercase;
+  }
+  .signal-link:hover{color:var(--paper)}
+
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ink:#080b0a;
+      --ink-2:#0e1410;
+      --paper:#e9eee9;
+      --paper-dim:#89938b;
+      --line:rgba(220,238,224,.14);
+      --amber:#9cff57;
+      --cyan:#5ce4d5;
+      --glass:rgba(14,20,16,.91);
+      --glass-line:rgba(220,238,224,.14);
+    }
+  }
+
+  @media (max-width:820px){
+    .wrap{width:calc(100% - 24px)}
+    .topbar{min-height:78px}
+    .topbar-brand{
+      grid-template-columns:38px auto;
+      gap:10px;
+      font-size:17px;
+    }
+    .topbar-brand::before{width:38px;height:38px;font-size:11px}
+    .hero{
+      min-height:auto;
+      padding:54px 32px 70px;
+    }
+    h1{font-size:clamp(64px,15vw,104px)}
+    h1 .zh{display:block;margin:.12em 0 0}
+    .lede{font-size:17px}
+    section,#about,#creating{padding:42px 30px}
+    .signal-body{grid-template-columns:1fr}
+    .signal-primary{border-right:0;border-bottom:1px solid var(--line)}
+  }
+
+  @media (max-width:600px){
+    .wrap{width:calc(100% - 20px)}
+    .topbar{padding:0 2px}
+    .site-nav{display:none}
+    .loc{display:none}
+    .hero-inner,
+    section,
+    #about,
+    #creating,
+    .prose{min-width:0;max-width:100%}
+    .hero{
+      margin-top:10px;
+      padding:48px 20px 62px;
+    }
+    .hero::after{right:18px;bottom:16px;font-size:6px}
+    h1{
+      font-size:clamp(44px,13.4vw,56px);
+      line-height:.84;
+      letter-spacing:-.045em;
+      overflow-wrap:normal;
+      white-space:normal;
+    }
+    .pron{font-size:8px}
+    .lede{font-size:16px;line-height:1.68}
+    .socials{display:grid;width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .social{min-width:0;min-height:42px;padding:0 9px;overflow:hidden;font-size:8px}
+    section,#about,#creating{
+      margin-top:10px;
+      padding:36px 20px;
+      border-radius:0;
+    }
+    #about{display:block}
+    #about .pull{margin-top:38px}
+    .shead{margin-bottom:34px}
+    .shead h2{font-size:42px}
+    .prose{width:100%;font-size:16px;overflow-wrap:anywhere}
+    .pull{font-size:44px}
+    .facts,.projects{gap:8px}
+    .lab-signal{margin-top:8px}
+    .signal-head{min-height:48px;padding:0 15px}
+    .signal-kicker{max-width:65%;line-height:1.4}
+    .signal-primary{
+      grid-template-columns:1fr;
+      gap:26px;
+      min-height:300px;
+      padding:28px 20px 24px;
+    }
+    .signal-progress{text-align:left}
+    .signal-percent{font-size:74px}
+    .signal-track{grid-column:auto}
+    .signal-metric{min-height:116px;padding:18px}
+    .signal-metric strong{font-size:28px}
+    .signal-foot{align-items:flex-start;padding:16px;flex-direction:column}
+    .fact{
+      min-height:185px;
+      padding:22px;
+      border-radius:0;
+    }
+    .fact .v{font-size:28px}
+    .card,.card:first-child{
+      min-height:250px;
+      padding:22px;
+      border-radius:0;
+    }
+    .card:first-child{min-height:310px}
+    .card .pt,.card:first-child .pt{font-size:48px}
+    footer{padding:34px 10px 42px}
+  }
+
+  @media (prefers-reduced-transparency:reduce){
+    .topbar,
+    html.is-scrolled .topbar,
+    .hero,
+    section,
+    #about,
+    #creating{background:var(--ink-2);-webkit-backdrop-filter:none;backdrop-filter:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .signal-state::before{animation:none!important}
+    .signal-track span{transition:none}
+  }
 </style>
 </head>
 <body>
@@ -841,6 +1599,37 @@
       <div class="fact rise"><p class="k"><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></p><p class="v">FRC 6941 IronPulse<br><small><span data-lang="en">Shanghai Regional Champions → Houston Worlds</span><span data-lang="zh">上海区域赛冠军 → 休斯顿世界赛</span></small></p></div>
       <div class="fact rise"><p class="k"><span data-lang="en">Research</span><span data-lang="zh">研究</span></p><p class="v"><span data-lang="en">Physics &amp; Math IAs</span><span data-lang="zh">物理与数学 IA</span><br><small><span data-lang="en">K₂Cr₂O₇–Zn cell · theatre-seating model</span><span data-lang="zh">K₂Cr₂O₇–Zn 电池 · 剧院座位模型</span></small></p></div>
       <div class="fact rise"><p class="k"><span data-lang="en">Building</span><span data-lang="zh">在做</span></p><p class="v"><span data-lang="en">FindItem hardware</span><span data-lang="zh">FindItem 硬件</span><br><small><span data-lang="en">ESP32-C3 · open-source CLI tools</span><span data-lang="zh">ESP32-C3 · 开源命令行工具</span></small></p></div>
+    </div>
+
+    <div class="lab-signal rise" id="rlcard-signal" data-state="loading" aria-live="polite">
+      <div class="signal-head">
+        <p class="signal-kicker"><b>LIVE / 01</b> · <span data-lang="en">RLCard training signal</span><span data-lang="zh">RLCard 训练信号</span></p>
+        <span class="signal-state" id="signal-state">CONNECTING</span>
+      </div>
+      <div class="signal-body">
+        <div class="signal-primary">
+          <div>
+            <p class="signal-label"><span data-lang="en">Current mission</span><span data-lang="zh">当前任务</span></p>
+            <p class="signal-run" id="signal-run">RLCard Lab</p>
+            <p class="signal-mode" id="signal-mode">SECURE PUBLIC TELEMETRY</p>
+          </div>
+          <div class="signal-progress">
+            <span class="signal-percent"><span id="signal-percent">--</span><small>%</small></span>
+            <span class="signal-count" id="signal-count">-- / -- EP</span>
+          </div>
+          <div class="signal-track" aria-hidden="true"><span id="signal-bar"></span></div>
+        </div>
+        <div class="signal-metrics">
+          <div class="signal-metric"><span><span data-lang="en">Payoff</span><span data-lang="zh">收益</span></span><strong class="cyan" id="signal-payoff">--</strong></div>
+          <div class="signal-metric"><span><span data-lang="en">Throughput</span><span data-lang="zh">速度</span></span><strong id="signal-speed">--</strong></div>
+          <div class="signal-metric"><span>GPU LOAD</span><strong id="signal-gpu">--</strong></div>
+          <div class="signal-metric"><span><span data-lang="en">Pipeline</span><span data-lang="zh">流水线</span></span><strong id="signal-phases">--</strong></div>
+        </div>
+      </div>
+      <div class="signal-foot">
+        <p class="signal-updated"><span data-lang="en">Last public update</span><span data-lang="zh">公开数据更新时间</span> · <span id="signal-updated">WAITING FOR DATA</span></p>
+        <a class="signal-link" href="/rlcard/"><span data-lang="en">Open full observatory</span><span data-lang="zh">进入完整观测台</span> <span aria-hidden="true">↗</span></a>
+      </div>
     </div>
   </section>
 
@@ -1010,6 +1799,86 @@
     var navSections = document.querySelectorAll('section[id]');
     for (var ns=0;ns<navSections.length;ns++) navObs.observe(navSections[ns]);
   }
+
+  /* Public RLCard signal. The endpoint is already server-side sanitised; this
+     compact homepage view never requests private diagnostics or model files. */
+  (function(){
+    var panel = document.getElementById('rlcard-signal');
+    if (!panel || !window.fetch) return;
+    var stateEl = document.getElementById('signal-state');
+    var runEl = document.getElementById('signal-run');
+    var modeEl = document.getElementById('signal-mode');
+    var percentEl = document.getElementById('signal-percent');
+    var countEl = document.getElementById('signal-count');
+    var barEl = document.getElementById('signal-bar');
+    var payoffEl = document.getElementById('signal-payoff');
+    var speedEl = document.getElementById('signal-speed');
+    var gpuEl = document.getElementById('signal-gpu');
+    var phasesEl = document.getElementById('signal-phases');
+    var updatedEl = document.getElementById('signal-updated');
+    var timer = null;
+    var integer = function(value){
+      return Number.isFinite(Number(value)) ? Math.round(Number(value)).toLocaleString('en-US') : '--';
+    };
+    var finite = function(value){ return Number.isFinite(Number(value)); };
+    var setState = function(value){
+      var state = String(value || 'offline').toLowerCase();
+      if (['live','delayed','offline','complete'].indexOf(state) < 0) state = 'offline';
+      panel.setAttribute('data-state', state);
+      stateEl.textContent = state.toUpperCase();
+    };
+    var render = function(data){
+      var training = data.training || {};
+      var hasCurrent = !!data.current;
+      var current = data.current || {};
+      var gpu = data.gpu || {};
+      var complete = !training.alive && Number(training.overallFraction) >= 1;
+      var fraction = finite(current.progress) && finite(current.target) && Number(current.target) > 0
+        ? Number(current.progress) / Number(current.target)
+        : Number(training.overallFraction || 0);
+      fraction = Math.max(0, Math.min(1, fraction));
+      var state = String(data.connectionState || 'OFFLINE').toLowerCase();
+      if (complete) state = 'complete';
+      setState(state);
+      runEl.textContent = complete && !hasCurrent
+        ? 'WEEK STUDY COMPLETE'
+        : [current.algorithm || 'RLCard', finite(current.seed) ? 'SEED ' + current.seed : ''].filter(Boolean).join(' · ');
+      modeEl.textContent = [
+        complete && !hasCurrent ? 'ARCHIVE READY' : current.mode || 'research',
+        finite(gpu.temperatureC) ? Math.round(gpu.temperatureC) + '°C' : '',
+      ].filter(Boolean).join(' · ');
+      percentEl.textContent = (fraction * 100).toFixed(1);
+      countEl.textContent = hasCurrent
+        ? integer(current.progress) + ' / ' + integer(current.target) + ' EP'
+        : integer(training.completeCount) + ' / ' + integer(training.stageCount) + ' PHASES';
+      barEl.style.width = (fraction * 100).toFixed(2) + '%';
+      payoffEl.textContent = finite(current.payoff) ? (Number(current.payoff) >= 0 ? '+' : '') + Number(current.payoff).toFixed(3) : '--';
+      speedEl.textContent = finite(current.speed) ? Number(current.speed).toFixed(1) + '/s' : complete ? 'IDLE' : '--';
+      gpuEl.textContent = finite(gpu.utilizationPct) ? Math.round(gpu.utilizationPct) + '%' : '--';
+      phasesEl.textContent = integer(training.completeCount) + '/' + integer(training.stageCount);
+      var age = finite(data.ageSeconds) ? Math.max(0, Math.round(data.ageSeconds)) : null;
+      var stamp = data.capturedAt ? new Date(data.capturedAt) : null;
+      updatedEl.textContent = age !== null
+        ? age + 's AGO'
+        : stamp && !isNaN(stamp.getTime()) ? stamp.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : 'UNAVAILABLE';
+    };
+    var load = function(){
+      fetch('/api/rlcard/status', {headers:{'Accept':'application/json'}, cache:'no-store'})
+        .then(function(response){ if (!response.ok) throw new Error('status unavailable'); return response.json(); })
+        .then(render)
+        .catch(function(){
+          setState('offline');
+          updatedEl.textContent = 'TELEMETRY UNAVAILABLE';
+        });
+    };
+    var schedule = function(){
+      if (timer) clearInterval(timer);
+      if (!document.hidden) timer = setInterval(load, 10000);
+    };
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden) load(); schedule(); });
+    load();
+    schedule();
+  })();
 
   /* everything below is motion enhancement — bail to the static, fully
      visible state when the user prefers reduced motion */
