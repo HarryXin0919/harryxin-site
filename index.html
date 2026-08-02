@@ -1073,8 +1073,12 @@
   }
   .facts .fact:nth-child(1){
     background:
-      linear-gradient(125deg,rgba(156,255,87,.09),transparent 62%),
-      rgba(8,11,10,.58);
+      linear-gradient(128deg,rgba(255,255,255,.14),transparent 42%),
+      linear-gradient(145deg,#148dff 0%,#0878e7 48%,#0055b6 100%);
+    border-color:rgba(255,255,255,.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.2),
+      inset 0 -32px 80px rgba(0,46,118,.18);
   }
   .fact::before{
     content:"";
@@ -1111,15 +1115,14 @@
   .facts .fact:nth-child(-n+2)::after{color:var(--paper-dim)}
   .fact-link{
     display:block;
-    padding-right:168px;
+    padding-right:184px;
     color:inherit;
     text-decoration:none;
     transition:border-color .22s ease,background-color .22s ease,transform .22s ease;
   }
   .fact-link:hover{
     z-index:1;
-    border-color:rgba(156,255,87,.55);
-    background-color:rgba(156,255,87,.065);
+    border-color:rgba(255,255,255,.55);
     transform:translateY(-3px);
   }
   .fact-link:focus-visible{
@@ -1128,37 +1131,50 @@
   }
   .fact-icon{
     position:absolute;
-    top:50%;
-    right:30px;
-    display:grid;
-    width:112px;
-    height:112px;
+    right:24px;
+    bottom:18px;
+    display:block;
+    width:146px;
+    height:146px;
     margin:0;
-    place-items:center;
-    border:1px solid rgba(156,255,87,.52);
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.28);
     border-radius:50%;
-    color:var(--amber);
-    background:
-      radial-gradient(circle,rgba(156,255,87,.1),rgba(156,255,87,.025) 58%,transparent 59%);
-    font:700 27px/1 var(--mono);
-    letter-spacing:-.08em;
+    background:rgba(255,255,255,.075);
     box-shadow:
-      inset 0 0 0 8px rgba(156,255,87,.025),
-      0 0 28px rgba(156,255,87,.08);
-    transform:translateY(-50%);
-    z-index:2;
+      inset 0 0 0 8px rgba(255,255,255,.035),
+      0 18px 40px rgba(0,37,93,.2);
+    z-index:1;
   }
-  .fact-icon::before,
   .fact-icon::after{
     content:"";
     position:absolute;
-    inset:11px;
-    border-top:1px solid rgba(156,255,87,.18);
-    border-bottom:1px solid rgba(156,255,87,.18);
+    inset:0;
     border-radius:50%;
-    transform:rotate(58deg);
+    background:rgba(255,255,255,.1);
+    z-index:2;
   }
-  .fact-icon::after{transform:rotate(-58deg)}
+  .fact-icon img{
+    display:block;
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    object-fit:cover;
+    filter:grayscale(1) contrast(1.35) brightness(1.55);
+    mix-blend-mode:screen;
+    opacity:.5;
+  }
+  .fact-link .k,
+  .fact-link .v,
+  .fact-link .fact-official{
+    position:relative;
+    z-index:3;
+  }
+  .facts .fact-link .k,
+  .facts .fact-link .v,
+  .facts .fact-link .v small,
+  .facts .fact-link .fact-official{color:#fff}
+  .facts .fact-link .fact-official{color:rgba(255,255,255,.78)}
   .fact-official{
     display:inline-block;
     margin-top:16px;
@@ -1536,9 +1552,8 @@
       padding:22px;
       border-radius:0;
     }
-    .fact-link{padding-right:112px}
-    .fact-icon{right:18px;width:76px;height:76px;font-size:19px}
-    .fact-icon::before,.fact-icon::after{inset:8px}
+    .fact-link{padding-right:116px}
+    .fact-icon{right:16px;bottom:16px;width:88px;height:88px}
     .fact .v{font-size:28px}
     .card,.card:first-child{
       min-height:250px;
@@ -1670,7 +1685,7 @@
     <div class="shead"><span class="num" aria-hidden="true">02</span> <h2><span data-lang="en">Currently</span><span data-lang="zh">近况</span></h2> <span class="ln" aria-hidden="true"></span></div>
     <div class="facts">
       <a class="fact fact-link rise" href="https://www.ibo.org/" target="_blank" rel="noopener" aria-label="International Baccalaureate official website">
-        <span class="fact-icon" aria-hidden="true">IB</span>
+        <span class="fact-icon" aria-hidden="true"><img src="/assets/ib-dp-logo.jpg" alt="" loading="lazy" decoding="async"></span>
         <p class="k"><span data-lang="en">Studying</span><span data-lang="zh">在读</span></p>
         <p class="v"><span data-lang="en">IB Diploma</span><span data-lang="zh">IB 文凭</span><br><small>HL Math AA · Physics · English&nbsp;B</small><br><span class="fact-official"><span data-lang="en">Official website</span><span data-lang="zh">IB 官方网站</span> · ibo.org ↗</span></p>
       </a>
