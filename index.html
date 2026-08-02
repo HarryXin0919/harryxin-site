@@ -1052,7 +1052,10 @@
   .pull .hl{color:var(--amber)}
   .pull .rule{background:var(--amber)}
 
-  .facts{gap:12px}
+  .facts{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+  }
   .fact{
     position:relative;
     min-height:220px;
@@ -1481,6 +1484,7 @@
     h1 .zh{display:block;margin:.12em 0 0}
     .lede{font-size:17px}
     section,#about,#creating{padding:42px 30px}
+    .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
     .signal-body{grid-template-columns:1fr}
     .signal-primary{border-right:0;border-bottom:1px solid var(--line)}
   }
@@ -1522,6 +1526,7 @@
     .shead h2{font-size:42px}
     .prose{width:100%;font-size:16px;overflow-wrap:anywhere}
     .pull{font-size:44px}
+    .facts{grid-template-columns:1fr}
     .facts,.projects{gap:8px}
     .lab-signal{margin-top:8px}
     .signal-head{min-height:48px;padding:0 15px}
@@ -1681,7 +1686,6 @@
         <p class="v"><span data-lang="en">IB Diploma</span><span data-lang="zh">IB 文凭</span><br><small>HL Math AA · Physics · English&nbsp;B</small><br><span class="fact-official"><span data-lang="en">Official website</span><span data-lang="zh">IB 官方网站</span> · ibo.org ↗</span></p>
       </a>
       <div class="fact rise"><p class="k"><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></p><p class="v">FRC 6941 IronPulse<br><small><span data-lang="en">Shanghai Regional Champions → Houston Worlds</span><span data-lang="zh">上海区域赛冠军 → 休斯顿世界赛</span></small></p></div>
-      <div class="fact rise"><p class="k"><span data-lang="en">Research</span><span data-lang="zh">研究</span></p><p class="v"><span data-lang="en">Physics &amp; Math IAs</span><span data-lang="zh">物理与数学 IA</span><br><small><span data-lang="en">K₂Cr₂O₇–Zn cell · theatre-seating model</span><span data-lang="zh">K₂Cr₂O₇–Zn 电池 · 剧院座位模型</span></small></p></div>
       <div class="fact rise"><p class="k"><span data-lang="en">Building</span><span data-lang="zh">在做</span></p><p class="v"><span data-lang="en">FindItem hardware</span><span data-lang="zh">FindItem 硬件</span><br><small><span data-lang="en">ESP32-C3 · open-source CLI tools</span><span data-lang="zh">ESP32-C3 · 开源命令行工具</span></small></p></div>
     </div>
 
