@@ -964,7 +964,7 @@
   }
   h1{
     max-width:1100px;
-    margin-bottom:22px;
+    margin-bottom:34px;
     color:var(--paper);
     font:720 clamp(68px,8.6vw,128px)/.94 var(--headline);
     letter-spacing:-.025em;
@@ -988,14 +988,14 @@
   .lede{
     max-width:850px;
     color:var(--paper-dim);
-    font:18px/1.75 Georgia,"Times New Roman",serif;
+    font:20px/1.7 Georgia,"Times New Roman",serif;
     letter-spacing:.002em;
   }
   .lede b,.lede .em{color:var(--paper);font-weight:600}
   .socials{gap:10px;margin-top:42px}
   .social{
-    min-height:48px;
-    padding:0 16px;
+    min-height:54px;
+    padding:0 18px;
     border:1px solid var(--line);
     border-radius:0;
     color:var(--paper-dim);
@@ -1003,11 +1003,11 @@
     box-shadow:none;
     -webkit-backdrop-filter:none;
             backdrop-filter:none;
-    font:600 13px/1 var(--mono);
+    font:600 14px/1 var(--mono);
     letter-spacing:.055em;
     text-transform:uppercase;
   }
-  .social svg{color:var(--amber)}
+  .social svg{width:22px;height:22px;color:var(--amber)}
   .social:hover,
   .social.gh:hover,
   .social.bili:hover,
@@ -1020,7 +1020,7 @@
   }
   .social .h{
     color:var(--paper-dim);
-    font:500 12px/1 var(--mono);
+    font:500 13px/1 var(--mono);
     font-weight:400;
     letter-spacing:.02em;
     text-transform:none;
@@ -1256,12 +1256,13 @@
   }
   .fact-icon{
     position:absolute;
-    right:24px;
+    right:97px;
     bottom:18px;
     display:block;
     width:146px;
     height:146px;
     margin:0;
+    transform:translateX(50%);
     overflow:hidden;
     border:1px solid rgba(255,255,255,.28);
     border-radius:50%;
@@ -1282,7 +1283,6 @@
   }
   .fact-ironpulse{padding-right:202px}
   .fact-ironpulse .ironpulse-icon{
-    right:0;
     bottom:10px;
     width:248px;
     height:140px;
@@ -1549,6 +1549,11 @@
     letter-spacing:-.025em;
     text-transform:uppercase;
   }
+  .foot-brand{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
   .foot-meta{
     color:var(--paper-dim);
     font:500 8px/1.8 var(--mono);
@@ -1558,12 +1563,9 @@
   .footer-socials{
     display:inline-flex;
     align-items:center;
-    gap:10px;
+    justify-content:center;
+    gap:14px;
     margin-top:18px;
-    padding:7px;
-    border:1px solid rgba(156,255,87,.2);
-    background:rgba(156,255,87,.025);
-    box-shadow:inset 0 0 30px rgba(156,255,87,.025);
   }
   .footer-social{
     display:grid;
@@ -1571,25 +1573,22 @@
     height:50px;
     place-items:center;
     flex:none;
-    border:1px solid rgba(156,255,87,.22);
-    color:var(--paper);
-    background:rgba(8,11,10,.76);
+    border:0;
+    color:rgba(233,238,233,.88);
+    background:transparent;
     text-decoration:none;
-    transition:color .2s ease,border-color .2s ease,background-color .2s ease,transform .2s ease;
+    transition:color .2s ease,opacity .2s ease,transform .2s ease;
   }
   .footer-social svg{width:25px;height:25px}
   .footer-social svg [stroke]{stroke-width:2}
   .footer-social:hover{
-    border-color:rgba(156,255,87,.38);
     color:var(--amber);
-    background:rgba(156,255,87,.07);
-    transform:translateY(-2px);
+    transform:translateY(-2px) scale(1.06);
   }
   .footer-social:focus-visible{
-    border-color:var(--amber);
     color:var(--amber);
     outline:2px solid var(--amber);
-    outline-offset:3px;
+    outline-offset:2px;
   }
   .footer-social:active{transform:translateY(0) scale(.96)}
 
@@ -1836,7 +1835,7 @@
     }
     h1{font-size:clamp(64px,15vw,104px)}
     h1 .zh{display:block;margin:.12em 0 0}
-    .lede{font-size:17px}
+    .lede{font-size:18px}
     section,#about,#creating{padding:42px 30px}
     .facts{grid-template-columns:minmax(0,1fr)}
     .show-meta{flex-direction:column;margin-bottom:30px}
@@ -1867,7 +1866,7 @@
       white-space:normal;
     }
     .pron{font-size:10px}
-    .lede{font-size:16px;line-height:1.68}
+    .lede{font-size:17px;line-height:1.68}
     .socials{display:grid;width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     .social{min-width:0;min-height:44px;padding:0 10px;overflow:hidden;font-size:12px}
     section,#about,#creating{
@@ -1916,9 +1915,9 @@
       border-radius:0;
     }
     .fact-link{padding-right:116px}
-    .fact-icon{right:16px;bottom:16px;width:88px;height:88px}
+    .fact-icon{right:60px;bottom:16px;width:88px;height:88px}
     .fact-ironpulse{padding-right:130px}
-    .fact-ironpulse .ironpulse-icon{right:0;bottom:8px;width:150px;height:86px}
+    .fact-ironpulse .ironpulse-icon{bottom:8px;width:150px;height:86px}
     .facts .fact-ironpulse .v{font-size:28px}
     .fact .v{font-size:28px}
     .card,.card:first-child{
@@ -1931,7 +1930,7 @@
     footer{padding:34px 10px 42px}
     .foot-grid{flex-direction:column;align-items:flex-start;gap:28px}
     .foot-meta{text-align:left}
-    .footer-socials{gap:8px;margin-top:16px;padding:6px}
+    .footer-socials{gap:10px;margin-top:16px}
     .footer-social{width:48px;height:48px}
     .footer-social svg{width:24px;height:24px}
   }
@@ -1993,7 +1992,7 @@
       <h1 class="rise d1">Harry&nbsp;Xin</h1>
       <p class="pron rise d2">/ˈhæri ʃin/ · <span data-lang="en">he/him · based in Shanghai 🇨🇳</span><span data-lang="zh">他 · 现居上海 🇨🇳</span></p>
       <p class="lede rise d2">
-        <span data-lang="en">IB student. I build robots, play table tennis, and publish my tools and experiments on <b>GitHub</b>.</span><span data-lang="zh">一名 IB 学生。做机器人、打乒乓球，也把自己做的工具与实验持续整理到 <b>GitHub</b>。</span>
+        <span data-lang="en"><b>IB student</b>. I build <b>robots</b>, play <b>table tennis</b>, and publish my tools and experiments on <b>GitHub</b>.</span><span data-lang="zh">一名 <b>IB 学生</b>。做<b>机器人</b>、打<b>乒乓球</b>，也把自己做的工具与实验持续整理到 <b>GitHub</b>。</span>
       </p>
 
       <!-- ============================================================
@@ -2186,7 +2185,7 @@
   <!-- ===================== FOOTER ===================== -->
   <footer>
     <div class="foot-grid">
-      <div>
+      <div class="foot-brand">
         <p class="sig rise">— Harry</p>
         <nav class="footer-socials" aria-label="Social media / 社交媒体">
           <a class="footer-social bili" href="https://space.bilibili.com/3546972787051483" target="_blank" rel="me noopener" aria-label="Bilibili / 哔哩哔哩" title="Bilibili">
