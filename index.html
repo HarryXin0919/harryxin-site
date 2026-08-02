@@ -1380,6 +1380,193 @@
     letter-spacing:.12em;
     text-transform:uppercase;
   }
+  .card-rlcard{
+    grid-column:1/-1;
+    min-height:0;
+    padding:0;
+  }
+  .card-rlcard:hover{
+    background-color:rgba(8,11,10,.46);
+  }
+  .rlcard-project-grid{
+    display:grid;
+    grid-template-columns:minmax(0,.88fr) minmax(520px,1.12fr);
+    min-height:390px;
+  }
+  .rlcard-project-copy{
+    display:flex;
+    min-width:0;
+    padding:34px;
+    flex-direction:column;
+    border-right:1px solid var(--line);
+  }
+  .rlcard-project-kicker{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0 0 36px;
+    color:var(--paper-dim);
+    font:600 8px/1.2 var(--mono);
+    letter-spacing:.15em;
+    text-transform:uppercase;
+  }
+  .rlcard-project-kicker::before{
+    content:"";
+    width:7px;
+    height:7px;
+    flex:none;
+    border-radius:50%;
+    background:var(--paper-dim);
+    box-shadow:0 0 0 4px rgba(137,147,139,.08);
+  }
+  .card-rlcard[data-research-state="running"] .rlcard-project-kicker{
+    color:var(--amber);
+  }
+  .card-rlcard[data-research-state="running"] .rlcard-project-kicker::before{
+    background:var(--amber);
+    box-shadow:0 0 0 4px rgba(156,255,87,.1),0 0 14px rgba(156,255,87,.65);
+    animation:signal-pulse 2s ease-in-out infinite;
+  }
+  .card-rlcard[data-research-state="complete"] .rlcard-project-kicker{color:var(--cyan)}
+  .card-rlcard[data-research-state="complete"] .rlcard-project-kicker::before{background:var(--cyan)}
+  .card-rlcard[data-research-state="delayed"] .rlcard-project-kicker,
+  .card-rlcard[data-research-state="idle"] .rlcard-project-kicker{color:#e8b54d}
+  .card-rlcard[data-research-state="delayed"] .rlcard-project-kicker::before,
+  .card-rlcard[data-research-state="idle"] .rlcard-project-kicker::before{background:#e8b54d}
+  .card-rlcard[data-research-state="offline"] .rlcard-project-kicker,
+  .card-rlcard[data-research-state="blocked"] .rlcard-project-kicker{color:#d06b5f}
+  .card-rlcard[data-research-state="offline"] .rlcard-project-kicker::before,
+  .card-rlcard[data-research-state="blocked"] .rlcard-project-kicker::before{background:#d06b5f}
+  .card-rlcard .pt{
+    margin:0;
+    font-size:clamp(48px,6.2vw,92px);
+  }
+  .card-rlcard .pd{margin:18px 0 30px}
+  .rlcard-project-links{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 20px;
+    margin-top:auto;
+  }
+  .rlcard-project-links a{
+    color:var(--cyan);
+    font:600 8px/1.2 var(--mono);
+    letter-spacing:.13em;
+    text-decoration:none;
+    text-transform:uppercase;
+  }
+  .rlcard-project-links a:hover,
+  .rlcard-project-links a:focus-visible{color:var(--amber)}
+  .rlcard-project-links a:focus-visible{outline:1px solid currentColor;outline-offset:5px}
+  .rlcard-research-readout{
+    display:flex;
+    min-width:0;
+    padding:28px;
+    flex-direction:column;
+    background:
+      linear-gradient(rgba(237,242,237,.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(237,242,237,.025) 1px,transparent 1px);
+    background-size:44px 44px;
+  }
+  .research-readout-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    border-top:1px solid var(--line);
+    border-left:1px solid var(--line);
+  }
+  .research-readout-grid>div{
+    min-width:0;
+    min-height:94px;
+    padding:17px;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .research-readout-grid span,
+  .research-readout-grid strong{
+    display:block;
+  }
+  .research-readout-grid span{
+    margin-bottom:15px;
+    color:var(--paper-dim);
+    font:600 7px/1.2 var(--mono);
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+  .research-readout-grid strong{
+    overflow:hidden;
+    color:var(--paper);
+    font:650 clamp(18px,2vw,28px)/1 var(--display);
+    letter-spacing:-.01em;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .research-readout-grid .research-current{
+    grid-column:1/-1;
+    min-height:86px;
+  }
+  .research-readout-grid .research-current strong{
+    color:var(--amber);
+    font-size:clamp(22px,2.4vw,34px);
+  }
+  .research-progress-row{
+    display:grid;
+    grid-template-columns:auto minmax(100px,1fr) auto;
+    align-items:center;
+    gap:13px;
+    margin-top:22px;
+    color:var(--paper-dim);
+    font:600 7px/1 var(--mono);
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .research-progress-track{
+    height:3px;
+    overflow:hidden;
+    background:rgba(220,238,224,.1);
+  }
+  .research-progress-track i{
+    display:block;
+    width:0;
+    height:100%;
+    background:linear-gradient(90deg,var(--cyan),var(--amber));
+    box-shadow:0 0 14px rgba(156,255,87,.55);
+    transition:width .55s cubic-bezier(.2,.8,.2,1);
+  }
+  .research-run-meta{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:1px;
+    margin-top:20px;
+    background:var(--line);
+  }
+  .research-run-meta>div{
+    min-width:0;
+    padding:14px;
+    background:rgba(5,9,7,.92);
+  }
+  .research-run-meta span,
+  .research-run-meta strong{display:block}
+  .research-run-meta span{
+    margin-bottom:9px;
+    color:var(--paper-dim);
+    font:600 7px/1 var(--mono);
+    letter-spacing:.14em;
+  }
+  .research-run-meta strong{
+    overflow:hidden;
+    color:var(--paper);
+    font:600 13px/1.15 var(--mono);
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .research-updated{
+    margin:auto 0 0;
+    padding-top:20px;
+    color:var(--paper-dim);
+    font:500 7px/1.45 var(--mono);
+    letter-spacing:.11em;
+    text-transform:uppercase;
+  }
 
   #creating .prose{max-width:880px}
   .show-feature{
@@ -1805,6 +1992,12 @@
     .loc{display:none}
     .about-areas{grid-template-columns:1fr}
     .about-area{min-height:auto}
+    .rlcard-project-grid{grid-template-columns:minmax(0,1fr)}
+    .rlcard-project-copy{
+      min-height:330px;
+      border-right:0;
+      border-bottom:1px solid var(--line);
+    }
     .show-feature{grid-template-columns:minmax(0,1fr)}
     .show-cover{
       min-height:0;
@@ -1925,7 +2118,25 @@
       padding:22px;
       border-radius:0;
     }
+    .rlcard-project-copy{min-height:300px;padding:24px}
+    .rlcard-project-kicker{margin-bottom:30px}
+    .card-rlcard .pt{font-size:clamp(45px,13vw,62px)}
+    .card-rlcard .pd{font-size:15px}
+    .rlcard-research-readout{padding:16px}
+    .research-readout-grid{grid-template-columns:minmax(0,1fr)}
+    .research-readout-grid .research-current{grid-column:auto}
+    .research-readout-grid>div{min-height:82px}
+    .research-readout-grid strong,
+    .research-readout-grid .research-current strong{font-size:25px}
+    .research-progress-row{
+      grid-template-columns:1fr;
+      gap:10px;
+      line-height:1.4;
+    }
+    .research-run-meta{grid-template-columns:minmax(0,1fr)}
+    .research-updated{margin-top:4px}
     .card:first-child{min-height:310px}
+    .card.card-rlcard{min-height:0;padding:0}
     .card .pt,.card:first-child .pt{font-size:48px}
     footer{padding:34px 10px 42px}
     .foot-grid{flex-direction:column;align-items:flex-start;gap:28px}
@@ -2105,12 +2316,75 @@
     <div class="shead"><span class="num" aria-hidden="true">03</span> <h2><span data-lang="en">Building</span><span data-lang="zh">在做的项目</span></h2> <span class="ln" aria-hidden="true"></span> <a class="arr-link" href="https://github.com/HarryXin0919" target="_blank" rel="noopener"><span data-lang="en">all on GitHub</span><span data-lang="zh">全部在 GitHub</span> <span class="ar">↗</span></a></div>
     <div class="projects">
 
-      <a class="card rise" href="/rlcard/">
+      <article
+        class="card card-rlcard rise"
+        id="rlcard-research-project"
+        data-research-state="idle"
+        aria-live="polite"
+      >
         <span class="pidx" aria-hidden="true"></span>
-        <p class="pt">RLCard Leduc Lab</p>
-        <p class="pd"><span data-lang="en">A live, reproducible reinforcement-learning study comparing DQN, NFSP, and CFR in Leduc Hold’em.</span><span data-lang="zh">一项可复现的强化学习实验，实时比较 DQN、NFSP 与 CFR 在 Leduc Hold’em 中的训练表现。</span></p>
-        <p class="pm">PYTORCH · RL <span class="arr">↗</span></p>
-      </a>
+        <div class="rlcard-project-grid">
+          <div class="rlcard-project-copy">
+            <p class="rlcard-project-kicker" id="research-card-state">
+              IDLE · 尚未启动
+            </p>
+            <h3 class="pt">RLCard Reward Study</h3>
+            <p class="pd">
+              <span data-lang="en">Phase II tests whether reward shaping improves strategy robustness—not merely payoff against a random opponent.</span><span data-lang="zh">第二阶段研究奖励塑形能否真正提升策略稳健性，而不只是提高对随机对手的收益。</span>
+            </p>
+            <div class="rlcard-project-links">
+              <a href="/rlcard/research/"><span data-lang="en">Open Phase II observatory</span><span data-lang="zh">进入第二阶段实验台</span> ↗</a>
+              <a href="/rlcard/"><span data-lang="en">Phase I archive</span><span data-lang="zh">第一阶段归档</span> ↗</a>
+            </div>
+          </div>
+
+          <div class="rlcard-research-readout">
+            <div class="research-readout-grid">
+              <div>
+                <span>PHASE / 阶段</span>
+                <strong id="research-card-phase">— / 07</strong>
+              </div>
+              <div>
+                <span>PILOT RUNS / 实验</span>
+                <strong id="research-card-runs">0 / 12</strong>
+              </div>
+              <div>
+                <span>STATE / 状态</span>
+                <strong id="research-card-state-short">IDLE</strong>
+              </div>
+              <div class="research-current">
+                <span>CURRENT RUN / 当前任务</span>
+                <strong id="research-card-current">尚未启动</strong>
+              </div>
+            </div>
+
+            <div class="research-progress-row">
+              <span id="research-card-progress-label">PILOT COMPLETION</span>
+              <span class="research-progress-track" aria-hidden="true"><i id="research-card-bar"></i></span>
+              <strong id="research-card-progress">0 / 12 RUNS</strong>
+            </div>
+
+            <div class="research-run-meta">
+              <div>
+                <span>ARM · SEED</span>
+                <strong id="research-card-context">—</strong>
+              </div>
+              <div>
+                <span>THROUGHPUT</span>
+                <strong id="research-card-speed">—</strong>
+              </div>
+              <div>
+                <span>ETA</span>
+                <strong id="research-card-eta">—</strong>
+              </div>
+            </div>
+
+            <p class="research-updated" id="research-card-updated">
+              WAITING FOR RESEARCH TELEMETRY
+            </p>
+          </div>
+        </div>
+      </article>
 
       <a class="card rise" href="https://github.com/HarryXin0919/factlens" target="_blank" rel="noopener">
         <span class="pidx" aria-hidden="true"></span>
@@ -2305,11 +2579,135 @@
     var gpuEl = document.getElementById('signal-gpu');
     var phasesEl = document.getElementById('signal-phases');
     var updatedEl = document.getElementById('signal-updated');
+    var researchPanel = document.getElementById('rlcard-research-project');
+    var researchStateEl = document.getElementById('research-card-state');
+    var researchStateShortEl = document.getElementById('research-card-state-short');
+    var researchPhaseEl = document.getElementById('research-card-phase');
+    var researchRunsEl = document.getElementById('research-card-runs');
+    var researchCurrentEl = document.getElementById('research-card-current');
+    var researchProgressLabelEl = document.getElementById('research-card-progress-label');
+    var researchProgressEl = document.getElementById('research-card-progress');
+    var researchBarEl = document.getElementById('research-card-bar');
+    var researchContextEl = document.getElementById('research-card-context');
+    var researchSpeedEl = document.getElementById('research-card-speed');
+    var researchEtaEl = document.getElementById('research-card-eta');
+    var researchUpdatedEl = document.getElementById('research-card-updated');
     var timer = null;
+    var researchArmNames = {
+      'terminal':'TERMINAL',
+      'scaled':'SCALED',
+      'pbrs-cfr-a010':'PBRS · LOW',
+      'pbrs-cfr-a025':'PBRS · MID'
+    };
     var integer = function(value){
       return Number.isFinite(Number(value)) ? Math.round(Number(value)).toLocaleString('en-US') : '--';
     };
-    var finite = function(value){ return Number.isFinite(Number(value)); };
+    var finite = function(value){
+      return value !== null && value !== '' && Number.isFinite(Number(value));
+    };
+    var eta = function(seconds){
+      if (!finite(seconds)) return '—';
+      seconds = Math.max(0, Number(seconds));
+      if (seconds < 60) return Math.ceil(seconds) + ' SEC';
+      if (seconds < 3600) return Math.ceil(seconds / 60) + ' MIN';
+      return (seconds / 3600).toFixed(1) + ' H';
+    };
+    var resetResearch = function(offline){
+      if (!researchPanel) return;
+      researchPanel.setAttribute('data-research-state', offline ? 'offline' : 'idle');
+      researchStateEl.textContent = offline ? 'OFFLINE · 无法确认' : 'IDLE · 尚未启动';
+      researchStateShortEl.textContent = offline ? 'OFFLINE' : 'IDLE';
+      researchPhaseEl.textContent = '— / 07';
+      researchRunsEl.textContent = '0 / 12';
+      researchCurrentEl.textContent = offline ? '数据暂不可用' : '尚未启动';
+      researchProgressLabelEl.textContent = 'PILOT COMPLETION';
+      researchProgressEl.textContent = '0 / 12 RUNS';
+      researchBarEl.style.width = '0%';
+      researchContextEl.textContent = '—';
+      researchSpeedEl.textContent = '—';
+      researchEtaEl.textContent = '—';
+      researchUpdatedEl.textContent = offline
+        ? 'RESEARCH TELEMETRY UNAVAILABLE'
+        : 'API ONLINE · NO RESEARCH PAYLOAD';
+    };
+    var renderResearch = function(data){
+      if (!researchPanel) return;
+      var research = data && data.research;
+      if (!research) {
+        resetResearch(!data);
+        return;
+      }
+
+      var connection = String(data.connectionState || 'OFFLINE').toUpperCase();
+      var rawState = String(research.state || 'idle').toLowerCase();
+      var visualState = (connection === 'OFFLINE' || connection === 'DELAYED')
+        ? connection.toLowerCase()
+        : rawState;
+      var stateText = {
+        running:'RUNNING · 训练中',
+        idle:'IDLE · 暂无活动训练',
+        complete:'COMPLETE · 已完成',
+        blocked:'BLOCKED · 已暂停'
+      }[rawState] || 'IDLE · 暂无活动训练';
+      if (connection === 'DELAYED') stateText = 'DELAYED · 数据延迟';
+      if (connection === 'OFFLINE') stateText = 'OFFLINE · 数据已过期';
+      researchPanel.setAttribute('data-research-state', visualState);
+      researchStateEl.textContent = stateText;
+      researchStateShortEl.textContent =
+        connection === 'LIVE' ? rawState.toUpperCase() : connection;
+
+      var phase = Number(research.phase);
+      var completedRuns = Number(research.completedRuns);
+      var totalRuns = Number(research.totalRuns);
+      researchPhaseEl.textContent = Number.isInteger(phase)
+        ? String(phase).padStart(2, '0') + ' / 07'
+        : '— / 07';
+      researchRunsEl.textContent =
+        integer(completedRuns) + ' / ' + integer(totalRuns);
+
+      var run = research.currentRun;
+      var fraction = totalRuns > 0 ? completedRuns / totalRuns : 0;
+      if (run) {
+        var armName = researchArmNames[run.arm] || String(run.arm || '').toUpperCase();
+        var seed = Number.isInteger(Number(run.seed)) ? String(run.seed) : '—';
+        researchCurrentEl.textContent = armName + ' · SEED ' + seed;
+        researchProgressLabelEl.textContent = 'CURRENT RUN';
+        researchProgressEl.textContent =
+          integer(run.progress) + ' / ' + integer(run.target) + ' EP';
+        fraction = finite(run.fraction)
+          ? Number(run.fraction)
+          : finite(run.progress) && finite(run.target) && Number(run.target) > 0
+            ? Number(run.progress) / Number(run.target)
+            : 0;
+        researchContextEl.textContent =
+          String(run.cohort || 'pilot').toUpperCase() + ' · ' + armName;
+        researchSpeedEl.textContent = finite(run.speed)
+          ? Number(run.speed).toFixed(1) + ' /S'
+          : '—';
+        researchEtaEl.textContent = eta(run.etaSeconds);
+      } else {
+        researchCurrentEl.textContent =
+          rawState === 'running'
+            ? 'STARTING · 正在分配任务'
+            : completedRuns > 0
+              ? 'NO ACTIVE RUN · 当前空闲'
+              : '尚未启动';
+        researchProgressLabelEl.textContent = 'PILOT COMPLETION';
+        researchProgressEl.textContent =
+          integer(completedRuns) + ' / ' + integer(totalRuns) + ' RUNS';
+        researchContextEl.textContent = '—';
+        researchSpeedEl.textContent = '—';
+        researchEtaEl.textContent = '—';
+      }
+      fraction = Math.max(0, Math.min(1, Number(fraction) || 0));
+      researchBarEl.style.width = (fraction * 100).toFixed(2) + '%';
+
+      var age = finite(data.ageSeconds) ? Math.max(0, Math.round(Number(data.ageSeconds))) : null;
+      researchUpdatedEl.textContent = [
+        Number.isInteger(phase) ? 'PHASE ' + String(phase).padStart(2, '0') + ' · ' + String(research.phaseLabel || '') : '',
+        age === null ? 'UPDATE AGE —' : 'UPDATED ' + age + 'S AGO'
+      ].filter(Boolean).join(' · ');
+    };
     var setState = function(value){
       var state = String(value || 'offline').toLowerCase();
       if (['live','delayed','offline','complete'].indexOf(state) < 0) state = 'offline';
@@ -2350,6 +2748,7 @@
       updatedEl.textContent = age !== null
         ? age + 's AGO'
         : stamp && !isNaN(stamp.getTime()) ? stamp.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : 'UNAVAILABLE';
+      renderResearch(data);
     };
     var load = function(){
       fetch('/api/rlcard/status', {headers:{'Accept':'application/json'}, cache:'no-store'})
@@ -2358,11 +2757,12 @@
         .catch(function(){
           setState('offline');
           updatedEl.textContent = 'TELEMETRY UNAVAILABLE';
+          renderResearch(null);
         });
     };
     var schedule = function(){
       if (timer) clearInterval(timer);
-      if (!document.hidden) timer = setInterval(load, 10000);
+      if (!document.hidden) timer = setInterval(load, 3000);
     };
     document.addEventListener('visibilitychange', function(){ if (!document.hidden) load(); schedule(); });
     load();

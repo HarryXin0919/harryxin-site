@@ -486,6 +486,182 @@ h2 {
   letter-spacing: 0.08em;
 }
 
+.live-run-panel {
+  margin-top: 16px;
+  padding: 30px;
+}
+
+.live-run-heading {
+  margin-bottom: 24px;
+}
+
+.live-run-grid {
+  display: grid;
+  grid-template-columns: 1.35fr repeat(5, minmax(105px, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.live-run-grid > div {
+  min-height: 88px;
+  padding: 19px 17px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.live-run-grid small,
+.live-run-grid strong {
+  display: block;
+}
+
+.live-run-grid small {
+  margin-bottom: 13px;
+  color: var(--dim);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+}
+
+.live-run-grid strong {
+  overflow: hidden;
+  color: var(--paper);
+  font: 620 16px/1.1 var(--display);
+  letter-spacing: 0.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-run-grid > div:first-child strong,
+#liveExploitability {
+  color: var(--signal);
+}
+
+.live-progress-track {
+  position: relative;
+  height: 3px;
+  margin: 19px 0 0;
+  overflow: hidden;
+  background: rgba(237, 242, 237, 0.08);
+}
+
+.live-progress-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--signal));
+  box-shadow: 0 0 16px rgba(157, 255, 87, 0.38);
+  transition: width 420ms ease;
+}
+
+.live-chart-shell {
+  position: relative;
+  min-height: 220px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(rgba(237, 242, 237, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(237, 242, 237, 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+#liveMetricChart {
+  display: block;
+  width: 100%;
+  height: 220px;
+}
+
+#liveChartLine {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 5px rgba(157, 255, 87, 0.35));
+}
+
+.live-chart-grid-line {
+  stroke: rgba(237, 242, 237, 0.08);
+  stroke-width: 1;
+}
+
+.live-chart-axis-label {
+  fill: var(--dim);
+  font: 8px var(--mono);
+}
+
+.live-chart-point {
+  fill: var(--base);
+  stroke: var(--signal);
+  stroke-width: 2;
+}
+
+.live-chart-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  padding: 28px;
+  text-align: center;
+}
+
+.live-chart-empty strong,
+.live-chart-empty span {
+  display: block;
+}
+
+.live-chart-empty strong {
+  color: var(--muted);
+  font: 620 20px/1 var(--display);
+  letter-spacing: 0.08em;
+}
+
+.live-chart-empty span {
+  max-width: 520px;
+  margin-top: 11px;
+  color: var(--dim);
+  font: 12px/1.7 var(--serif);
+}
+
+.live-chart-shell.has-data .live-chart-empty {
+  display: none;
+}
+
+.live-run-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 22px;
+  margin-top: 14px;
+  color: var(--dim);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.chip.live,
+.chip.running {
+  border-color: rgba(157, 255, 87, 0.34);
+  color: var(--signal);
+  background: var(--signal-soft);
+}
+
+.chip.idle,
+.chip.delayed {
+  border-color: rgba(244, 173, 75, 0.34);
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.chip.offline,
+.chip.blocked {
+  border-color: rgba(255, 103, 95, 0.34);
+  color: var(--danger);
+  background: rgba(255, 103, 95, 0.08);
+}
+
+.chip.complete {
+  border-color: rgba(97, 232, 215, 0.34);
+  color: var(--cyan);
+  background: var(--cyan-soft);
+}
+
 .evidence-grid,
 .lower-grid {
   display: grid;
@@ -832,13 +1008,30 @@ h2 {
   background: var(--dim);
 }
 
-.arm-card.control footer {
+.arm-card[data-status="running"] footer {
   color: var(--signal);
 }
 
-.arm-card.control footer i {
+.arm-card[data-status="running"] footer i {
   background: var(--signal);
   box-shadow: 0 0 10px rgba(157, 255, 87, 0.5);
+  animation: pulse 2s steps(2, end) infinite;
+}
+
+.arm-card[data-status="complete"] footer {
+  color: var(--cyan);
+}
+
+.arm-card[data-status="complete"] footer i {
+  background: var(--cyan);
+}
+
+.arm-card[data-status="paused"] footer {
+  color: var(--amber);
+}
+
+.arm-card[data-status="paused"] footer i {
+  background: var(--amber);
 }
 
 .arm-card.scaled h3 {
@@ -913,6 +1106,15 @@ h2 {
 .pipeline li.active > span,
 .pipeline li.active em {
   color: var(--signal);
+}
+
+.pipeline li.blocked {
+  background: linear-gradient(90deg, rgba(255, 103, 95, 0.08), transparent 75%);
+}
+
+.pipeline li.blocked > span,
+.pipeline li.blocked em {
+  color: var(--danger);
 }
 
 .seed-panel {
@@ -1045,28 +1247,32 @@ h2 {
   animation-delay: 80ms;
 }
 
+.live-run-panel {
+  animation-delay: 120ms;
+}
+
 .evidence-grid .chart-panel {
-  animation-delay: 140ms;
+  animation-delay: 180ms;
 }
 
 .evidence-grid .endpoint-panel {
-  animation-delay: 200ms;
+  animation-delay: 240ms;
 }
 
 .arms-panel {
-  animation-delay: 260ms;
+  animation-delay: 300ms;
 }
 
 .lower-grid .pipeline-panel {
-  animation-delay: 320ms;
+  animation-delay: 360ms;
 }
 
 .lower-grid .seed-panel {
-  animation-delay: 380ms;
+  animation-delay: 420ms;
 }
 
 .disclosure {
-  animation-delay: 440ms;
+  animation-delay: 480ms;
 }
 
 @keyframes reveal {
@@ -1114,6 +1320,10 @@ h2 {
 
   .arm-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .live-run-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -1187,6 +1397,7 @@ h2 {
   }
 
   .hero,
+  .live-run-panel,
   .chart-panel,
   .endpoint-panel,
   .arms-panel,
@@ -1241,6 +1452,19 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .live-run-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .live-run-grid > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .live-run-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
   .chart-summary > div {
     text-align: left;
   }
@@ -1287,6 +1511,47 @@ h2 {
     flex-direction: column;
     gap: 10px;
   }
+}
+
+/* Operational labels remain legible on both desktop and phone viewports. */
+.brand-copy small,
+.topnav a,
+.system-state,
+.eyebrow,
+.hero-metrics small,
+.phase-dial-core small,
+.phase-dial-core span,
+.phase-caption,
+.signal-code,
+.signal-rail small,
+.signal-rail .compute-signal > span:last-child,
+.live-run-grid small,
+.live-chart-axis-label,
+.live-run-footer,
+.chip,
+.chart-summary small,
+.chart-summary span,
+.chart-axis-label,
+.chart-policy-label,
+.chart-legend,
+.formula small,
+.endpoint-list dt,
+.endpoint-list dd,
+.arm-card header,
+.arm-card dt,
+.arm-card dd,
+.arm-card footer,
+.pipeline li > span,
+.pipeline small,
+.pipeline em,
+.seed-group header,
+.seed-grid span,
+.confirmatory .seed-grid span,
+.integrity-stamp span,
+.disclosure > span,
+.disclosure a,
+.page-footer {
+  font-size: 10px;
 }
 
 @media (prefers-reduced-motion: reduce) {
