@@ -1445,19 +1445,42 @@
   .rlcard-project-links{
     display:flex;
     flex-wrap:wrap;
-    gap:10px 20px;
+    gap:10px;
     margin-top:auto;
   }
   .rlcard-project-links a{
+    display:inline-flex;
+    min-height:48px;
+    padding:0 16px;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    border:1px solid rgba(92,228,213,.28);
     color:var(--cyan);
-    font:600 8px/1.2 var(--mono);
-    letter-spacing:.13em;
+    background:rgba(92,228,213,.045);
+    font:650 11px/1.2 var(--mono);
+    letter-spacing:.11em;
     text-decoration:none;
     text-transform:uppercase;
+    transition:
+      color .2s ease,
+      border-color .2s ease,
+      background-color .2s ease,
+      transform .2s ease;
+  }
+  .rlcard-project-links a:first-child{
+    border-color:rgba(156,255,87,.34);
+    color:var(--amber);
+    background:rgba(156,255,87,.07);
   }
   .rlcard-project-links a:hover,
-  .rlcard-project-links a:focus-visible{color:var(--amber)}
-  .rlcard-project-links a:focus-visible{outline:1px solid currentColor;outline-offset:5px}
+  .rlcard-project-links a:focus-visible{
+    border-color:var(--amber);
+    color:var(--paper);
+    background:rgba(156,255,87,.11);
+    transform:translateY(-2px);
+  }
+  .rlcard-project-links a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
   .rlcard-research-readout{
     display:flex;
     min-width:0;
@@ -1973,15 +1996,33 @@
   }
   .signal-link{
     display:inline-flex;
+    min-height:48px;
+    padding:0 15px;
     align-items:center;
+    justify-content:space-between;
     gap:10px;
+    border:1px solid rgba(156,255,87,.34);
     color:var(--amber);
-    font:600 8px/1 var(--mono);
-    letter-spacing:.14em;
+    background:rgba(156,255,87,.07);
+    font:650 11px/1.2 var(--mono);
+    letter-spacing:.11em;
     text-decoration:none;
     text-transform:uppercase;
+    transition:
+      color .2s ease,
+      border-color .2s ease,
+      background-color .2s ease,
+      transform .2s ease;
   }
-  .signal-link:hover{color:var(--paper)}
+  .signal-link:hover,
+  .signal-link:focus-visible{
+    border-color:var(--amber);
+    color:var(--paper);
+    background:rgba(156,255,87,.12);
+    transform:translateY(-2px);
+  }
+  .signal-link:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+  .projects>.lab-signal{grid-column:1/-1;margin-top:0}
 
   @media (prefers-color-scheme:dark){
     :root{
@@ -2111,6 +2152,9 @@
     .signal-metric{min-height:116px;padding:18px}
     .signal-metric strong{font-size:28px}
     .signal-foot{align-items:flex-start;padding:16px;flex-direction:column}
+    .signal-link,
+    .rlcard-project-links a{width:100%;min-height:52px}
+    .rlcard-project-links{display:grid;grid-template-columns:1fr}
     .fact{
       min-height:185px;
       padding:22px;
@@ -2289,36 +2333,6 @@
       <div class="fact rise"><p class="k"><span data-lang="en">Building</span><span data-lang="zh">在做</span></p><p class="v"><span data-lang="en">FindItem hardware</span><span data-lang="zh">FindItem 硬件</span><br><small><span data-lang="en">ESP32-C3 · open-source CLI tools</span><span data-lang="zh">ESP32-C3 · 开源命令行工具</span></small></p></div>
     </div>
 
-    <div class="lab-signal rise" id="rlcard-signal" data-state="loading" aria-live="polite">
-      <div class="signal-head">
-        <p class="signal-kicker"><b>LIVE / 01</b> · <span data-lang="en">RLCard training signal</span><span data-lang="zh">RLCard 训练信号</span></p>
-        <span class="signal-state" id="signal-state">CONNECTING</span>
-      </div>
-      <div class="signal-body">
-        <div class="signal-primary">
-          <div>
-            <p class="signal-label"><span data-lang="en">Current mission</span><span data-lang="zh">当前任务</span></p>
-            <p class="signal-run" id="signal-run">RLCard Lab</p>
-            <p class="signal-mode" id="signal-mode">SECURE PUBLIC TELEMETRY</p>
-          </div>
-          <div class="signal-progress">
-            <span class="signal-percent"><span id="signal-percent">--</span><small>%</small></span>
-            <span class="signal-count" id="signal-count">-- / -- EP</span>
-          </div>
-          <div class="signal-track" aria-hidden="true"><span id="signal-bar"></span></div>
-        </div>
-        <div class="signal-metrics">
-          <div class="signal-metric"><span><span data-lang="en">Payoff</span><span data-lang="zh">收益</span></span><strong class="cyan" id="signal-payoff">--</strong></div>
-          <div class="signal-metric"><span><span data-lang="en">Throughput</span><span data-lang="zh">速度</span></span><strong id="signal-speed">--</strong></div>
-          <div class="signal-metric"><span>GPU LOAD</span><strong id="signal-gpu">--</strong></div>
-          <div class="signal-metric"><span><span data-lang="en">Pipeline</span><span data-lang="zh">流水线</span></span><strong id="signal-phases">--</strong></div>
-        </div>
-      </div>
-      <div class="signal-foot">
-        <p class="signal-updated"><span data-lang="en">Last public update</span><span data-lang="zh">公开数据更新时间</span> · <span id="signal-updated">WAITING FOR DATA</span></p>
-        <a class="signal-link" href="/rlcard/"><span data-lang="en">Open full observatory</span><span data-lang="zh">进入完整观测台</span> <span aria-hidden="true">↗</span></a>
-      </div>
-    </div>
   </section>
 
   <!-- ===================== BUILDING ===================== -->
@@ -2395,6 +2409,37 @@
           </div>
         </div>
       </article>
+
+      <div class="lab-signal rise" id="rlcard-signal" data-state="loading" aria-live="polite">
+        <div class="signal-head">
+          <p class="signal-kicker"><b>PHASE I / LIVE</b> · <span data-lang="en">RLCard training signal</span><span data-lang="zh">RLCard 训练信号</span></p>
+          <span class="signal-state" id="signal-state">CONNECTING</span>
+        </div>
+        <div class="signal-body">
+          <div class="signal-primary">
+            <div>
+              <p class="signal-label"><span data-lang="en">Current mission</span><span data-lang="zh">当前任务</span></p>
+              <p class="signal-run" id="signal-run">RLCard Lab</p>
+              <p class="signal-mode" id="signal-mode">SECURE PUBLIC TELEMETRY</p>
+            </div>
+            <div class="signal-progress">
+              <span class="signal-percent"><span id="signal-percent">--</span><small>%</small></span>
+              <span class="signal-count" id="signal-count">-- / -- EP</span>
+            </div>
+            <div class="signal-track" aria-hidden="true"><span id="signal-bar"></span></div>
+          </div>
+          <div class="signal-metrics">
+            <div class="signal-metric"><span><span data-lang="en">Payoff</span><span data-lang="zh">收益</span></span><strong class="cyan" id="signal-payoff">--</strong></div>
+            <div class="signal-metric"><span><span data-lang="en">Throughput</span><span data-lang="zh">速度</span></span><strong id="signal-speed">--</strong></div>
+            <div class="signal-metric"><span>GPU LOAD</span><strong id="signal-gpu">--</strong></div>
+            <div class="signal-metric"><span><span data-lang="en">Pipeline</span><span data-lang="zh">流水线</span></span><strong id="signal-phases">--</strong></div>
+          </div>
+        </div>
+        <div class="signal-foot">
+          <p class="signal-updated"><span data-lang="en">Last public update</span><span data-lang="zh">公开数据更新时间</span> · <span id="signal-updated">WAITING FOR DATA</span></p>
+          <a class="signal-link" href="/rlcard/"><span data-lang="en">Open Phase I observatory</span><span data-lang="zh">进入第一阶段观测台</span> <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
 
       <a class="card rise" href="https://github.com/HarryXin0919/factlens" target="_blank" rel="noopener">
         <span class="pidx" aria-hidden="true"></span>
