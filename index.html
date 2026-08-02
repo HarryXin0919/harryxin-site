@@ -1384,15 +1384,14 @@
   #creating .prose{max-width:880px}
   .show-feature{
     position:relative;
-    display:block;
-    min-height:280px;
-    padding:32px;
+    display:grid;
+    grid-template-columns:minmax(0,1.18fr) minmax(360px,.82fr);
+    min-height:430px;
+    padding:0;
     overflow:hidden;
     border:1px solid var(--line);
     color:inherit;
-    background:
-      linear-gradient(115deg,rgba(156,255,87,.075),transparent 52%),
-      rgba(8,11,10,.5);
+    background:rgba(8,11,10,.64);
     text-decoration:none;
     transition:border-color .22s ease,background-color .22s ease,transform .22s ease;
   }
@@ -1405,21 +1404,115 @@
     outline:2px solid var(--amber);
     outline-offset:3px;
   }
+  .show-cover{
+    position:relative;
+    min-width:0;
+    min-height:430px;
+    overflow:hidden;
+    border-right:1px solid var(--line);
+    background:#050706;
+    isolation:isolate;
+  }
+  .show-cover::before{
+    content:"";
+    position:absolute;
+    z-index:2;
+    inset:0;
+    background:
+      linear-gradient(90deg,transparent 70%,rgba(8,11,10,.68) 100%),
+      repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 4px);
+    pointer-events:none;
+  }
+  .show-cover::after{
+    content:"";
+    position:absolute;
+    z-index:3;
+    left:18px;
+    bottom:18px;
+    width:30px;
+    height:30px;
+    border-left:2px solid var(--amber);
+    border-bottom:2px solid var(--amber);
+    pointer-events:none;
+  }
+  .show-cover img{
+    display:block;
+    width:100%;
+    height:100%;
+    min-height:430px;
+    object-fit:cover;
+    object-position:center;
+    filter:saturate(.9) contrast(1.04) brightness(.86);
+    transition:filter .3s ease,transform .55s cubic-bezier(.2,.8,.2,1);
+  }
+  .show-feature:hover .show-cover img{
+    filter:saturate(1) contrast(1.02) brightness(.98);
+    transform:scale(1.018);
+  }
+  .show-play{
+    position:absolute;
+    z-index:4;
+    top:50%;
+    left:50%;
+    display:grid;
+    width:68px;
+    height:68px;
+    place-items:center;
+    border:1px solid rgba(233,238,233,.62);
+    border-radius:50%;
+    color:var(--paper);
+    background:rgba(8,11,10,.7);
+    box-shadow:0 12px 42px rgba(0,0,0,.38);
+    transform:translate(-50%,-50%);
+    transition:color .22s ease,border-color .22s ease,background-color .22s ease,transform .22s ease;
+    -webkit-backdrop-filter:blur(8px);
+            backdrop-filter:blur(8px);
+  }
+  .show-play svg{
+    width:25px;
+    height:25px;
+    margin-left:3px;
+    fill:currentColor;
+  }
+  .show-feature:hover .show-play{
+    border-color:var(--amber);
+    color:var(--ink);
+    background:var(--amber);
+    transform:translate(-50%,-50%) scale(1.06);
+  }
+  .show-duration{
+    position:absolute;
+    z-index:4;
+    right:18px;
+    bottom:18px;
+    padding:7px 9px 6px;
+    border:1px solid rgba(233,238,233,.25);
+    color:var(--paper);
+    background:rgba(8,11,10,.78);
+    font:600 10px/1 var(--mono);
+    letter-spacing:.09em;
+  }
+  .show-copy{
+    display:flex;
+    min-width:0;
+    padding:clamp(30px,3.2vw,50px);
+    flex-direction:column;
+  }
   .show-meta{
     display:flex;
     justify-content:space-between;
     gap:18px;
-    margin:0 0 42px;
+    margin:0 0 clamp(30px,4vw,52px);
     color:var(--amber);
     font:600 10px/1.4 var(--mono);
     letter-spacing:.13em;
     text-transform:uppercase;
   }
   .show-feature h3{
-    max-width:920px;
+    max-width:600px;
     margin:0 0 18px;
     color:var(--paper);
-    font:700 clamp(34px,5vw,68px)/1.02 var(--headline);
+    font:700 clamp(36px,4vw,60px)/1.02 var(--headline);
     letter-spacing:-.025em;
   }
   html.lang-zh .show-feature h3{
@@ -1435,15 +1528,20 @@
   html.lang-zh .show-feature p{font-family:var(--zh-serif)}
   .show-title{
     display:block;
-    margin-top:22px;
+    margin-top:auto;
+    padding-top:26px;
     color:var(--cyan);
     font:600 11px/1.55 var(--mono);
     letter-spacing:.035em;
+    overflow-wrap:anywhere;
   }
   footer{
     margin-top:18px;
     padding:42px 24px 48px;
-    border-top:1px solid var(--line);
+    border:1px solid var(--line);
+    background:
+      linear-gradient(110deg,rgba(156,255,87,.045),transparent 42%),
+      rgba(8,11,10,.56);
   }
   .sig{
     color:var(--paper);
@@ -1458,24 +1556,29 @@
     text-transform:uppercase;
   }
   .footer-socials{
-    display:flex;
+    display:inline-flex;
     align-items:center;
     gap:10px;
     margin-top:18px;
+    padding:7px;
+    border:1px solid rgba(156,255,87,.2);
+    background:rgba(156,255,87,.025);
+    box-shadow:inset 0 0 30px rgba(156,255,87,.025);
   }
   .footer-social{
     display:grid;
-    width:44px;
-    height:44px;
+    width:50px;
+    height:50px;
     place-items:center;
     flex:none;
-    border:1px solid transparent;
-    color:var(--paper-dim);
-    background:transparent;
+    border:1px solid rgba(156,255,87,.22);
+    color:var(--paper);
+    background:rgba(8,11,10,.76);
     text-decoration:none;
     transition:color .2s ease,border-color .2s ease,background-color .2s ease,transform .2s ease;
   }
-  .footer-social svg{width:22px;height:22px}
+  .footer-social svg{width:25px;height:25px}
+  .footer-social svg [stroke]{stroke-width:2}
   .footer-social:hover{
     border-color:rgba(156,255,87,.38);
     color:var(--amber);
@@ -1703,6 +1806,19 @@
     .loc{display:none}
     .about-areas{grid-template-columns:1fr}
     .about-area{min-height:auto}
+    .show-feature{grid-template-columns:minmax(0,1fr)}
+    .show-cover{
+      min-height:0;
+      aspect-ratio:16/9;
+      border-right:0;
+      border-bottom:1px solid var(--line);
+    }
+    .show-cover::before{
+      background:
+        linear-gradient(0deg,rgba(8,11,10,.5),transparent 35%),
+        repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 4px);
+    }
+    .show-cover img{height:auto;min-height:0;aspect-ratio:16/9}
   }
 
   @media (max-width:820px){
@@ -1769,7 +1885,12 @@
     .about-area{padding:24px}
     .about-index{margin-bottom:30px}
     .about-area h3{font-size:30px}
-    .show-feature{min-height:0;padding:24px}
+    .show-feature{min-height:0;padding:0}
+    .show-copy{padding:24px}
+    .show-cover::after{left:12px;bottom:12px;width:24px;height:24px}
+    .show-play{width:56px;height:56px}
+    .show-play svg{width:21px;height:21px}
+    .show-duration{right:12px;bottom:12px}
     .show-feature h3{font-size:32px;line-height:1.12}
     .show-feature p{font-size:16px}
     .facts{grid-template-columns:minmax(0,1fr)}
@@ -1810,7 +1931,9 @@
     footer{padding:34px 10px 42px}
     .foot-grid{flex-direction:column;align-items:flex-start;gap:28px}
     .foot-meta{text-align:left}
-    .footer-socials{gap:8px;margin-top:16px}
+    .footer-socials{gap:8px;margin-top:16px;padding:6px}
+    .footer-social{width:48px;height:48px}
+    .footer-social svg{width:24px;height:24px}
   }
 
   @media (prefers-reduced-transparency:reduce){
@@ -2039,15 +2162,22 @@
   <section id="creating" data-num="04" data-name="CREATING">
     <div class="shead"><span class="num" aria-hidden="true">04</span> <h2><span data-lang="en">Creating</span><span data-lang="zh">创作</span></h2> <span class="ln" aria-hidden="true"></span></div>
     <a class="show-feature rise" href="https://www.bilibili.com/video/BV18XN3z5EGH/" target="_blank" rel="noopener">
-      <div class="show-meta">
-        <span>04.01 / <span data-lang="en">Campus production</span><span data-lang="zh">校园节目</span></span>
-        <span>BILIBILI · 24:31 ↗</span>
+      <div class="show-cover">
+        <img src="/assets/cross-club-variety-cover.jpg" width="1939" height="1091" loading="lazy" decoding="async" alt="社团联动综艺《这才是高中！》视频封面">
+        <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 6.7v10.6L17 12 8.5 6.7z"/></svg></span>
+        <span class="show-duration" aria-hidden="true">24:31</span>
       </div>
-      <h3><span data-lang="en">Cross-club variety project</span><span data-lang="zh">社团联动综艺</span></h3>
-      <p>
-        <span data-lang="en">I produced a zero-script campus collaboration that brought IronPulse robotics and FORMULAP racing together through technology, teamwork, and genuine high-school fun.</span><span data-lang="zh">我制作了一档零剧本校园跨社团综艺，让 IronPulse 机器人社与 FORMULAP 赛车社在技术交流、团队协作和真实的校园趣味中碰撞。</span>
-      </p>
-      <span class="show-title"><span data-lang="en">Watch: “This Is High School!”</span><span data-lang="zh">观看：《这才是高中！首场跨社团综艺团建，这就是我们不被定义的青春！》</span></span>
+      <div class="show-copy">
+        <div class="show-meta">
+          <span>04.01 / <span data-lang="en">Campus production</span><span data-lang="zh">校园节目</span></span>
+          <span>BILIBILI · ORIGINAL ↗</span>
+        </div>
+        <h3><span data-lang="en">Cross-club variety project</span><span data-lang="zh">社团联动综艺</span></h3>
+        <p>
+          <span data-lang="en">I produced a zero-script campus collaboration that brought IronPulse robotics and FORMULAP racing together through technology, teamwork, and genuine high-school fun.</span><span data-lang="zh">我制作了一档零剧本校园跨社团综艺，让 IronPulse 机器人社与 FORMULAP 赛车社在技术交流、团队协作和真实的校园趣味中碰撞。</span>
+        </p>
+        <span class="show-title"><span data-lang="en">Watch: “This Is High School!”</span><span data-lang="zh">观看：《这才是高中！首场跨社团综艺团建，这就是我们不被定义的青春！》</span></span>
+      </div>
     </a>
   </section>
 
@@ -2058,7 +2188,7 @@
     <div class="foot-grid">
       <div>
         <p class="sig rise">— Harry</p>
-        <nav class="footer-socials rise" aria-label="Social media / 社交媒体">
+        <nav class="footer-socials" aria-label="Social media / 社交媒体">
           <a class="footer-social bili" href="https://space.bilibili.com/3546972787051483" target="_blank" rel="me noopener" aria-label="Bilibili / 哔哩哔哩" title="Bilibili">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><rect x="2.5" y="6" width="19" height="14" rx="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M7 3l3 3M17 3l-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 11v3M16 11v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           </a>
