@@ -383,3 +383,34 @@ test("detail UI surfaces a blocked preflight without claiming the GPU is queued"
   assert.ok(blocked.elements.liveDataState.classList.contains("blocked"));
   assert.equal(blocked.elements.liveDataState.classList.contains("queued"), false);
 });
+
+test("detail UI never calls a failed Phase 7 report saved", () => {
+  const blocked = createHarness();
+  blocked.apply(
+    exploratoryPayload({
+      state: "blocked",
+      runStatus: "complete",
+      phase: 7,
+      completedRuns: 20,
+      progress: 300000,
+    }),
+  );
+
+  assert.equal(
+    blocked.elements.liveDataState.textContent,
+    "BLOCKED · REPORT FAILED",
+  );
+  assert.equal(
+    blocked.elements.liveRunHeading.textContent,
+    "报告受阻 / Report Blocked",
+  );
+  assert.equal(
+    blocked.elements.liveThroughput.textContent,
+    "BLOCKED · REPORT NOT SAVED",
+  );
+  assert.doesNotMatch(blocked.elements.liveDataState.textContent, /SAVED/);
+  assert.doesNotMatch(
+    blocked.elements.liveThroughput.textContent,
+    /REPORT SAVED|COMPLETE · SAVED/,
+  );
+});

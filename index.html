@@ -3426,7 +3426,10 @@
         rawState !== 'queued' &&
         !(rawState === 'running' && phase < 7);
       var pilotComplete = !isExploratory && cohortComplete;
-      var exploratoryComplete = isExploratory && cohortComplete;
+      var exploratoryComplete =
+        isExploratory && cohortComplete && rawState === 'complete';
+      var reportBlocked =
+        isExploratory && phase === 7 && cohortComplete && blocked;
       var awaitingSelection = pilotComplete && phase === 5;
       var visualState = (connection === 'OFFLINE' || connection === 'DELAYED')
         ? connection.toLowerCase()
@@ -3450,7 +3453,9 @@
       }[rawState] || 'IDLE · 暂无活动训练';
       if (connection === 'LIVE' && isExploratory) {
         stateText = blocked
-          ? 'BLOCKED · PREFLIGHT FAILED'
+          ? reportBlocked
+            ? 'BLOCKED · REPORT FAILED'
+            : 'BLOCKED · PREFLIGHT FAILED'
           : reporting
           ? 'REPORTING · EXPLORATORY'
           : exploratoryComplete
@@ -3471,7 +3476,9 @@
       researchStateEl.textContent = stateText;
       researchStateShortEl.textContent =
         connection === 'LIVE'
-          ? reporting
+          ? blocked
+            ? 'BLOCKED'
+            : reporting
             ? 'REPORTING'
             : cohortComplete
             ? 'COMPLETE'
@@ -3497,9 +3504,15 @@
         var armName = researchArmNames[run.arm] || String(run.arm || '').toUpperCase();
         var seed = Number.isInteger(Number(run.seed)) ? String(run.seed) : '—';
         if (blocked) {
-          researchCurrentLabelEl.textContent = 'BLOCKED RUN / 启动受阻';
-          researchSpeedLabelEl.textContent = 'PREFLIGHT STATUS';
-          researchEtaLabelEl.textContent = 'GPU STATUS';
+          researchCurrentLabelEl.textContent = reportBlocked
+            ? 'REPORT BLOCKED / 报告受阻'
+            : 'BLOCKED RUN / 启动受阻';
+          researchSpeedLabelEl.textContent = reportBlocked
+            ? 'REPORT STATUS'
+            : 'PREFLIGHT STATUS';
+          researchEtaLabelEl.textContent = reportBlocked
+            ? 'REPORT ARTIFACT'
+            : 'GPU STATUS';
         } else if (completedSnapshot) {
           researchCurrentLabelEl.textContent = 'LAST COMPLETED RUN / 最近完成';
           researchSpeedLabelEl.textContent = 'RUN STATUS';
@@ -3530,10 +3543,12 @@
           isExploratory
             ? 'POST-OUTCOME EXPLORATORY · ' + armName
             : String(run.cohort || 'pilot').toUpperCase() + ' · ' + armName;
-        researchSpeedEl.textContent = completedSnapshot
-          ? 'COMPLETE'
-          : blocked
-            ? 'BLOCKED'
+        researchSpeedEl.textContent = blocked
+          ? reportBlocked
+            ? 'REPORT BLOCKED'
+            : 'BLOCKED'
+          : completedSnapshot
+            ? 'COMPLETE'
             : queued
             ? 'QUEUED'
             : paused
@@ -3542,12 +3557,20 @@
             ? Number(run.speed).toFixed(1) + ' /S'
             : '—';
         researchEtaEl.textContent = completedSnapshot ? 'SAVED' : eta(run.etaSeconds);
-        if (blocked) researchEtaEl.textContent = 'NO GPU START';
+        if (blocked) {
+          researchEtaEl.textContent = reportBlocked
+            ? 'REPORT NOT SAVED'
+            : 'NO GPU START';
+        }
         if (queued) researchEtaEl.textContent = 'AFTER PREFLIGHT';
         if (paused) researchEtaEl.textContent = 'RESUME PENDING';
       } else if (cohortComplete) {
-        researchCurrentLabelEl.textContent = 'LAST COMPLETED RUN / 最近完成';
-        researchCurrentEl.textContent = isExploratory
+        researchCurrentLabelEl.textContent = reportBlocked
+          ? 'REPORT BLOCKED / 报告受阻'
+          : 'LAST COMPLETED RUN / 最近完成';
+        researchCurrentEl.textContent = reportBlocked
+          ? '20 / 20 · REPORT BLOCKED'
+          : isExploratory
           ? reporting
             ? '20 / 20 · REPORTING'
             : '20 / 20 · EXPLORATORY COMPLETE'
@@ -3561,9 +3584,19 @@
           integer(completedRuns) + ' / ' + integer(totalRuns) + ' RUNS';
         researchContextEl.textContent = 'AWAITING SNAPSHOT';
         researchSpeedLabelEl.textContent = 'RUN STATUS';
-        researchSpeedEl.textContent = reporting ? 'REPORTING' : 'COMPLETE';
-        researchEtaLabelEl.textContent = 'SAVED ARTIFACT';
-        researchEtaEl.textContent = reporting ? 'BUILDING REPORT' : 'SNAPSHOT PENDING';
+        researchSpeedEl.textContent = reportBlocked
+          ? 'REPORT BLOCKED'
+          : reporting
+            ? 'REPORTING'
+            : 'COMPLETE';
+        researchEtaLabelEl.textContent = reportBlocked
+          ? 'REPORT ARTIFACT'
+          : 'SAVED ARTIFACT';
+        researchEtaEl.textContent = reportBlocked
+          ? 'REPORT NOT SAVED'
+          : reporting
+            ? 'BUILDING REPORT'
+            : 'SNAPSHOT PENDING';
       } else {
         researchCurrentEl.textContent =
           isExploratory && rawState === 'queued'

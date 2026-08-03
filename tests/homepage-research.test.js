@@ -124,6 +124,8 @@ test("homepage presents the extension as post-outcome exploratory", async () => 
   assert.match(homepage, /rawState === 'queued'/);
   assert.match(homepage, /rawState === 'blocked'/);
   assert.match(homepage, /BLOCKED · PREFLIGHT FAILED/);
+  assert.match(homepage, /BLOCKED · REPORT FAILED/);
+  assert.match(homepage, /REPORT NOT SAVED/);
   assert.match(homepage, /NO GPU START/);
   assert.match(homepage, /POST-OUTCOME EXPLORATORY/);
   assert.match(homepage, /EXPLORATORY COMPLETION/);

@@ -384,10 +384,13 @@ function applyResearchSignal(data) {
     research.state !== "queued" &&
     !(research.state === "running" && phase < 7);
   const pilotComplete = !isExploratory && cohortComplete;
-  const exploratoryComplete = isExploratory && cohortComplete;
+  const exploratoryComplete =
+    isExploratory && cohortComplete && research.state === "complete";
   const reporting =
     isExploratory && phase === 7 && research.state === "running";
   const blocked = research.state === "blocked";
+  const reportBlocked =
+    isExploratory && phase === 7 && cohortComplete && blocked;
   const queued =
     !blocked && (research.state === "queued" || run?.status === "pending");
   const paused = run?.status === "paused";
@@ -429,7 +432,9 @@ function applyResearchSignal(data) {
       : connection.toLowerCase();
   liveChip.classList.add(effectiveState);
   if (connection === "LIVE" && isExploratory && blocked) {
-    liveChip.textContent = "BLOCKED · PREFLIGHT FAILED";
+    liveChip.textContent = reportBlocked
+      ? "BLOCKED · REPORT FAILED"
+      : "BLOCKED · PREFLIGHT FAILED";
   } else if (connection === "LIVE" && reporting) {
     liveChip.textContent = "REPORTING · EXPLORATORY";
   } else if (connection === "LIVE" && isExploratory && exploratoryComplete) {
@@ -462,7 +467,9 @@ function applyResearchSignal(data) {
   byId("phaseCaptionRight").textContent = reporting
     ? "EXPLORATORY REPORT · BUILDING"
     : isExploratory && blocked
-      ? "EXTENSION BLOCKED · NO GPU START"
+      ? reportBlocked
+        ? "REPORT BLOCKED · NOT SAVED"
+        : "EXTENSION BLOCKED · NO GPU START"
     : isExploratory && queued
       ? "EXTENSION QUEUED · PREFLIGHT"
       : isExploratory && paused
@@ -546,11 +553,19 @@ function applyResearchSignal(data) {
   );
   if (run) {
     if (blocked) {
-      byId("liveRunHeading").textContent = "启动受阻 / Preflight Blocked";
-      byId("liveThroughputLabel").textContent = "PREFLIGHT STATUS";
+      byId("liveRunHeading").textContent = reportBlocked
+        ? "报告受阻 / Report Blocked"
+        : "启动受阻 / Preflight Blocked";
+      byId("liveThroughputLabel").textContent = reportBlocked
+        ? "REPORT STATUS"
+        : "PREFLIGHT STATUS";
       setLiveChartEmpty(
-        "BLOCKED · NO GPU START",
-        "安全预检未通过；GPU 未启动。修复条件并重新预检后才会进入运行态。",
+        reportBlocked
+          ? "BLOCKED · REPORT NOT SAVED"
+          : "BLOCKED · NO GPU START",
+        reportBlocked
+          ? "20 / 20 个探索运行已经完成，但探索性报告生成失败；页面不会把它标记为已保存。"
+          : "安全预检未通过；GPU 未启动。修复条件并重新预检后才会进入运行态。",
       );
     } else if (completedSnapshot) {
       byId("liveRunHeading").textContent = "最近完成运行 / Latest Completed Run";
@@ -581,10 +596,12 @@ function applyResearchSignal(data) {
       3,
     );
     byId("livePayoff").textContent = formatMetric(run.latestPayoff, 3, true);
-    byId("liveThroughput").textContent = completedSnapshot
-      ? "COMPLETE · SAVED"
-      : blocked
-        ? "BLOCKED · NO GPU START"
+    byId("liveThroughput").textContent = blocked
+      ? reportBlocked
+        ? "BLOCKED · REPORT NOT SAVED"
+        : "BLOCKED · NO GPU START"
+      : completedSnapshot
+        ? "COMPLETE · SAVED"
         : queued
         ? "QUEUED · AWAITING GPU"
         : paused
@@ -594,10 +611,14 @@ function applyResearchSignal(data) {
     byId("liveProgressFill").style.width = `${percent}%`;
     byId("liveProgressTrack").setAttribute("aria-valuenow", percent.toFixed(1));
   } else if (cohortComplete) {
-    byId("liveRunHeading").textContent = isExploratory
-      ? "探索延长已完成 / Exploratory Complete"
-      : "Pilot 已完成 / Pilot Complete";
-    byId("liveArm").textContent = isExploratory
+    byId("liveRunHeading").textContent = reportBlocked
+      ? "报告受阻 / Report Blocked"
+      : isExploratory
+        ? "探索延长已完成 / Exploratory Complete"
+        : "Pilot 已完成 / Pilot Complete";
+    byId("liveArm").textContent = reportBlocked
+      ? "20 / 20 · REPORT BLOCKED"
+      : isExploratory
       ? reporting
         ? "REPORTING · EXPLORATORY"
         : "EXPLORATORY COMPLETE"
@@ -610,9 +631,11 @@ function applyResearchSignal(data) {
     byId("liveExploitability").textContent = "—";
     byId("livePayoff").textContent = "—";
     byId("liveThroughputLabel").textContent = "RUN STATUS";
-    byId("liveThroughput").textContent = reporting
-      ? "REPORTING · EXPLORATORY"
-      : "COMPLETED SNAPSHOT PENDING";
+    byId("liveThroughput").textContent = reportBlocked
+      ? "BLOCKED · REPORT NOT SAVED"
+      : reporting
+        ? "REPORTING · EXPLORATORY"
+        : "COMPLETED SNAPSHOT PENDING";
     byId("liveProgressFill").style.width = "100%";
     byId("liveProgressTrack").setAttribute("aria-valuenow", "100");
     setLiveChartEmpty(
@@ -654,7 +677,9 @@ function applyResearchSignal(data) {
   byId("disclosureLiveState").textContent =
     connection === "LIVE" && isExploratory
       ? blocked
-        ? "探索扩展预检未通过，GPU 没有启动；页面不会把 blocked 状态伪装成 queued 或 running。"
+        ? reportBlocked
+          ? "20 / 20 个探索运行已经完成，但探索性报告生成失败且尚未保存；页面不会把该状态伪装成完成。"
+          : "探索扩展预检未通过，GPU 没有启动；页面不会把 blocked 状态伪装成 queued 或 running。"
         : reporting
         ? "20 / 20 个探索运行已完成，正在生成明确标注为 exploratory 的报告。"
         : exploratoryComplete
