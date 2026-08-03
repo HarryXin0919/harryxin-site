@@ -75,7 +75,7 @@ test("frozen endpoint title keeps two intentional Chinese lines", async () => {
       endpoint[1].matchAll(/class="endpoint-title-line">([^<]+)<\/span>/g),
       (match) => match[1],
     ),
-    ["先写规则，", "再看结果。"],
+    ["先保留失败，", "再延长问题。"],
   );
   assert.doesNotMatch(endpoint[1], /<h2>[\s\S]*?<br\s*\/?>/i);
   assert.match(
