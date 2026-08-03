@@ -51,7 +51,7 @@
       <section class="hero panel reveal">
         <div class="hero-copy">
           <p class="eyebrow">
-            <span id="heroPhaseCode">R2—--</span> LIVE RESEARCH / 实时研究
+            <span id="heroPhaseCode">R2—--</span> EXPLORATORY RESEARCH / 探索研究
           </p>
           <h1><span>REWARD</span><span>STUDY<span class="hero-index">02</span></span></h1>
           <p class="hero-question">
@@ -90,6 +90,18 @@
         </div>
       </section>
 
+      <section class="study-mode-banner reveal" aria-label="研究解释边界">
+        <div>
+          <span>PROTOCOL AMENDMENT / 结果后修订</span>
+          <strong id="studyModeLabel">POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY</strong>
+        </div>
+        <p>
+          <b>NO CANDIDATE PROMOTED.</b>
+          Pilot 未支持任何奖励方案晋级；scaled 仅因非 control 方案中 AUC 最低、变换最简单而进入延长探索，
+          不代表 Pilot 支持其有效。
+        </p>
+      </section>
+
       <section class="signal-rail reveal" aria-label="研究状态">
         <div>
           <span class="signal-code">A</span>
@@ -103,8 +115,8 @@
         </div>
         <div>
           <span class="signal-code">C</span>
-          <small>PILOT RUNS</small>
-          <strong id="pilotRunCount">0 / 12 PLANNED</strong>
+          <small id="cohortRunLabel">EXPLORATORY RUNS</small>
+          <strong id="pilotRunCount">0 / 20 PLANNED</strong>
         </div>
         <div class="compute-signal">
           <span class="signal-code">D</span>
@@ -134,7 +146,7 @@
           </div>
           <div>
             <small>PROGRESS</small>
-            <strong id="liveProgress">0 / 12 RUNS</strong>
+            <strong id="liveProgress">0 / 20 RUNS</strong>
           </div>
           <div>
             <small>EXPLOITABILITY</small>
@@ -179,9 +191,9 @@
             <g id="liveChartLabels"></g>
           </svg>
           <div id="liveChartEmpty" class="live-chart-empty">
-            <strong id="liveChartEmptyTitle">NO TRAINING SERIES YET</strong>
+            <strong id="liveChartEmptyTitle">EXPLORATORY SERIES AWAITING START</strong>
             <span id="liveChartEmptyDetail"
-              >遥测链路会保持在线；Pilot 启动后这里只显示真实 CSV 指标。</span
+              >探索运行启动后这里只显示当前 arm / seed 的真实 CSV 指标。</span
             >
           </div>
         </div>
@@ -241,10 +253,10 @@
         <aside class="panel endpoint-panel reveal" id="protocol">
           <div class="panel-heading endpoint-heading">
             <p class="eyebrow"><span>R2—02</span> FROZEN ENDPOINT</p>
-            <span class="chip locked-chip">LOCKED</span>
+            <span class="chip locked-chip">POST-OUTCOME AMENDMENT</span>
             <h2>
-              <span class="endpoint-title-line">先写规则，</span>
-              <span class="endpoint-title-line">再看结果。</span>
+              <span class="endpoint-title-line">先保留失败，</span>
+              <span class="endpoint-title-line">再延长问题。</span>
             </h2>
           </div>
 
@@ -259,24 +271,24 @@
           <dl class="endpoint-list">
             <div>
               <dt>PRIMARY</dt>
-              <dd>300K exact exploitability</dd>
+              <dd>300K exploratory exploitability</dd>
             </div>
             <div>
               <dt>REPLICATION</dt>
-              <dd>10 unseen paired seeds</dd>
+              <dd>10 reused paired seeds</dd>
             </div>
             <div>
               <dt>SELECTION</dt>
-              <dd>Exploitability AUC</dd>
+              <dd>No candidate promoted</dd>
             </div>
             <div>
-              <dt>FORBIDDEN</dt>
-              <dd>Hidden-card reward leakage</dd>
+              <dt>INTERPRETATION</dt>
+              <dd>Exploratory, not confirmatory</dd>
             </div>
           </dl>
 
           <p class="endpoint-note">
-            单局牌局是同一策略下的重复观测；真正的独立重复单位是一次完整、独立随机种子的训练。
+            正式 Pilot 结论已冻结为 no_candidate_promoted。本次延长不会回写原结果，也不会被包装成验证性证据。
           </p>
         </aside>
       </section>
@@ -285,9 +297,9 @@
         <div class="panel-heading">
           <div>
             <p class="eyebrow"><span>R2—03</span> EXPERIMENT ARMS</p>
-            <h2>四组 Pilot，不允许赛后改名</h2>
+            <h2>Pilot 结论保持可见</h2>
           </div>
-          <span class="chip">4 ARMS · 3 SEEDS</span>
+          <span class="chip">NO CANDIDATE PROMOTED</span>
         </div>
 
         <div class="arm-grid">
@@ -299,7 +311,7 @@
               <div><dt>SCALE</dt><dd>1.000</dd></div>
               <div><dt>ALPHA</dt><dd>0.00</dd></div>
             </dl>
-            <footer><i></i><span data-arm-status>WAITING · 0/3</span></footer>
+            <footer><i></i><span data-arm-status>PILOT CONTROL · COMPLETE</span></footer>
           </article>
 
           <article class="arm-card scaled" data-arm-id="scaled">
@@ -310,7 +322,7 @@
               <div><dt>SCALE</dt><dd>0.143</dd></div>
               <div><dt>ALPHA</dt><dd>0.00</dd></div>
             </dl>
-            <footer><i></i><span data-arm-status>WAITING · 0/3</span></footer>
+            <footer><i></i><span data-arm-status>EXPLORATORY FOLLOW-UP</span></footer>
           </article>
 
           <article class="arm-card pbrs" data-arm-id="pbrs-cfr-a010">
@@ -321,7 +333,7 @@
               <div><dt>SCALE</dt><dd>0.143</dd></div>
               <div><dt>ALPHA</dt><dd>0.10</dd></div>
             </dl>
-            <footer><i></i><span data-arm-status>WAITING · 0/3</span></footer>
+            <footer><i></i><span data-arm-status>PILOT FAILED · CLOSED</span></footer>
           </article>
 
           <article class="arm-card pbrs high" data-arm-id="pbrs-cfr-a025">
@@ -332,7 +344,7 @@
               <div><dt>SCALE</dt><dd>0.143</dd></div>
               <div><dt>ALPHA</dt><dd>0.25</dd></div>
             </dl>
-            <footer><i></i><span data-arm-status>WAITING · 0/3</span></footer>
+            <footer><i></i><span data-arm-status>PILOT FAILED · CLOSED</span></footer>
           </article>
         </div>
       </section>
@@ -370,12 +382,12 @@
             </li>
             <li data-phase="5">
               <span>05</span>
-              <div><strong>LOCK ONE CANDIDATE</strong><small>按预注册 AUC 规则晋级</small></div>
+              <div><strong>NO CANDIDATE PROMOTED</strong><small>Pilot AUC 与 50K 终点均未通过</small></div>
               <em>AWAITING DATA</em>
             </li>
             <li data-phase="6">
               <span>06</span>
-              <div><strong>300K CONFIRMATION</strong><small>10 unseen paired seeds</small></div>
+              <div><strong>300K EXPLORATORY EXTENSION</strong><small>terminal vs scaled · 10 paired seeds</small></div>
               <em>AWAITING DATA</em>
             </li>
             <li data-phase="7">
@@ -390,7 +402,7 @@
           <p class="eyebrow"><span>R2—05</span> REPLICATION MAP</p>
           <h2>种子不是装饰。</h2>
           <p class="seed-intro">
-            Pilot 只筛选方案；正式统计使用完全未参与调参的独立种子。
+            原预留的十个 seeds 已由结果后探索消耗，未来不得再声称它们是未见过的验证性样本。
           </p>
 
           <div class="seed-group">
@@ -400,8 +412,8 @@
             </div>
           </div>
 
-          <div class="seed-group confirmatory">
-            <header><span>CONFIRM</span><strong>UNSEEN · PAIRED</strong></header>
+          <div class="seed-group exploratory">
+            <header><span>EXTENSION</span><strong>POST-OUTCOME · PAIRED</strong></header>
             <div class="seed-grid">
               <span>31415</span><span>27182</span><span>16180</span><span>57721</span>
               <span>65537</span><span>99991</span><span>104729</span><span>13007</span>
@@ -428,7 +440,7 @@
     </main>
 
     <footer class="page-footer">
-      <span>RLCard 1.2.0 · LEDUC REWARD STUDY V1</span>
+      <span>RLCard 1.2.0 · EXPLORATORY SCALED V1</span>
       <span id="footerTime">SHANGHAI --:--</span>
       <a href="/">HARRYXIN.COM</a>
     </footer>
