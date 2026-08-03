@@ -244,6 +244,45 @@ test("About is a four-part clickable index with evidence-led destinations", asyn
   assert.match(aboutMatch[0], /cross-club-variety-cover\.jpg/, "Content Creator module is missing the Bilibili video");
 });
 
+test("the Bilibili cover follows the selected site language", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const englishCover = await readFile(
+    new URL("assets/cross-club-variety-cover-en.jpg", root),
+  );
+  assert.ok(englishCover.byteLength > 100_000, "the local English cover asset is missing or unexpectedly small");
+
+  const localizedCovers = tagsWithClass(homepage, "localized-video-cover", ["img"]);
+  assert.equal(localizedCovers.length, 2, "About and Creating must both use the localized Bilibili cover");
+  for (const [index, { tag }] of localizedCovers.entries()) {
+    assert.equal(
+      attribute(tag, "src"),
+      "/assets/cross-club-variety-cover-en.jpg",
+      `localized cover ${index + 1} must default to English`,
+    );
+    assert.equal(
+      attribute(tag, "data-cover-en"),
+      "/assets/cross-club-variety-cover-en.jpg",
+      `localized cover ${index + 1} is missing its English source`,
+    );
+    assert.equal(
+      attribute(tag, "data-cover-zh"),
+      "/assets/cross-club-variety-cover.jpg",
+      `localized cover ${index + 1} is missing its Chinese source`,
+    );
+  }
+
+  assert.match(
+    homepage,
+    /document\.querySelectorAll\('\[data-cover-en\]\[data-cover-zh\]'\)/,
+    "the language switch must update localized cover sources",
+  );
+  assert.match(
+    homepage,
+    /html\.lang-zh\s+\.show-cover\s+img\.localized-video-cover/,
+    "the 16:9 Chinese artwork should keep its full-bleed crop",
+  );
+});
+
 test("public project cards link to their exact GitHub repositories", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
   const buildingMatch = homepage.match(/<section id="building"[\s\S]*?<\/section>/);
