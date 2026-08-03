@@ -187,10 +187,15 @@ test("section navigation, document order, and numbering stay aligned", async () 
   const creatingMatch = homepage.match(/<section id="creating"[\s\S]*?<\/section>/);
   assert.ok(creatingMatch, "Creating section markup is missing");
   assert.match(creatingMatch[0], /class="media-grid"/, "Creating videos must share the responsive media grid");
+  assert.doesNotMatch(
+    creatingMatch[0],
+    /class="(?:show-meta|show-title)"/,
+    "Creating videos should not reintroduce decorative micro-label rows",
+  );
   assert.deepEqual(
-    Array.from(creatingMatch[0].matchAll(/\b(02\.\d{2})\s*\//g), (match) => match[1]),
-    ["02.01", "02.02"],
-    "Creating item numbers must follow section 02",
+    Array.from(creatingMatch[0].matchAll(/class="show-duration"[^>]*>([^<]+)</g), (match) => match[1]),
+    ["01:08", "24:31"],
+    "Creating covers should retain useful duration labels after decorative metadata is removed",
   );
   assert.match(
     creatingMatch[0],

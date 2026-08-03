@@ -1949,19 +1949,9 @@
   .show-copy{
     display:flex;
     min-width:0;
-    min-height:330px;
+    min-height:0;
     padding:clamp(30px,3.2vw,50px);
     flex-direction:column;
-  }
-  .show-meta{
-    display:flex;
-    justify-content:space-between;
-    gap:18px;
-    margin:0 0 clamp(30px,4vw,52px);
-    color:var(--amber);
-    font:600 10px/1.4 var(--mono);
-    letter-spacing:.13em;
-    text-transform:uppercase;
   }
   .show-feature h3{
     max-width:600px;
@@ -1981,15 +1971,6 @@
     font:17px/1.75 Georgia,"Times New Roman",serif;
   }
   html.lang-zh .show-feature p{font-family:var(--zh-serif)}
-  .show-title{
-    display:block;
-    margin-top:auto;
-    padding-top:26px;
-    color:var(--cyan);
-    font:600 11px/1.55 var(--mono);
-    letter-spacing:.035em;
-    overflow-wrap:anywhere;
-  }
   footer{
     margin-top:18px;
     padding:42px 24px 48px;
@@ -2328,7 +2309,6 @@
     .about-area:nth-child(even){border-left:0}
     .about-area:nth-child(n+2){border-top:1px solid var(--line)}
     .facts{grid-template-columns:minmax(0,1fr)}
-    .show-meta{flex-direction:column;margin-bottom:30px}
     .signal-body{grid-template-columns:1fr}
     .signal-primary{border-right:0;border-bottom:1px solid var(--line)}
   }
@@ -2967,15 +2947,10 @@
           <span class="show-duration" aria-hidden="true">01:08</span>
         </div>
         <div class="show-copy">
-          <div class="show-meta">
-            <span>02.01 / <span data-lang="en">Summer-school build</span><span data-lang="zh">夏校作品</span></span>
-            <span>YOUTUBE · ORIGINAL</span>
-          </div>
           <h3><span data-lang="en">I Built a Game Console at Summer School</span><span data-lang="zh">我在夏校做了一台游戏机</span></h3>
           <p>
             <span data-lang="en">Aaron Zheng, Vincent Yan, and I built a five-level memory game on the Adafruit Circuit Playground Express, with two buttons and increasingly difficult light sequences.</span><span data-lang="zh">我和 Aaron Zheng、Vincent Yan 基于 Adafruit Circuit Playground Express 做了一台五关灯光记忆游戏机，用两个按键挑战难度不断提升的灯光序列。</span>
           </p>
-          <span class="show-title"><span data-lang="en">Watch on YouTube ↗</span><span data-lang="zh">前往 YouTube 观看 ↗</span></span>
         </div>
       </a>
 
@@ -2986,15 +2961,10 @@
           <span class="show-duration" aria-hidden="true">24:31</span>
         </div>
         <div class="show-copy">
-          <div class="show-meta">
-            <span>02.02 / <span data-lang="en">Campus production</span><span data-lang="zh">校园节目</span></span>
-            <span>BILIBILI · ORIGINAL</span>
-          </div>
           <h3><span data-lang="en">This Is High School!</span><span data-lang="zh">这才是高中！</span></h3>
           <p>
             <span data-lang="en">I produced a zero-script campus collaboration that brought IronPulse robotics and FORMULAP racing together through technology, teamwork, and genuine high-school fun.</span><span data-lang="zh">我制作了一档零剧本校园跨社团综艺，让 IronPulse 机器人社与 FORMULAP 赛车社在技术交流、团队协作和真实的校园趣味中碰撞。</span>
           </p>
-          <span class="show-title"><span data-lang="en">Watch on Bilibili ↗</span><span data-lang="zh">前往 Bilibili 观看 ↗</span></span>
         </div>
       </a>
     </div>
