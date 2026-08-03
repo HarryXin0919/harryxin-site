@@ -352,3 +352,34 @@ test("detail UI distinguishes paused, reporting, and completed states", () => {
   assert.equal(complete.elements.liveThroughput.textContent, "COMPLETE · SAVED");
   assert.ok(complete.elements.liveDataState.classList.contains("complete"));
 });
+
+test("detail UI surfaces a blocked preflight without claiming the GPU is queued", () => {
+  const blocked = createHarness();
+  blocked.apply(
+    exploratoryPayload({
+      state: "blocked",
+      runStatus: "pending",
+      completedRuns: 0,
+      progress: 0,
+    }),
+  );
+
+  assert.equal(
+    blocked.elements.liveDataState.textContent,
+    "BLOCKED · PREFLIGHT FAILED",
+  );
+  assert.equal(
+    blocked.elements.liveRunHeading.textContent,
+    "启动受阻 / Preflight Blocked",
+  );
+  assert.equal(
+    blocked.elements.liveThroughput.textContent,
+    "BLOCKED · NO GPU START",
+  );
+  assert.match(
+    blocked.elements.disclosureLiveState.textContent,
+    /预检未通过/,
+  );
+  assert.ok(blocked.elements.liveDataState.classList.contains("blocked"));
+  assert.equal(blocked.elements.liveDataState.classList.contains("queued"), false);
+});

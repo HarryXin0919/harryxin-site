@@ -122,6 +122,9 @@ test("homepage presents the extension as post-outcome exploratory", async () => 
   assert.match(homepage, /300K EXPLORATORY EXTENSION/);
   assert.match(homepage, /scaled 仅因非 control 方案中 AUC 最低、变换最简单/);
   assert.match(homepage, /rawState === 'queued'/);
+  assert.match(homepage, /rawState === 'blocked'/);
+  assert.match(homepage, /BLOCKED · PREFLIGHT FAILED/);
+  assert.match(homepage, /NO GPU START/);
   assert.match(homepage, /POST-OUTCOME EXPLORATORY/);
   assert.match(homepage, /EXPLORATORY COMPLETION/);
   assert.match(homepage, /LAST COMPLETED RUN \/ 最近完成/);

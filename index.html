@@ -3415,7 +3415,8 @@
         research.cohort === 'exploratory' ||
         research.protocolMode === 'post_outcome_exploratory';
       var completedSnapshot = !!run && runState === 'complete';
-      var queued = rawState === 'queued' || runState === 'pending';
+      var blocked = rawState === 'blocked';
+      var queued = !blocked && (rawState === 'queued' || runState === 'pending');
       var paused = runState === 'paused';
       var reporting =
         isExploratory && phase === 7 && rawState === 'running';
@@ -3429,7 +3430,9 @@
       var awaitingSelection = pilotComplete && phase === 5;
       var visualState = (connection === 'OFFLINE' || connection === 'DELAYED')
         ? connection.toLowerCase()
-        : reporting
+        : blocked
+          ? 'blocked'
+          : reporting
           ? 'running'
           : paused
             ? 'paused'
@@ -3446,7 +3449,9 @@
         blocked:'BLOCKED · 已暂停'
       }[rawState] || 'IDLE · 暂无活动训练';
       if (connection === 'LIVE' && isExploratory) {
-        stateText = reporting
+        stateText = blocked
+          ? 'BLOCKED · PREFLIGHT FAILED'
+          : reporting
           ? 'REPORTING · EXPLORATORY'
           : exploratoryComplete
             ? 'EXPLORATORY COMPLETE · 报告已保存'
@@ -3491,7 +3496,11 @@
       if (run) {
         var armName = researchArmNames[run.arm] || String(run.arm || '').toUpperCase();
         var seed = Number.isInteger(Number(run.seed)) ? String(run.seed) : '—';
-        if (completedSnapshot) {
+        if (blocked) {
+          researchCurrentLabelEl.textContent = 'BLOCKED RUN / 启动受阻';
+          researchSpeedLabelEl.textContent = 'PREFLIGHT STATUS';
+          researchEtaLabelEl.textContent = 'GPU STATUS';
+        } else if (completedSnapshot) {
           researchCurrentLabelEl.textContent = 'LAST COMPLETED RUN / 最近完成';
           researchSpeedLabelEl.textContent = 'RUN STATUS';
           researchEtaLabelEl.textContent = 'SAVED ARTIFACT';
@@ -3523,7 +3532,9 @@
             : String(run.cohort || 'pilot').toUpperCase() + ' · ' + armName;
         researchSpeedEl.textContent = completedSnapshot
           ? 'COMPLETE'
-          : queued
+          : blocked
+            ? 'BLOCKED'
+            : queued
             ? 'QUEUED'
             : paused
               ? 'CHECKPOINT SAVED'
@@ -3531,6 +3542,7 @@
             ? Number(run.speed).toFixed(1) + ' /S'
             : '—';
         researchEtaEl.textContent = completedSnapshot ? 'SAVED' : eta(run.etaSeconds);
+        if (blocked) researchEtaEl.textContent = 'NO GPU START';
         if (queued) researchEtaEl.textContent = 'AFTER PREFLIGHT';
         if (paused) researchEtaEl.textContent = 'RESUME PENDING';
       } else if (cohortComplete) {
