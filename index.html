@@ -1861,19 +1861,6 @@
     filter:saturate(1) contrast(1.02) brightness(.98);
     transform:scale(1.018);
   }
-  /*
-   * The source English artwork is a 2.35:1 master. Keep every title letter
-   * visible inside the 16:9 video slots; the Chinese export is already 16:9.
-   */
-  .about-mini-video img.localized-video-cover,
-  .show-cover img.localized-video-cover{
-    object-fit:contain;
-    background:#050706;
-  }
-  html.lang-zh .about-mini-video img.localized-video-cover,
-  html.lang-zh .show-cover img.localized-video-cover{
-    object-fit:cover;
-  }
   .show-play{
     position:absolute;
     z-index:4;
@@ -2927,7 +2914,7 @@
             <span>YOUTUBE · 01:08</span>
           </span>
           <span class="about-mini-video">
-            <img class="localized-video-cover" src="/assets/cross-club-variety-cover-en.jpg" data-cover-en="/assets/cross-club-variety-cover-en.jpg" data-cover-zh="/assets/cross-club-variety-cover.jpg" width="5070" height="2160" loading="lazy" decoding="async" alt="">
+            <img class="localized-video-cover" src="/assets/cross-club-variety-cover-en-16x9.jpg" data-cover-en="/assets/cross-club-variety-cover-en-16x9.jpg" data-cover-zh="/assets/cross-club-variety-cover.jpg" width="1600" height="900" loading="lazy" decoding="async" alt="">
             <span>BILIBILI · 24:31</span>
           </span>
         </div>
@@ -2961,7 +2948,7 @@
 
       <a class="show-feature rise" href="https://www.bilibili.com/video/BV18XN3z5EGH/" rel="noopener" data-motion-surface data-destination="BILIBILI VIDEO">
         <div class="show-cover">
-          <img class="localized-video-cover" src="/assets/cross-club-variety-cover-en.jpg" data-cover-en="/assets/cross-club-variety-cover-en.jpg" data-cover-zh="/assets/cross-club-variety-cover.jpg" width="5070" height="2160" loading="lazy" decoding="async" alt="">
+          <img class="localized-video-cover" src="/assets/cross-club-variety-cover-en-16x9.jpg" data-cover-en="/assets/cross-club-variety-cover-en-16x9.jpg" data-cover-zh="/assets/cross-club-variety-cover.jpg" width="1600" height="900" loading="lazy" decoding="async" alt="">
           <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 6.7v10.6L17 12 8.5 6.7z"/></svg></span>
           <span class="show-duration" aria-hidden="true">24:31</span>
         </div>

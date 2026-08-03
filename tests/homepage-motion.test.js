@@ -257,7 +257,7 @@ test("About is a four-part clickable index with evidence-led destinations", asyn
 test("the Bilibili cover follows the selected site language", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
   const englishCover = await readFile(
-    new URL("assets/cross-club-variety-cover-en.jpg", root),
+    new URL("assets/cross-club-variety-cover-en-16x9.jpg", root),
   );
   assert.ok(englishCover.byteLength > 100_000, "the local English cover asset is missing or unexpectedly small");
 
@@ -266,12 +266,12 @@ test("the Bilibili cover follows the selected site language", async () => {
   for (const [index, { tag }] of localizedCovers.entries()) {
     assert.equal(
       attribute(tag, "src"),
-      "/assets/cross-club-variety-cover-en.jpg",
+      "/assets/cross-club-variety-cover-en-16x9.jpg",
       `localized cover ${index + 1} must default to English`,
     );
     assert.equal(
       attribute(tag, "data-cover-en"),
-      "/assets/cross-club-variety-cover-en.jpg",
+      "/assets/cross-club-variety-cover-en-16x9.jpg",
       `localized cover ${index + 1} is missing its English source`,
     );
     assert.equal(
@@ -279,6 +279,8 @@ test("the Bilibili cover follows the selected site language", async () => {
       "/assets/cross-club-variety-cover.jpg",
       `localized cover ${index + 1} is missing its Chinese source`,
     );
+    assert.equal(attribute(tag, "width"), "1600", `localized cover ${index + 1} must declare a 16:9 width`);
+    assert.equal(attribute(tag, "height"), "900", `localized cover ${index + 1} must declare a 16:9 height`);
   }
 
   assert.match(
@@ -286,10 +288,10 @@ test("the Bilibili cover follows the selected site language", async () => {
     /document\.querySelectorAll\('\[data-cover-en\]\[data-cover-zh\]'\)/,
     "the language switch must update localized cover sources",
   );
-  assert.match(
+  assert.doesNotMatch(
     homepage,
-    /html\.lang-zh\s+\.show-cover\s+img\.localized-video-cover/,
-    "the 16:9 Chinese artwork should keep its full-bleed crop",
+    /img\.localized-video-cover\s*\{[^}]*object-fit\s*:\s*contain/,
+    "localized covers must fill their matching 16:9 frames instead of appearing inset",
   );
 });
 
