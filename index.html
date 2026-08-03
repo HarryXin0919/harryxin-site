@@ -12,6 +12,20 @@
 <meta property="og:type" content="website" />
 <meta name="theme-color" content="#080b0a" />
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+<script>
+  /* Establish the first motion frame before paint. If the main script cannot
+     finish, the fail-safe restores the fully visible page automatically. */
+  (function(){
+    var motionQuery = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)');
+    if (motionQuery && motionQuery.matches) return;
+    var motionRoot = document.documentElement;
+    motionRoot.classList.add('motion-enabled','motion-preload');
+    window.__hxMotionFailSafe = window.setTimeout(function(){
+      motionRoot.classList.remove('motion-preload','is-entering','is-leaving');
+      motionRoot.classList.add('is-entered');
+    }, 1600);
+  })();
+</script>
 <style>
   /* ============================================================
      harryxin.com — editorial / engineer's-notebook aesthetic
@@ -387,7 +401,7 @@
     transition:opacity .85s var(--ease), transform .85s var(--ease);
     transition-delay:calc(var(--i,0)*70ms);
   }
-  html.js-reveal .rise.in{opacity:1; transform:none}
+  html.js-reveal .rise.in{opacity:1; --reveal-y:0px}
 
   @media (prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}
@@ -1468,7 +1482,6 @@
     border-color:var(--amber);
     color:var(--paper);
     background:rgba(156,255,87,.11);
-    transform:translateY(-2px);
   }
   .rlcard-project-links a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
   .rlcard-research-readout{
@@ -1792,14 +1805,13 @@
   .footer-social svg [stroke]{stroke-width:2}
   .footer-social:hover{
     color:var(--amber);
-    transform:translateY(-2px) scale(1.06);
   }
   .footer-social:focus-visible{
     color:var(--amber);
     outline:2px solid var(--amber);
     outline-offset:2px;
   }
-  .footer-social:active{transform:translateY(0) scale(.96)}
+  .footer-social:active{color:var(--amber)}
 
   /* homepage live signal — reads the existing public, sanitised RLCard API */
   .lab-signal{
@@ -2009,7 +2021,6 @@
     border-color:var(--amber);
     color:var(--paper);
     background:rgba(156,255,87,.12);
-    transform:translateY(-2px);
   }
   .signal-link:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
   .projects>.lab-signal{grid-column:1/-1;margin-top:0}
@@ -2204,6 +2215,262 @@
     .footer-social{transition:none}
     .footer-social:hover{transform:none}
   }
+
+  /* ============================================================
+     MOTION SYSTEM / LABORATORY BOOT
+     Reveal, hover, press, and pointer tilt share one transform so
+     no interaction state can erase another state.
+     ============================================================ */
+  :root{
+    --motion-route:420ms;
+    --motion-reveal:720ms;
+    --motion-interaction:220ms;
+    --motion-press:90ms;
+    --motion-ease:cubic-bezier(.22,1,.36,1);
+  }
+
+  .rise,
+  [data-motion-surface]{
+    --reveal-y:0px;
+    --hover-y:0px;
+    --press-scale:1;
+    --tilt-x:0deg;
+    --tilt-y:0deg;
+    transform:
+      translate3d(0,calc(var(--reveal-y) + var(--hover-y)),0)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      scale(var(--press-scale));
+    transform-origin:center;
+  }
+  .card{will-change:auto}
+  html.motion-enabled.motion-preload .rise{
+    --reveal-y:22px;
+    animation:none!important;
+    opacity:0;
+  }
+  html.js-reveal .rise{
+    --reveal-y:22px;
+    animation:none;
+    opacity:0;
+    transition:
+      opacity var(--motion-reveal) var(--motion-ease),
+      transform var(--motion-reveal) var(--motion-ease);
+    transition-delay:calc(var(--i,0)*55ms);
+  }
+  html.js-reveal .rise.in{
+    --reveal-y:0px;
+    opacity:1;
+    transform:
+      translate3d(0,calc(var(--reveal-y) + var(--hover-y)),0)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      scale(var(--press-scale));
+  }
+  html.js-reveal .rise.in.reveal-complete{
+    transition:
+      border-color var(--motion-interaction) ease,
+      background-color var(--motion-interaction) ease,
+      color var(--motion-interaction) ease,
+      opacity var(--motion-interaction) ease,
+      transform var(--motion-interaction) var(--motion-ease);
+    transition-delay:0ms;
+  }
+  html.js-reveal .rise.focus-reveal{transition:none!important}
+  html.js-reveal .projects > a.card.rise.in.reveal-complete.is-tilting{
+    transition-property:border-color,background-color,color,opacity;
+  }
+
+  /* The hero is a single composed boot sequence, not a set of unrelated fades. */
+  html.js-reveal .hero .eyebrow.rise{transition-duration:300ms;transition-delay:220ms}
+  html.js-reveal .hero h1.rise{
+    clip-path:inset(0 0 100% 0);
+    transition-property:opacity,transform,clip-path;
+    transition-duration:340ms;
+    transition-delay:220ms;
+  }
+  html.js-reveal .hero h1.rise.in{clip-path:inset(0)}
+  html.js-reveal .hero .pron.rise{transition-duration:320ms;transition-delay:360ms}
+  html.js-reveal .hero .lede.rise{transition-duration:270ms;transition-delay:410ms}
+  html.js-reveal .hero .social.rise{transition-duration:115ms}
+  html.js-reveal .hero .social.rise:nth-child(1){transition-delay:520ms}
+  html.js-reveal .hero .social.rise:nth-child(2){transition-delay:575ms}
+  html.js-reveal .hero .social.rise:nth-child(3){transition-delay:630ms}
+  html.js-reveal .hero .social.rise:nth-child(4){transition-delay:685ms}
+
+  [data-motion-surface]:not(.rise),
+  [data-motion-cta]{
+    transition:
+      border-color var(--motion-interaction) ease,
+      background-color var(--motion-interaction) ease,
+      color var(--motion-interaction) ease,
+      opacity var(--motion-interaction) ease,
+      transform var(--motion-interaction) var(--motion-ease);
+  }
+  [data-motion-cta]{
+    --cta-y:0px;
+    --cta-scale:1;
+    transform:translate3d(0,var(--cta-y),0) scale(var(--cta-scale));
+  }
+  [data-motion-surface]:focus-visible{
+    --hover-y:-2px;
+    outline:2px solid var(--amber);
+    outline-offset:3px;
+  }
+  [data-motion-cta]:focus-visible{
+    --cta-y:-2px;
+    outline:2px solid var(--amber);
+    outline-offset:3px;
+  }
+  @media (hover:hover) and (pointer:fine){
+    [data-motion-surface]:hover{
+      --hover-y:-4px;
+      --press-scale:1.006;
+      will-change:transform;
+    }
+    [data-motion-cta]:hover{--cta-y:-2px}
+    .social[data-motion-surface] svg,
+    .footer-social[data-motion-cta] svg{transition:transform var(--motion-interaction) var(--motion-ease)}
+    .social[data-motion-surface]:hover svg,
+    .footer-social[data-motion-cta]:hover svg{transform:translateY(-1px) scale(1.05)}
+    .fact-link[data-motion-surface] .fact-icon{transition:transform var(--motion-interaction) var(--motion-ease)}
+    .fact-link[data-motion-surface]:hover .fact-icon{transform:translateX(50%) scale(1.025)}
+  }
+  [data-motion-surface]:active,
+  [data-motion-surface].is-routing{
+    --hover-y:-1px;
+    --press-scale:.985;
+    transition-duration:var(--motion-press);
+  }
+  [data-motion-cta]:active,
+  [data-motion-cta].is-routing{
+    --cta-y:0px;
+    --cta-scale:.985;
+    transition-duration:var(--motion-press);
+  }
+
+  /* Prepaint state and the compositor-only 0–900ms laboratory boot. */
+  html.motion-enabled.motion-preload body::before,
+  html.motion-enabled.motion-preload .atmo,
+  html.motion-enabled.motion-preload .scope,
+  html.motion-enabled.motion-preload .scope-tag,
+  html.motion-enabled.motion-preload .topbar,
+  html.motion-enabled.motion-preload .watermark{opacity:0}
+  html.motion-enabled.motion-preload .topbar{transform:translate3d(0,-10px,0)}
+  html.motion-enabled.is-entering body::before{animation:hx-grid-in 180ms ease-out both}
+  html.motion-enabled.is-entering .atmo{animation:hx-atmo-in 180ms ease-out both}
+  html.motion-enabled.is-entering .topbar{animation:hx-topbar-in 220ms 100ms var(--motion-ease) both}
+  html.motion-enabled.is-entering .scope,
+  html.motion-enabled.is-entering .scope-tag{animation:hx-chrome-in 240ms 80ms ease-out both}
+  html.motion-enabled.is-entering .watermark{animation:hx-watermark-in 360ms 120ms ease-out both}
+  @keyframes hx-grid-in{from{opacity:0}}
+  @keyframes hx-atmo-in{from{opacity:0}}
+  @keyframes hx-topbar-in{from{opacity:0;transform:translate3d(0,-10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+  @keyframes hx-chrome-in{from{opacity:0}to{opacity:1}}
+  @keyframes hx-watermark-in{from{opacity:0}}
+
+  /* Destination-aware route curtain. It exists only for the 420ms handoff. */
+  .route-transition{
+    --route-x:50%;
+    --route-y:50%;
+    position:fixed;
+    z-index:100;
+    inset:0;
+    display:grid;
+    place-items:center;
+    overflow:hidden;
+    visibility:hidden;
+    pointer-events:none;
+    color:var(--paper);
+    background:
+      radial-gradient(circle at var(--route-x) var(--route-y),rgba(156,255,87,.14),transparent 34%),
+      rgba(5,9,7,.985);
+    clip-path:circle(0 at var(--route-x) var(--route-y));
+    transition:clip-path var(--motion-route) var(--motion-ease);
+  }
+  .route-transition::before{
+    content:"";
+    position:absolute;
+    inset:-20% 0 auto;
+    height:38%;
+    opacity:0;
+    background:linear-gradient(180deg,transparent,rgba(156,255,87,.1),rgba(156,255,87,.28),transparent);
+    transform:translate3d(0,-80%,0);
+  }
+  html.is-leaving .route-transition{
+    visibility:visible;
+    pointer-events:auto;
+    clip-path:circle(160vmax at var(--route-x) var(--route-y));
+  }
+  html.is-leaving .route-transition::before{animation:hx-route-scan 360ms 30ms ease-out both}
+  .route-copy{
+    position:relative;
+    width:min(78vw,720px);
+    text-align:center;
+    opacity:0;
+    transform:translate3d(0,12px,0);
+    transition:opacity 180ms 70ms ease-out,transform 260ms 70ms var(--motion-ease);
+  }
+  html.is-leaving .route-copy{opacity:1;transform:translate3d(0,0,0)}
+  .route-kicker{
+    margin:0 0 18px;
+    color:var(--amber);
+    font:650 clamp(10px,1vw,12px)/1 var(--mono);
+    letter-spacing:.22em;
+    text-transform:uppercase;
+  }
+  .route-destination{
+    margin:0;
+    color:var(--paper);
+    font:650 clamp(46px,9vw,132px)/.86 var(--display);
+    letter-spacing:-.035em;
+    overflow-wrap:anywhere;
+    text-transform:uppercase;
+  }
+  .route-progress{
+    display:block;
+    width:min(320px,62vw);
+    height:1px;
+    margin:30px auto 0;
+    overflow:hidden;
+    background:rgba(233,238,233,.16);
+  }
+  .route-progress>span{
+    display:block;
+    width:100%;
+    height:100%;
+    background:var(--amber);
+    box-shadow:0 0 14px rgba(156,255,87,.52);
+    transform:scaleX(0);
+    transform-origin:left;
+  }
+  html.is-leaving .route-progress>span{animation:hx-route-progress 340ms 50ms linear both}
+  @keyframes hx-route-scan{from{opacity:0;transform:translate3d(0,-80%,0)}35%{opacity:1}to{opacity:0;transform:translate3d(0,330%,0)}}
+  @keyframes hx-route-progress{to{transform:scaleX(1)}}
+
+  @media (max-width:600px){
+    .route-copy{width:calc(100vw - 40px)}
+    .route-destination{font-size:clamp(38px,14vw,72px);line-height:.94}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    html.motion-preload body::before,
+    html.motion-preload .atmo,
+    html.motion-preload .scope,
+    html.motion-preload .scope-tag,
+    html.motion-preload .topbar,
+    html.motion-preload .watermark{opacity:revert!important;transform:none!important}
+    .rise,
+    [data-motion-surface],
+    [data-motion-cta]{
+      animation:none!important;
+      transition:none!important;
+      opacity:1!important;
+      transform:none!important;
+      clip-path:none!important;
+    }
+    .route-transition{display:none!important}
+  }
 </style>
 </head>
 <body>
@@ -2214,6 +2481,14 @@
 <div class="atmo atmo-bloom" aria-hidden="true"></div>
 <div class="atmo atmo-vignette" aria-hidden="true"></div>
 <div class="atmo atmo-spot" aria-hidden="true"></div>
+
+<div class="route-transition" id="route-transition" aria-hidden="true">
+  <div class="route-copy" role="status" aria-live="polite" aria-atomic="true">
+    <p class="route-kicker">ROUTING / 跳转中</p>
+    <p class="route-destination" id="route-destination">DESTINATION</p>
+    <span class="route-progress" aria-hidden="true"><span></span></span>
+  </div>
+</div>
 
 <!-- oscilloscope scroll rail + section readout -->
 <div class="scope" aria-hidden="true"><span class="scope-fill"></span></div>
@@ -2256,25 +2531,25 @@
       <nav class="socials" aria-label="Social links">
 
         <!-- Bilibili -->
-        <a class="social bili rise" href="https://space.bilibili.com/3546972787051483" target="_blank" rel="me noopener">
+        <a class="social bili rise" href="https://space.bilibili.com/3546972787051483" rel="me noopener" data-motion-surface data-destination="BILIBILI">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="6" width="19" height="14" rx="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M7 3l3 3M17 3l-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 11v3M16 11v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           Bilibili <span class="h">乙未猗Harry</span>
         </a>
 
         <!-- YouTube -->
-        <a class="social yt rise" href="https://www.youtube.com/@HarryAlexander-Xin" target="_blank" rel="me noopener">
+        <a class="social yt rise" href="https://www.youtube.com/@HarryAlexander-Xin" rel="me noopener" data-motion-surface data-destination="YOUTUBE">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M10.4 9.1v5.8l5-2.9-5-2.9z" fill="currentColor"/></svg>
           YouTube <span class="h">@HarryAlexander-Xin</span>
         </a>
 
         <!-- Instagram -->
-        <a class="social ig rise" href="https://www.instagram.com/harryalexanderxin/" target="_blank" rel="me noopener">
+        <a class="social ig rise" href="https://www.instagram.com/harryalexanderxin/" rel="me noopener" data-motion-surface data-destination="INSTAGRAM">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"/></svg>
           Instagram <span class="h">@harryalexanderxin</span>
         </a>
 
         <!-- GitHub -->
-        <a class="social gh rise" href="https://github.com/HarryXin0919" target="_blank" rel="me noopener">
+        <a class="social gh rise" href="https://github.com/HarryXin0919" rel="me noopener" data-motion-surface data-destination="GITHUB">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5A10.5 10.5 0 0 0 8.68 22c.52.1.71-.23.71-.5v-1.96c-2.9.63-3.52-1.24-3.52-1.24-.48-1.2-1.16-1.53-1.16-1.53-.95-.65.07-.64.07-.64 1.05.07 1.6 1.08 1.6 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.31-.26-4.74-1.16-4.74-5.14 0-1.13.4-2.06 1.07-2.78-.11-.27-.46-1.32.1-2.76 0 0 .87-.28 2.85 1.06a9.9 9.9 0 0 1 5.2 0c1.97-1.34 2.84-1.06 2.84-1.06.57 1.44.21 2.49.11 2.76.67.72 1.07 1.65 1.07 2.78 0 3.99-2.44 4.87-4.76 5.13.38.32.71.96.71 1.94v2.87c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5z"/></svg>
           GitHub <span class="h">@HarryXin0919</span>
         </a>
@@ -2310,12 +2585,12 @@
   <section id="now" data-num="02" data-name="CURRENTLY">
     <div class="shead"><span class="num" aria-hidden="true">02</span> <h2><span data-lang="en">Currently</span><span data-lang="zh">近况</span></h2> <span class="ln" aria-hidden="true"></span></div>
     <div class="facts">
-      <a class="fact fact-link rise" href="https://www.ibo.org/" target="_blank" rel="noopener" aria-label="International Baccalaureate official website">
+      <a class="fact fact-link rise" href="https://www.ibo.org/" rel="noopener" aria-label="International Baccalaureate official website" data-motion-surface data-destination="IB DIPLOMA">
         <span class="fact-icon" aria-hidden="true"><img src="/assets/ib-dp-logo.jpg" alt="" loading="lazy" decoding="async"></span>
         <p class="k"><span data-lang="en">Studying</span><span data-lang="zh">在读</span></p>
         <p class="v"><span data-lang="en">IB Diploma</span><span data-lang="zh">IB 文凭</span><br><small>HL Math AA · Physics · English&nbsp;B</small><br><span class="fact-official"><span data-lang="en">Official website</span><span data-lang="zh">IB 官方网站</span> · ibo.org ↗</span></p>
       </a>
-      <a class="fact fact-link fact-ironpulse rise" href="https://www.ironpulse.net/" target="_blank" rel="noopener" aria-label="IronPulse Robotics 6941 official website">
+      <a class="fact fact-link fact-ironpulse rise" href="https://www.ironpulse.net/" rel="noopener" aria-label="IronPulse Robotics 6941 official website" data-motion-surface data-destination="IRONPULSE">
         <span class="fact-icon ironpulse-icon" aria-hidden="true"><img src="/assets/ironpulse-logo.svg" alt="" loading="lazy" decoding="async"></span>
         <p class="k"><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></p>
         <p class="v">FRC 6941 IronPulse<br><small><span data-lang="en">Shanghai Regional Champions → Houston Worlds</span><span data-lang="zh">上海区域赛冠军 → 休斯顿世界赛</span></small><br><span class="fact-official">ironpulse.net ↗</span></p>
@@ -2327,7 +2602,7 @@
 
   <!-- ===================== BUILDING ===================== -->
   <section id="building" data-num="03" data-name="BUILDING">
-    <div class="shead"><span class="num" aria-hidden="true">03</span> <h2><span data-lang="en">Building</span><span data-lang="zh">在做的项目</span></h2> <span class="ln" aria-hidden="true"></span> <a class="arr-link" href="https://github.com/HarryXin0919" target="_blank" rel="noopener"><span data-lang="en">all on GitHub</span><span data-lang="zh">全部在 GitHub</span> <span class="ar">↗</span></a></div>
+    <div class="shead"><span class="num" aria-hidden="true">03</span> <h2><span data-lang="en">Building</span><span data-lang="zh">在做的项目</span></h2> <span class="ln" aria-hidden="true"></span> <a class="arr-link" href="https://github.com/HarryXin0919" rel="noopener" data-motion-cta data-destination="GITHUB"><span data-lang="en">all on GitHub</span><span data-lang="zh">全部在 GitHub</span> <span class="ar">↗</span></a></div>
     <div class="projects">
 
       <article
@@ -2347,8 +2622,8 @@
               <span data-lang="en">Phase II tests whether reward shaping improves strategy robustness—not merely payoff against a random opponent.</span><span data-lang="zh">第二阶段研究奖励塑形能否真正提升策略稳健性，而不只是提高对随机对手的收益。</span>
             </p>
             <div class="rlcard-project-links">
-              <a href="/rlcard/research/"><span data-lang="en">Open Phase II observatory</span><span data-lang="zh">进入第二阶段实验台</span> ↗</a>
-              <a href="/rlcard/"><span data-lang="en">Phase I archive</span><span data-lang="zh">第一阶段归档</span> ↗</a>
+              <a href="/rlcard/research/" data-motion-cta data-destination="RLCARD PHASE II"><span data-lang="en">Open Phase II observatory</span><span data-lang="zh">进入第二阶段实验台</span> ↗</a>
+              <a href="/rlcard/" data-motion-cta data-destination="RLCARD PHASE I"><span data-lang="en">Phase I archive</span><span data-lang="zh">第一阶段归档</span> ↗</a>
             </div>
           </div>
 
@@ -2427,46 +2702,46 @@
         </div>
         <div class="signal-foot">
           <p class="signal-updated"><span data-lang="en">Last public update</span><span data-lang="zh">公开数据更新时间</span> · <span id="signal-updated">WAITING FOR DATA</span></p>
-          <a class="signal-link" href="/rlcard/"><span data-lang="en">Open Phase I observatory</span><span data-lang="zh">进入第一阶段观测台</span> <span aria-hidden="true">↗</span></a>
+          <a class="signal-link" href="/rlcard/" data-motion-cta data-destination="RLCARD PHASE I"><span data-lang="en">Open Phase I observatory</span><span data-lang="zh">进入第一阶段观测台</span> <span aria-hidden="true">↗</span></a>
         </div>
       </div>
 
-      <a class="card rise" href="https://github.com/HarryXin0919/factlens" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919/factlens" rel="noopener" data-motion-surface data-destination="FACTLENS">
         <span class="pidx" aria-hidden="true"></span>
         <p class="pt">factlens</p>
         <p class="pd"><span data-lang="en">Multimodal video fact-checking — transcribe, read the screen, verify claims against the web.</span><span data-lang="zh">多模态视频事实核查：转录、读屏，把视频里的说法拿到网上核对。</span></p>
         <p class="pm">PYTHON <span class="arr">↗</span></p>
       </a>
 
-      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" rel="noopener" data-motion-surface data-destination="FINDITEM">
         <span class="pidx" aria-hidden="true"></span>
         <p class="pt">FindItem</p>
         <p class="pd"><span data-lang="en">Decentralised parts-storage hardware on ESP32-C3 — RGB strip + buzzer locate any bin.</span><span data-lang="zh">基于 ESP32-C3 的去中心化零件收纳硬件，靠 RGB 灯带和蜂鸣器帮你找到任意一格。</span></p>
         <p class="pm">HARDWARE · C++ <span class="arr">↗</span></p>
       </a>
 
-      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" rel="noopener" data-motion-surface data-destination="VIRALENS">
         <span class="pidx" aria-hidden="true"></span>
         <p class="pt">viralens</p>
         <p class="pd"><span data-lang="en">Open-source toolkit that dissects what makes a video land — metadata, subtitles, comments.</span><span data-lang="zh">一套开源工具，拆解一条视频凭什么打动人：元数据、字幕、评论逐一来过。</span></p>
         <p class="pm">PYTHON <span class="arr">↗</span></p>
       </a>
 
-      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" rel="noopener" data-motion-surface data-destination="LOOMING">
         <span class="pidx" aria-hidden="true"></span>
         <p class="pt">looming</p>
         <p class="pd"><span data-lang="en">A self-driving loop daemon that keeps an agent working toward a mission until interrupted.</span><span data-lang="zh">一个自驱的循环守护进程，让 agent 盯着目标一直干，直到你叫停。</span></p>
         <p class="pm">NODE · CLI <span class="arr">↗</span></p>
       </a>
 
-      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" rel="noopener" data-motion-surface data-destination="SKILLTREE">
         <span class="pidx" aria-hidden="true"></span>
         <p class="pt">skilltree</p>
         <p class="pd"><span data-lang="en">Reads your shell history and draws a command-line skill tree in the terminal.</span><span data-lang="zh">扫一遍你的 shell 历史，在终端里画出你的命令行技能树。</span></p>
         <p class="pm">PYTHON · TYPER <span class="arr">↗</span></p>
       </a>
 
-      <a class="card rise" href="https://github.com/HarryXin0919" target="_blank" rel="noopener">
+      <a class="card rise" href="https://github.com/HarryXin0919" rel="noopener" data-motion-surface data-destination="CTXTAX">
         <span class="pidx" aria-hidden="true"></span>
         <p class="pt">ctxtax</p>
         <p class="pd"><span data-lang="en">CLI that measures how much context budget each MCP tool actually costs you.</span><span data-lang="zh">一个 CLI，算清每个 MCP 工具到底吃掉你多少 context。</span></p>
@@ -2479,7 +2754,7 @@
   <!-- ===================== CREATING ===================== -->
   <section id="creating" data-num="04" data-name="CREATING">
     <div class="shead"><span class="num" aria-hidden="true">04</span> <h2><span data-lang="en">Creating</span><span data-lang="zh">创作</span></h2> <span class="ln" aria-hidden="true"></span></div>
-    <a class="show-feature rise" href="https://www.bilibili.com/video/BV18XN3z5EGH/" target="_blank" rel="noopener">
+    <a class="show-feature rise" href="https://www.bilibili.com/video/BV18XN3z5EGH/" rel="noopener" data-motion-surface data-destination="BILIBILI VIDEO">
       <div class="show-cover">
         <img src="/assets/cross-club-variety-cover.jpg" width="1939" height="1091" loading="lazy" decoding="async" alt="社团联动综艺《这才是高中！》视频封面">
         <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 6.7v10.6L17 12 8.5 6.7z"/></svg></span>
@@ -2507,16 +2782,16 @@
       <div class="foot-brand">
         <p class="sig rise">— Harry</p>
         <nav class="footer-socials" aria-label="Social media / 社交媒体">
-          <a class="footer-social bili" href="https://space.bilibili.com/3546972787051483" target="_blank" rel="me noopener" aria-label="Bilibili / 哔哩哔哩" title="Bilibili">
+          <a class="footer-social bili" href="https://space.bilibili.com/3546972787051483" rel="me noopener" aria-label="Bilibili / 哔哩哔哩" title="Bilibili" data-motion-cta data-destination="BILIBILI">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><rect x="2.5" y="6" width="19" height="14" rx="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M7 3l3 3M17 3l-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 11v3M16 11v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           </a>
-          <a class="footer-social yt" href="https://www.youtube.com/@HarryAlexander-Xin" target="_blank" rel="me noopener" aria-label="YouTube" title="YouTube">
+          <a class="footer-social yt" href="https://www.youtube.com/@HarryAlexander-Xin" rel="me noopener" aria-label="YouTube" title="YouTube" data-motion-cta data-destination="YOUTUBE">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M10.4 9.1v5.8l5-2.9-5-2.9z" fill="currentColor"/></svg>
           </a>
-          <a class="footer-social ig" href="https://www.instagram.com/harryalexanderxin/" target="_blank" rel="me noopener" aria-label="Instagram" title="Instagram">
+          <a class="footer-social ig" href="https://www.instagram.com/harryalexanderxin/" rel="me noopener" aria-label="Instagram" title="Instagram" data-motion-cta data-destination="INSTAGRAM">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"/></svg>
           </a>
-          <a class="footer-social gh" href="https://github.com/HarryXin0919" target="_blank" rel="me noopener" aria-label="GitHub" title="GitHub">
+          <a class="footer-social gh" href="https://github.com/HarryXin0919" rel="me noopener" aria-label="GitHub" title="GitHub" data-motion-cta data-destination="GITHUB">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 1.5A10.5 10.5 0 0 0 8.68 22c.52.1.71-.23.71-.5v-1.96c-2.9.63-3.52-1.24-3.52-1.24-.48-1.2-1.16-1.53-1.16-1.53-.95-.65.07-.64.07-.64 1.05.07 1.6 1.08 1.6 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.31-.26-4.74-1.16-4.74-5.14 0-1.13.4-2.06 1.07-2.78-.11-.27-.46-1.32.1-2.76 0 0 .87-.28 2.85 1.06a9.9 9.9 0 0 1 5.2 0c1.97-1.34 2.84-1.06 2.84-1.06.57 1.44.21 2.49.11 2.76.67.72 1.07 1.65 1.07 2.78 0 3.99-2.44 4.87-4.76 5.13.38.32.71.96.71 1.94v2.87c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5z"/></svg>
           </a>
         </nav>
@@ -2860,8 +3135,61 @@
     schedule();
   })();
 
-  /* everything below is motion enhancement — bail to the static, fully
-     visible state when the user prefers reduced motion */
+  /* Destination-aware routing. Ordinary activation uses the current tab so
+     the handoff stays visible; modified/middle clicks keep browser defaults. */
+  var ROUTE_DURATION = 420;
+  var routeDelay = reduce ? 0 : ROUTE_DURATION;
+  var routeTransition = document.getElementById('route-transition');
+  var routeDestination = document.getElementById('route-destination');
+  var routeTimer = null;
+  var routingAnchor = null;
+  var resetRoute = function(){
+    if (routeTimer) window.clearTimeout(routeTimer);
+    routeTimer = null;
+    root.classList.remove('is-leaving');
+    if (routingAnchor) routingAnchor.classList.remove('is-routing');
+    routingAnchor = null;
+    if (routeTransition) routeTransition.setAttribute('aria-hidden','true');
+  };
+  document.addEventListener('click', function(event){
+    if (!event.target || !event.target.closest) return;
+    var anchor = event.target.closest('a[data-motion-surface],a[data-motion-cta]');
+    if (!anchor || event.defaultPrevented) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (anchor.hasAttribute('download')) return;
+    var rawHref = anchor.getAttribute('href') || '';
+    if (!rawHref || rawHref.charAt(0) === '#') return;
+    var destinationUrl;
+    try { destinationUrl = new URL(anchor.href, window.location.href); } catch(error) { return; }
+    if (!/^https?:$/.test(destinationUrl.protocol)) return;
+
+    event.preventDefault();
+    if (routeDelay === 0) {
+      window.location.assign(destinationUrl.href);
+      return;
+    }
+    if (root.classList.contains('is-leaving')) return;
+
+    routingAnchor = anchor;
+    routingAnchor.classList.add('is-routing');
+    if (routeDestination) routeDestination.textContent = anchor.dataset.destination || destinationUrl.hostname;
+    if (routeTransition) {
+      var routeRect = anchor.getBoundingClientRect();
+      var routeX = ((routeRect.left + routeRect.width / 2) / Math.max(window.innerWidth,1) * 100).toFixed(2) + '%';
+      var routeY = ((routeRect.top + routeRect.height / 2) / Math.max(window.innerHeight,1) * 100).toFixed(2) + '%';
+      routeTransition.style.setProperty('--route-x',routeX);
+      routeTransition.style.setProperty('--route-y',routeY);
+      routeTransition.setAttribute('aria-hidden','false');
+    }
+    root.classList.add('is-leaving');
+    routeTimer = window.setTimeout(function(){
+      window.location.assign(destinationUrl.href);
+    }, routeDelay);
+  });
+  window.addEventListener('pageshow', function(){ resetRoute(); });
+
+  /* Everything below is visual motion enhancement. Reduced-motion users keep
+     the routing semantics above, but routeDelay=0 and all content is static. */
   if (reduce) return;
 
   root.classList.add('js-reveal');
@@ -2873,25 +3201,68 @@
     for (i=0;i<els.length;i++) els[i].style.setProperty('--i', Math.min(i,6));
   };
   stagger('.facts .fact');
-  stagger('.projects .card');
+  stagger('.projects > a.card');
 
-  /* scroll-reveal: hero reveals immediately (always in view), the rest on scroll */
+  /* Laboratory boot: the prepaint frame is held for two rAFs, then the hero
+     runs as one 0–900ms sequence. Scroll reveals remain a separate state. */
   var hero = document.querySelector('.hero');
-  requestAnimationFrame(function(){
-    if (!hero) return;
-    var hr = hero.querySelectorAll('.rise'), i;
-    for (i=0;i<hr.length;i++){ hr[i].style.setProperty('--i', Math.min(i,6)); hr[i].classList.add('in'); }
-  });
+  var revealElement = function(element){
+    if (!element || element.classList.contains('in')) return;
+    element.classList.add('in');
+    var revealIndex = Number(element.style.getPropertyValue('--i')) || 0;
+    window.setTimeout(function(){ element.classList.add('reveal-complete'); }, 760 + Math.min(revealIndex,6) * 55);
+  };
+  var beginBoot = function(){
+    window.requestAnimationFrame(function(){
+      window.requestAnimationFrame(function(){
+        if (window.__hxMotionFailSafe) window.clearTimeout(window.__hxMotionFailSafe);
+        root.classList.remove('motion-preload','is-entered');
+        root.classList.add('is-entering');
+        if (hero) {
+          var heroRise = hero.querySelectorAll('.rise');
+          for (var h=0;h<heroRise.length;h++) heroRise[h].classList.add('in');
+        }
+        window.setTimeout(function(){
+          root.classList.remove('is-entering');
+          root.classList.add('is-entered');
+          if (hero) {
+            var settledHero = hero.querySelectorAll('.rise');
+            for (var sh=0;sh<settledHero.length;sh++) settledHero[sh].classList.add('reveal-complete');
+          }
+        }, 900);
+      });
+    });
+  };
+  if (root.classList.contains('motion-preload')) beginBoot();
+  else {
+    root.classList.add('is-entered');
+    if (hero) {
+      var readyHero = hero.querySelectorAll('.rise');
+      for (var rh=0;rh<readyHero.length;rh++) {
+        readyHero[rh].classList.add('in','reveal-complete');
+      }
+    }
+  }
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function(es){
-      es.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, {threshold:0, rootMargin:'0px 0px -8% 0px'});
+      es.forEach(function(e){ if (e.isIntersecting){ revealElement(e.target); io.unobserve(e.target); } });
+    }, {threshold:.12, rootMargin:'0px 0px -14% 0px'});
     var rest = document.querySelectorAll('.rise'), j;
     for (j=0;j<rest.length;j++){ if (!(hero && hero.contains(rest[j]))) io.observe(rest[j]); }
   } else {
     var all = document.querySelectorAll('.rise'), k;
-    for (k=0;k<all.length;k++) all[k].classList.add('in');
+    for (k=0;k<all.length;k++) revealElement(all[k]);
   }
+
+  /* Keyboard focus must never land inside an opacity:0 reveal target. */
+  document.addEventListener('focusin', function(event){
+    if (!event.target || !event.target.closest) return;
+    var hiddenRise = event.target.closest('.rise:not(.in)');
+    if (!hiddenRise) return;
+    hiddenRise.classList.add('focus-reveal','in','reveal-complete');
+    if (io) io.unobserve(hiddenRise);
+    window.requestAnimationFrame(function(){ hiddenRise.classList.remove('focus-reveal'); });
+  });
 
   /* single rAF scroll tick: progress rail + parallax drivers */
   var ticking = false;
@@ -2944,45 +3315,46 @@
       if (!raf) raf = requestAnimationFrame(loop);
     }, {passive:true});
 
-    /* Project cards: follow-glow + independent, interruptible X/Y/lift springs.
-       Re-targeting preserves the current velocity, so reversals never snap. */
-    var cards = document.querySelectorAll('.card'), c;
+    /* Clickable project cards only: direct pointer tilt begins after the base
+       hover lift has settled, so it never double-interpolates with CSS.
+       Informational RLCard panels never receive a false navigation affordance. */
+    var cards = document.querySelectorAll('.projects > a.card[data-motion-surface]'), c;
     for (c=0;c<cards.length;c++){
       (function(card){
-        var craf = null, rect = null, last = 0;
-        var x = 0, y = 0, lift = 0, vx = 0, vy = 0, vl = 0;
-        var tx = 0, ty = 0, tl = 0;
-        var spring = function(now){
-          var dt = last ? Math.min((now-last)/1000, .032) : 1/60;
-          last = now;
-          var stiffness = 240, damping = 28;
-          vx += (stiffness*(tx-x) - damping*vx) * dt;
-          vy += (stiffness*(ty-y) - damping*vy) * dt;
-          vl += (stiffness*(tl-lift) - damping*vl) * dt;
-          x += vx*dt; y += vy*dt; lift += vl*dt;
-          card.style.setProperty('--card-rx', x.toFixed(3) + 'deg');
-          card.style.setProperty('--card-ry', y.toFixed(3) + 'deg');
-          card.style.setProperty('--card-lift', lift.toFixed(3) + 'px');
-          if (Math.abs(tx-x)+Math.abs(ty-y)+Math.abs(tl-lift)+Math.abs(vx)+Math.abs(vy)+Math.abs(vl) > .02) {
-            craf = requestAnimationFrame(spring);
-          } else {
-            x=tx; y=ty; lift=tl; vx=vy=vl=0; craf=null; last=0;
-          }
+        var rect = null, tiltTimer = null, lastX = 0, lastY = 0;
+        var paintTilt = function(){
+          if (!rect || !card.classList.contains('is-tilting')) return;
+          var px = lastX / rect.width - 0.5, py = lastY / rect.height - 0.5;
+          card.style.setProperty('--tilt-x', (-py*4).toFixed(3) + 'deg');
+          card.style.setProperty('--tilt-y', (px*4).toFixed(3) + 'deg');
         };
-        var retarget = function(nx,ny,nl){
-          tx=nx; ty=ny; tl=nl;
-          if (!craf) craf=requestAnimationFrame(spring);
-        };
-        card.addEventListener('pointerenter', function(){ rect = card.getBoundingClientRect(); retarget(0,0,-4); });
+        card.addEventListener('pointerenter', function(ev){
+          rect = card.getBoundingClientRect();
+          lastX = ev.clientX - rect.left;
+          lastY = ev.clientY - rect.top;
+          if (tiltTimer) window.clearTimeout(tiltTimer);
+          tiltTimer = window.setTimeout(function(){
+            tiltTimer = null;
+            card.classList.add('is-tilting');
+            paintTilt();
+          }, 220);
+        });
         card.addEventListener('pointermove', function(ev){
           if (!rect) rect = card.getBoundingClientRect();
-          var lx = ev.clientX - rect.left, ly = ev.clientY - rect.top;
-          var px = lx / rect.width - 0.5, py = ly / rect.height - 0.5;
-          card.style.setProperty('--gx', lx + 'px');
-          card.style.setProperty('--gy', ly + 'px');
-          retarget(-py*4,px*4,-4);
+          lastX = ev.clientX - rect.left;
+          lastY = ev.clientY - rect.top;
+          card.style.setProperty('--gx', lastX + 'px');
+          card.style.setProperty('--gy', lastY + 'px');
+          paintTilt();
         }, {passive:true});
-        card.addEventListener('pointerleave', function(){ rect = null; retarget(0,0,0); });
+        card.addEventListener('pointerleave', function(){
+          if (tiltTimer) window.clearTimeout(tiltTimer);
+          tiltTimer = null;
+          card.classList.remove('is-tilting');
+          card.style.setProperty('--tilt-x','0deg');
+          card.style.setProperty('--tilt-y','0deg');
+          rect = null;
+        });
       })(cards[c]);
     }
   }
