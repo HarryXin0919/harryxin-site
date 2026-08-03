@@ -208,6 +208,25 @@ test("section navigation, document order, and numbering stay aligned", async () 
   assert.equal(factCounter[1], expected.now.number, "Currently card numbers must follow section 03");
 });
 
+test("the sticky navigation dissolves into the page instead of becoming a boxed strip", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  assert.match(
+    homepage,
+    /\.topbar::before\s*\{[^}]*inset:0 -24px -20px[^}]*background:linear-gradient\([^}]*mask-image:linear-gradient\(90deg,transparent 0,#000 5%,#000 95%,transparent 100%\)/,
+    "the sticky navigation should feather its material into the page canvas",
+  );
+  assert.match(
+    homepage,
+    /html\.is-scrolled \.topbar\s*\{[^}]*border:0[^}]*background:transparent[^}]*box-shadow:none/,
+    "the scrolled navigation must not restore a solid framed rectangle",
+  );
+  assert.match(
+    homepage,
+    /\.site-nav a\[aria-current="location"\]\s*\{[^}]*border:0[^}]*background:transparent/,
+    "the current section should use the precision marker rather than a filled green box",
+  );
+});
+
 test("About is a four-part clickable index with evidence-led destinations", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
   const aboutMatch = homepage.match(/<section id="about"[\s\S]*?<\/section>/);

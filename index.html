@@ -816,47 +816,92 @@
     padding:0;
   }
   .topbar{
-    min-height:96px;
+    top:env(safe-area-inset-top,0px);
+    min-height:84px;
     margin:0;
     padding:0;
     border:0;
-    border-bottom:1px solid var(--line);
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    -webkit-backdrop-filter:none;
+            backdrop-filter:none;
+    isolation:isolate;
+  }
+  /* A dissolved instrument ribbon: the page grid remains visible and the
+     sticky state fades into the canvas instead of becoming a pasted-on bar. */
+  .topbar::before{
+    content:"";
+    position:absolute;
+    z-index:-1;
+    inset:0 -24px -20px;
+    pointer-events:none;
+    opacity:0;
+    background:linear-gradient(
+      180deg,
+      rgba(8,11,10,.78) 0%,
+      rgba(8,11,10,.60) 64%,
+      rgba(8,11,10,0) 100%
+    );
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);
+    -webkit-backdrop-filter:blur(18px) saturate(112%);
+            backdrop-filter:blur(18px) saturate(112%);
+    transition:opacity .28s var(--ease);
+  }
+  .topbar::after{
+    content:"";
+    position:absolute;
+    left:6%;
+    right:6%;
+    bottom:0;
+    height:1px;
+    display:block;
+    pointer-events:none;
+    opacity:.32;
+    background:linear-gradient(
+      90deg,
+      transparent,
+      rgba(220,238,224,.10) 18%,
+      rgba(156,255,87,.18) 50%,
+      rgba(220,238,224,.10) 82%,
+      transparent
+    );
+    transition:opacity .28s var(--ease);
+  }
+  html.is-scrolled .topbar{
+    margin:0;
+    border:0;
     border-radius:0;
     background:transparent;
     box-shadow:none;
     -webkit-backdrop-filter:none;
             backdrop-filter:none;
   }
-  html.is-scrolled .topbar{
-    margin:0;
-    border-radius:0;
-    background:rgba(8,11,10,.92);
-    box-shadow:0 1px 0 var(--line);
-    -webkit-backdrop-filter:blur(16px);
-            backdrop-filter:blur(16px);
-  }
+  html.is-scrolled .topbar::before{opacity:1}
+  html.is-scrolled .topbar::after{opacity:.68}
   .topbar-brand{
     display:grid;
-    grid-template-columns:46px auto;
+    grid-template-columns:42px auto;
     grid-template-rows:1fr;
-    gap:14px;
+    gap:13px;
     align-items:center;
     color:var(--paper);
-    font:700 20px/1 var(--headline);
+    font:700 19px/1 var(--headline);
     letter-spacing:.025em;
     text-transform:none;
   }
   .topbar-brand::before{
     content:"H/X";
     display:grid;
-    width:46px;
-    height:46px;
+    width:42px;
+    height:42px;
     place-items:center;
-    border:1px solid var(--amber);
+    border:1px solid rgba(156,255,87,.52);
     color:var(--amber);
-    font:700 13px/1 var(--mono);
-    box-shadow:inset 0 0 22px rgba(156,255,87,.1);
-    transform:rotate(-3deg);
+    font:700 12px/1 var(--mono);
+    box-shadow:none;
+    transform:rotate(-1deg);
   }
   .topbar-brand .dot{display:none}
   .topbar-name{
@@ -878,25 +923,40 @@
     background:none;
   }
   .site-nav a{
-    padding:11px 13px 10px;
-    border:1px solid transparent;
+    padding:11px 14px 10px;
+    border:0;
     border-radius:0;
+    background:transparent;
     color:var(--paper-dim);
     font:600 13px/1.1 var(--mono);
     letter-spacing:.09em;
     text-transform:uppercase;
+    transition:color .18s var(--ease),transform 120ms var(--ease);
   }
   .site-nav a:hover{
-    border-color:var(--line);
     color:var(--paper);
-    background:rgba(156,255,87,.04);
+    background:transparent;
+    transform:translateY(-1px);
   }
   .site-nav a[aria-current="location"]{
-    border-color:rgba(156,255,87,.28);
+    border:0;
     color:var(--amber);
-    background:rgba(156,255,87,.08);
+    background:transparent;
   }
-  .site-nav a[aria-current="location"]::after{display:none}
+  .site-nav a[aria-current="location"]::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    right:auto;
+    bottom:3px;
+    width:16px;
+    height:1px;
+    display:block;
+    opacity:.82;
+    background:var(--amber);
+    box-shadow:0 0 8px rgba(156,255,87,.26);
+    transform:translateX(-50%);
+  }
   .right,.loc,.langsw{
     color:var(--paper-dim);
     font:500 12px/1.2 var(--mono);
@@ -2423,6 +2483,14 @@
     section,
     #about,
     #creating{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
+    .topbar::before{
+      inset:0;
+      background:var(--ink);
+      -webkit-mask-image:none;
+              mask-image:none;
+      -webkit-backdrop-filter:none;
+              backdrop-filter:none;
+    }
   }
   @media (prefers-reduced-motion:reduce){
     .signal-state::before{animation:none!important}
