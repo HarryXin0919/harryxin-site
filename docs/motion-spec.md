@@ -4,7 +4,7 @@
 
 - 视觉语义：**实验室启动 / signal acquire**。克制、精确、可中断，不做全屏加载器。
 - 不新增永久外框、区块底色或遮罩背景；沿用现有透明区块与连续网格背景。
-- 动画只使用 `opacity`、`transform`，标题可渐进增强使用 `clip-path`；不动画尺寸、布局、滤镜或大面积阴影。
+- 动画只使用 `opacity`、`transform`；标题始终以完整字形淡入，不使用会切断下伸笔画的 `clip-path`。不动画尺寸、布局、滤镜或大面积阴影。
 - 沿用现有缓动：`--ease: cubic-bezier(.2,.7,.2,1)`；强调动作使用 `--ease-spring: cubic-bezier(.16,1,.3,1)`。
 - 页面入场与滚动显现必须是两个独立状态机。动画结束后移除临时 `will-change`，不得留下持续运行的 rAF。
 
@@ -17,7 +17,7 @@
 | 首次绘制前 | 页面 | `<head>` 设置 `motion-enabled motion-preload`；双 rAF 后切换为 `is-entering`，内容保持可访问 |
 | 0–180ms | 现有网格与氛围层 | 淡入至既有环境亮度，不创建新背景 |
 | 80–320ms | H/X 装饰、顶栏与顶部线条 | 顶栏 `translateY(-10px) → 0`、淡入；现有 chrome 同步启动 |
-| 220–560ms | 栏目标签与主标题 | `translateY(22px) → 0`、淡入；标题支持时用 `clip-path: inset(0 0 100% 0) → inset(0)` |
+| 220–560ms | 栏目标签与主标题 | 完整字形 `translateY(22px) → 0` 并淡入；每个可见帧都必须保留字母下伸笔画 |
 | 360–680ms | 发音与简介 | 依次淡入并上移 |
 | 520–800ms | 社交入口 | 四项依次上移、淡入，stagger 55ms |
 | 700–900ms | 页面 | 所有对象 settle；移除 `is-entering` 与临时合成提示，保留 `is-entered` |
@@ -70,14 +70,14 @@ stateDiagram-v2
 - `@media (prefers-reduced-motion: reduce)` 下：首帧直接进入最终视觉状态，不播放 boot、scroll reveal、位移、缩放或 420ms 离场等待。
 - Hover/Pressed 可保留即时颜色与边线变化；Focus outline 始终保留。
 - 动画期间不得锁定滚动、遮挡链接或改变 tab order；不使用 `aria-hidden` 隐藏真实内容。
-- `clip-path` 仅作视觉增强；不支持时必须退化为 `opacity + transform`。
+- 主标题不得使用 `clip-path`、mask 或容器裁切；所有浏览器统一使用 `opacity + transform`。
 
 ## 5. Test matrix
 
 | 场景 | 验收标准 |
 |---|---|
 | Desktop Chrome/Edge，fine pointer | 0–900ms 顺序正确；Hover、Pressed、Leaving 可中断且无跳帧 |
-| Safari/Firefox | 无 `clip-path` 依赖；退化后内容、焦点与导航完整 |
+| Safari/Firefox | 主标题无 `clip-path`；动画全过程字形、焦点与导航完整 |
 | Mobile/touch | 不出现粘滞 Hover；轻触有 Pressed 反馈，布局无位移 |
 | Keyboard only | Tab 顺序不变；所有跳转块都有清晰 Focus；Enter 导航正常 |
 | Reduced motion | 首帧全部可见；无位移、缩放、stagger 或 420ms 延迟 |
