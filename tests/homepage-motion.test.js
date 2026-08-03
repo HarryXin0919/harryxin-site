@@ -355,3 +355,20 @@ test("legacy styles cannot override CTA, boot, tilt, or keyboard reveal states",
     "hero title motion must never clip or mask descenders such as Harry's y",
   );
 });
+
+test("footer brand and social links blend into the page without a container frame", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const labFooter = homepage.match(
+    /footer\s*\{\s*margin-top:\s*18px;[^}]*\}/i,
+  );
+
+  assert.ok(labFooter, "the laboratory footer style is missing");
+  assert.match(labFooter[0], /\bborder\s*:\s*0\s*;/i);
+  assert.match(labFooter[0], /\bbackground\s*:\s*transparent\s*;/i);
+  assert.match(labFooter[0], /\bbox-shadow\s*:\s*none\s*;/i);
+  assert.doesNotMatch(
+    labFooter[0],
+    /(?:linear-gradient|rgba?\()/i,
+    "the footer must not create a separate tinted surface",
+  );
+});
