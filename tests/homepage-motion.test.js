@@ -372,3 +372,15 @@ test("footer brand and social links blend into the page without a container fram
     "the footer must not create a separate tinted surface",
   );
 });
+
+test("project cards do not render the legacy circular corner ornament", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const laboratorySkin = homepage.split("RLCard laboratory visual skin")[1];
+
+  assert.ok(laboratorySkin, "the laboratory visual skin is missing");
+  assert.match(
+    laboratorySkin,
+    /\.card::before\s*\{\s*content\s*:\s*none\s*;\s*\}/i,
+    "the laboratory skin must suppress the inherited circular card ornament",
+  );
+});
