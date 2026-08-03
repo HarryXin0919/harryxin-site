@@ -278,6 +278,67 @@ test("About is a four-part clickable index with evidence-led destinations", asyn
     assertDestinationLabel(tag, `About module ${index + 1}`);
   }
 
+  assert.match(
+    aboutMatch[0],
+    /class="about-robotics-stage"/,
+    "Robotics needs the monumental poster stage",
+  );
+  assert.match(
+    aboutMatch[0],
+    /With FRC 6941 IronPulse, I build and iterate competition robots, then help turn that work into calm execution under match pressure\./,
+    "Robotics needs the approved concise English role statement",
+  );
+  assert.match(
+    aboutMatch[0],
+    /在 FRC 6941 IronPulse，我参与竞赛机器人的研发与迭代，并把工程推进转化为赛场压力下的稳定执行。/,
+    "Robotics needs the approved concise Chinese role statement",
+  );
+  assert.match(
+    aboutMatch[0],
+    /class="about-robotics-number" aria-hidden="true">6941<\/strong>/,
+    "Robotics must retain 6941 as its decorative visual anchor",
+  );
+  assert.match(
+    aboutMatch[0],
+    /class="about-robotics-logo"[^>]*alt=""[^>]*aria-hidden="true"/,
+    "the IronPulse seal must remain decorative to assistive technology",
+  );
+  assert.match(
+    aboutMatch[0],
+    /Shanghai Regional Champions[\s\S]*?Houston Worlds/,
+    "Robotics needs the consolidated English competition result",
+  );
+  assert.match(
+    aboutMatch[0],
+    /上海区域赛冠军[\s\S]*?休斯顿世界赛/,
+    "Robotics needs the consolidated Chinese competition result",
+  );
+  assert.doesNotMatch(
+    aboutMatch[0],
+    /about-work-(?:list|row)|>BUILD<|>TEAM<|>RESULT</,
+    "Robotics must not restore the old micro-label table",
+  );
+  assert.doesNotMatch(
+    homepage,
+    /\.about-work-(?:list|row)\b/,
+    "obsolete Robotics table styles must be removed",
+  );
+  assert.match(
+    homepage,
+    /\.about-robotics-stage\{[^}]*min-height:230px/,
+    "the desktop Robotics poster stage must retain its monumental height",
+  );
+  assert.match(
+    homepage,
+    /\.about-robotics-number\{[^}]*clamp\(118px,12\.2vw,184px\)/,
+    "6941 must remain the dominant responsive visual",
+  );
+  assert.match(
+    homepage,
+    /\.about-robotics::before\{display:none\}/,
+    "Robotics must not inherit the generic green sweep overlay",
+  );
+
   assert.match(aboutMatch[0], /class="[^"]*\babout-repo-preview\b[^"]*"/, "GitHub module needs project summary rows");
   assert.match(aboutMatch[0], /class="[^"]*\babout-video-preview\b[^"]*"/, "Content Creator module needs the two-video preview");
   assert.match(aboutMatch[0], /aE1tZ9RmhG0/, "Content Creator module is missing the summer-school video");
