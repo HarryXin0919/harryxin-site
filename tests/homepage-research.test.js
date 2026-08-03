@@ -127,6 +127,8 @@ test("homepage presents the extension as post-outcome exploratory", async () => 
   assert.match(homepage, /BLOCKED · REPORT FAILED/);
   assert.match(homepage, /REPORT NOT SAVED/);
   assert.match(homepage, /NO GPU START/);
+  assert.match(homepage, /BLOCKED · DATA INVALID/);
+  assert.match(homepage, /paused && !blocked/);
   assert.match(homepage, /POST-OUTCOME EXPLORATORY/);
   assert.match(homepage, /EXPLORATORY COMPLETION/);
   assert.match(homepage, /LAST COMPLETED RUN \/ 最近完成/);

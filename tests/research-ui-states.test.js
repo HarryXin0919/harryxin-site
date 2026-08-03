@@ -414,3 +414,39 @@ test("detail UI never calls a failed Phase 7 report saved", () => {
     /REPORT SAVED|COMPLETE · SAVED/,
   );
 });
+
+test("detail UI gives a blocked legacy payload priority over Pilot completion", () => {
+  const payload = exploratoryPayload({
+    state: "blocked",
+    runStatus: "complete",
+    phase: 5,
+    completedRuns: 12,
+    progress: 50000,
+  });
+  delete payload.research.cohort;
+  delete payload.research.protocolMode;
+  delete payload.research.sourceStudyId;
+  payload.research.studyId = "leduc-reward-study-v1";
+  payload.research.totalRuns = 12;
+  payload.research.selection = null;
+  payload.research.currentRun.cohort = "pilot";
+  payload.research.currentRun.target = 50000;
+  payload.research.currentRun.fraction = 1;
+
+  const blocked = createHarness();
+  blocked.apply(payload);
+
+  assert.equal(
+    blocked.elements.liveDataState.textContent,
+    "BLOCKED · DATA INVALID",
+  );
+  assert.equal(
+    blocked.elements.liveRunHeading.textContent,
+    "数据受阻 / Data Blocked",
+  );
+  assert.equal(
+    blocked.elements.liveThroughput.textContent,
+    "BLOCKED · DATA INVALID",
+  );
+  assert.doesNotMatch(blocked.elements.liveDataState.textContent, /COMPLETE/);
+});

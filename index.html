@@ -3465,6 +3465,8 @@
               : queued
                 ? 'QUEUED · AWAITING GPU'
                 : 'POST-OUTCOME EXPLORATORY · RUNNING';
+      } else if (connection === 'LIVE' && blocked) {
+        stateText = 'BLOCKED · DATA INVALID';
       } else if (connection === 'LIVE' && pilotComplete) {
         stateText = awaitingSelection
           ? 'PILOT COMPLETE · 等待选组'
@@ -3506,13 +3508,19 @@
         if (blocked) {
           researchCurrentLabelEl.textContent = reportBlocked
             ? 'REPORT BLOCKED / 报告受阻'
-            : 'BLOCKED RUN / 启动受阻';
+            : isExploratory
+              ? 'BLOCKED RUN / 启动受阻'
+              : 'DATA BLOCKED / 数据受阻';
           researchSpeedLabelEl.textContent = reportBlocked
             ? 'REPORT STATUS'
-            : 'PREFLIGHT STATUS';
+            : isExploratory
+              ? 'PREFLIGHT STATUS'
+              : 'DATA STATUS';
           researchEtaLabelEl.textContent = reportBlocked
             ? 'REPORT ARTIFACT'
-            : 'GPU STATUS';
+            : isExploratory
+              ? 'GPU STATUS'
+              : 'DATA CONTRACT';
         } else if (completedSnapshot) {
           researchCurrentLabelEl.textContent = 'LAST COMPLETED RUN / 最近完成';
           researchSpeedLabelEl.textContent = 'RUN STATUS';
@@ -3546,7 +3554,9 @@
         researchSpeedEl.textContent = blocked
           ? reportBlocked
             ? 'REPORT BLOCKED'
-            : 'BLOCKED'
+            : isExploratory
+              ? 'BLOCKED'
+              : 'DATA INVALID'
           : completedSnapshot
             ? 'COMPLETE'
             : queued
@@ -3560,16 +3570,22 @@
         if (blocked) {
           researchEtaEl.textContent = reportBlocked
             ? 'REPORT NOT SAVED'
-            : 'NO GPU START';
+            : isExploratory
+              ? 'NO GPU START'
+              : 'NOT COMPLETE';
         }
         if (queued) researchEtaEl.textContent = 'AFTER PREFLIGHT';
-        if (paused) researchEtaEl.textContent = 'RESUME PENDING';
+        if (paused && !blocked) researchEtaEl.textContent = 'RESUME PENDING';
       } else if (cohortComplete) {
         researchCurrentLabelEl.textContent = reportBlocked
           ? 'REPORT BLOCKED / 报告受阻'
+          : blocked
+            ? 'DATA BLOCKED / 数据受阻'
           : 'LAST COMPLETED RUN / 最近完成';
         researchCurrentEl.textContent = reportBlocked
           ? '20 / 20 · REPORT BLOCKED'
+          : blocked
+            ? 'BLOCKED · DATA INVALID'
           : isExploratory
           ? reporting
             ? '20 / 20 · REPORTING'
@@ -3586,14 +3602,20 @@
         researchSpeedLabelEl.textContent = 'RUN STATUS';
         researchSpeedEl.textContent = reportBlocked
           ? 'REPORT BLOCKED'
+          : blocked
+            ? 'DATA INVALID'
           : reporting
             ? 'REPORTING'
             : 'COMPLETE';
         researchEtaLabelEl.textContent = reportBlocked
           ? 'REPORT ARTIFACT'
+          : blocked
+            ? 'DATA CONTRACT'
           : 'SAVED ARTIFACT';
         researchEtaEl.textContent = reportBlocked
           ? 'REPORT NOT SAVED'
+          : blocked
+            ? 'NOT COMPLETE'
           : reporting
             ? 'BUILDING REPORT'
             : 'SNAPSHOT PENDING';

@@ -431,10 +431,12 @@ function applyResearchSignal(data) {
         : research.state
       : connection.toLowerCase();
   liveChip.classList.add(effectiveState);
-  if (connection === "LIVE" && isExploratory && blocked) {
-    liveChip.textContent = reportBlocked
-      ? "BLOCKED · REPORT FAILED"
-      : "BLOCKED · PREFLIGHT FAILED";
+  if (connection === "LIVE" && blocked) {
+    liveChip.textContent = isExploratory
+      ? reportBlocked
+        ? "BLOCKED · REPORT FAILED"
+        : "BLOCKED · PREFLIGHT FAILED"
+      : "BLOCKED · DATA INVALID";
   } else if (connection === "LIVE" && reporting) {
     liveChip.textContent = "REPORTING · EXPLORATORY";
   } else if (connection === "LIVE" && isExploratory && exploratoryComplete) {
@@ -459,17 +461,21 @@ function applyResearchSignal(data) {
     liveChip.textContent = `${connection} · ${researchState}`;
   }
   byId("researchTelemetryState").textContent =
-    connection === "LIVE" && isExploratory
+    connection === "LIVE" && blocked
+      ? "LIVE · BLOCKED"
+      : connection === "LIVE" && isExploratory
       ? `LIVE · ${reporting ? "REPORTING" : researchState} · EXPLORATORY`
       : connection === "LIVE" && pilotComplete
         ? "LIVE · PILOT COMPLETE"
       : `${connection} · ${researchState}`;
   byId("phaseCaptionRight").textContent = reporting
     ? "EXPLORATORY REPORT · BUILDING"
-    : isExploratory && blocked
-      ? reportBlocked
-        ? "REPORT BLOCKED · NOT SAVED"
-        : "EXTENSION BLOCKED · NO GPU START"
+    : blocked
+      ? isExploratory
+        ? reportBlocked
+          ? "REPORT BLOCKED · NOT SAVED"
+          : "EXTENSION BLOCKED · NO GPU START"
+        : "TELEMETRY BLOCKED · DATA INVALID"
     : isExploratory && queued
       ? "EXTENSION QUEUED · PREFLIGHT"
       : isExploratory && paused
@@ -555,17 +561,25 @@ function applyResearchSignal(data) {
     if (blocked) {
       byId("liveRunHeading").textContent = reportBlocked
         ? "报告受阻 / Report Blocked"
-        : "启动受阻 / Preflight Blocked";
+        : isExploratory
+          ? "启动受阻 / Preflight Blocked"
+          : "数据受阻 / Data Blocked";
       byId("liveThroughputLabel").textContent = reportBlocked
         ? "REPORT STATUS"
-        : "PREFLIGHT STATUS";
+        : isExploratory
+          ? "PREFLIGHT STATUS"
+          : "DATA STATUS";
       setLiveChartEmpty(
         reportBlocked
           ? "BLOCKED · REPORT NOT SAVED"
-          : "BLOCKED · NO GPU START",
+          : isExploratory
+            ? "BLOCKED · NO GPU START"
+            : "BLOCKED · DATA INVALID",
         reportBlocked
           ? "20 / 20 个探索运行已经完成，但探索性报告生成失败；页面不会把它标记为已保存。"
-          : "安全预检未通过；GPU 未启动。修复条件并重新预检后才会进入运行态。",
+          : isExploratory
+            ? "安全预检未通过；GPU 未启动。修复条件并重新预检后才会进入运行态。"
+            : "研究遥测未通过数据合同校验；页面不会把无效状态标记为已完成。",
       );
     } else if (completedSnapshot) {
       byId("liveRunHeading").textContent = "最近完成运行 / Latest Completed Run";
@@ -599,7 +613,9 @@ function applyResearchSignal(data) {
     byId("liveThroughput").textContent = blocked
       ? reportBlocked
         ? "BLOCKED · REPORT NOT SAVED"
-        : "BLOCKED · NO GPU START"
+        : isExploratory
+          ? "BLOCKED · NO GPU START"
+          : "BLOCKED · DATA INVALID"
       : completedSnapshot
         ? "COMPLETE · SAVED"
         : queued
@@ -613,11 +629,15 @@ function applyResearchSignal(data) {
   } else if (cohortComplete) {
     byId("liveRunHeading").textContent = reportBlocked
       ? "报告受阻 / Report Blocked"
+      : blocked
+        ? "数据受阻 / Data Blocked"
       : isExploratory
         ? "探索延长已完成 / Exploratory Complete"
         : "Pilot 已完成 / Pilot Complete";
     byId("liveArm").textContent = reportBlocked
       ? "20 / 20 · REPORT BLOCKED"
+      : blocked
+        ? "BLOCKED · DATA INVALID"
       : isExploratory
       ? reporting
         ? "REPORTING · EXPLORATORY"
@@ -633,6 +653,8 @@ function applyResearchSignal(data) {
     byId("liveThroughputLabel").textContent = "RUN STATUS";
     byId("liveThroughput").textContent = reportBlocked
       ? "BLOCKED · REPORT NOT SAVED"
+      : blocked
+        ? "BLOCKED · DATA INVALID"
       : reporting
         ? "REPORTING · EXPLORATORY"
         : "COMPLETED SNAPSHOT PENDING";
@@ -690,7 +712,9 @@ function applyResearchSignal(data) {
               ? "探索运行已暂停，恢复点已保存；页面保留当前单 run 的真实 CSV。"
               : "结果后探索正在运行；页面只呈现当前 arm / seed 的真实 CSV，不做跨 seed 汇总。"
       : connection === "LIVE" && pilotComplete
-      ? "Pilot 12 / 12 已完成；遥测在线，正在等待按预注册规则锁定候选。"
+      ? blocked
+        ? "研究遥测未通过数据合同校验；页面不会把无效的 Pilot 状态标记为完成。"
+        : "Pilot 12 / 12 已完成；遥测在线，正在等待按预注册规则锁定候选。"
       : connection === "LIVE"
         ? research.state === "running"
           ? "训练与遥测均处于实时状态。"
