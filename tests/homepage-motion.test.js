@@ -293,6 +293,11 @@ test("the Bilibili cover follows the selected site language", async () => {
     /img\.localized-video-cover\s*\{[^}]*object-fit\s*:\s*contain/,
     "localized covers must fill their matching 16:9 frames instead of appearing inset",
   );
+  assert.match(
+    homepage,
+    /html\[lang\^="en"\] img\.localized-video-cover\s*\{[^}]*top:-5%[^}]*left:-7%[^}]*width:114%[^}]*height:114%/,
+    "the English cover should use a restrained upper-biased crop that hides the generated lower legs",
+  );
 });
 
 test("public project cards link to their exact GitHub repositories", async () => {
