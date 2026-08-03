@@ -212,6 +212,16 @@ test("About is a four-part clickable index with evidence-led destinations", asyn
   const homepage = await readFile(new URL("index.html", root), "utf8");
   const aboutMatch = homepage.match(/<section id="about"[\s\S]*?<\/section>/);
   assert.ok(aboutMatch, "About section markup is missing");
+  assert.match(
+    homepage,
+    /--zh-sans:"PingFang SC"[\s\S]*?html\.lang-zh #about \[data-lang="zh"\]\s*\{\s*font-family:var\(--zh-sans\)/,
+    "About Chinese copy must use the modern sans-serif font stack",
+  );
+  assert.doesNotMatch(
+    homepage,
+    /html\.lang-zh \.(?:about-intro|about-area h3|about-copy)[^{]*\{[^}]*font-family:var\(--zh-serif\)/,
+    "About Chinese typography must not fall back to the serif stack",
+  );
 
   const modules = tagsWithClass(aboutMatch[0], "about-area");
   assert.equal(modules.length, 4, "About must expose exactly four clickable modules");

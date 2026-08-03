@@ -762,6 +762,7 @@
     --display:"Bahnschrift Condensed","Franklin Gothic Medium","Arial Narrow",sans-serif;
     --headline:"Segoe UI Variable Display","Aptos Display","Avenir Next","Helvetica Neue",sans-serif;
     --zh-serif:"Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;
+    --zh-sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei UI","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC","Heiti SC",sans-serif;
     --mono:"Cascadia Mono","Cascadia Code","Consolas",monospace;
     --maxw:1480px;
   }
@@ -1062,6 +1063,11 @@
     letter-spacing:-.025em;
     text-transform:uppercase;
   }
+  html.lang-zh #about .shead h2{
+    font-family:var(--zh-sans);
+    font-weight:800;
+    letter-spacing:.015em;
+  }
   .shead .ln{height:1px;background:var(--line)}
   .arr-link{
     color:var(--amber);
@@ -1083,9 +1089,9 @@
     letter-spacing:-.015em;
   }
   html.lang-zh .about-intro{
-    font-family:var(--zh-serif);
-    font-weight:700;
-    letter-spacing:.025em;
+    font-family:var(--zh-sans);
+    font-weight:650;
+    letter-spacing:.012em;
   }
   .about-areas{
     display:grid;
@@ -1152,15 +1158,21 @@
     letter-spacing:-.02em;
   }
   html.lang-zh .about-area h3{
-    font-family:var(--zh-serif);
-    letter-spacing:.04em;
+    font-family:var(--zh-sans);
+    font-weight:750;
+    letter-spacing:.015em;
   }
   .about-copy{
     margin:0;
     color:var(--paper-dim);
     font:16px/1.8 Georgia,"Times New Roman",serif;
   }
-  html.lang-zh .about-copy{font-family:var(--zh-serif)}
+  html.lang-zh .about-copy{
+    font-family:var(--zh-sans);
+    font-weight:400;
+    letter-spacing:.008em;
+  }
+  html.lang-zh #about [data-lang="zh"]{font-family:var(--zh-sans)}
   .about-evidence{
     margin:clamp(28px,3.3vw,46px) 0 0;
   }
