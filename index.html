@@ -334,7 +334,7 @@
   /* facts grid */
   .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:1px; background:var(--line); border:1px solid var(--line); counter-reset:fact}
   .fact{background:var(--ink); padding:var(--sp-4); position:relative; counter-increment:fact}
-  .fact::after{content:"02." counter(fact,decimal-leading-zero); position:absolute; bottom:var(--sp-3); right:var(--sp-3); font-family:"Spline Sans Mono",monospace; font-size:var(--step--2); letter-spacing:.08em; color:var(--paper-dim); font-variant-numeric:lining-nums tabular-nums; opacity:.5}
+  .fact::after{content:"03." counter(fact,decimal-leading-zero); position:absolute; bottom:var(--sp-3); right:var(--sp-3); font-family:"Spline Sans Mono",monospace; font-size:var(--step--2); letter-spacing:.08em; color:var(--paper-dim); font-variant-numeric:lining-nums tabular-nums; opacity:.5}
   .fact .k{font-family:"Spline Sans Mono",monospace; font-size:var(--step--1); letter-spacing:.1em; text-transform:uppercase; color:var(--amber); font-variant-numeric:lining-nums tabular-nums; margin:0 0 var(--sp-2)}
   .fact .v{font-size:var(--step-1); color:var(--paper); line-height:var(--lh-snug); font-weight:500}
   .fact .v small{color:var(--paper-dim); font-size:13.5px; font-weight:400}
@@ -2290,20 +2290,29 @@
     transition-property:border-color,background-color,color,opacity;
   }
 
-  /* The hero is a single composed boot sequence, not a set of unrelated fades. */
-  html.js-reveal .hero .eyebrow.rise{transition-duration:300ms;transition-delay:220ms}
+  /* H/X signal-lock boot. The title remains one uncropped text plane. */
+  html.js-reveal .hero .eyebrow.rise{transition-duration:250ms;transition-delay:190ms}
   html.js-reveal .hero h1.rise{
+    --reveal-y:14px;
+    overflow:visible;
+    padding-bottom:.1em;
+    margin-bottom:calc(34px - .1em);
     transition-property:opacity,transform;
-    transition-duration:340ms;
-    transition-delay:220ms;
+    transition-duration:330ms;
+    transition-delay:250ms;
   }
-  html.js-reveal .hero .pron.rise{transition-duration:320ms;transition-delay:360ms}
-  html.js-reveal .hero .lede.rise{transition-duration:270ms;transition-delay:410ms}
-  html.js-reveal .hero .social.rise{transition-duration:115ms}
-  html.js-reveal .hero .social.rise:nth-child(1){transition-delay:520ms}
-  html.js-reveal .hero .social.rise:nth-child(2){transition-delay:575ms}
-  html.js-reveal .hero .social.rise:nth-child(3){transition-delay:630ms}
-  html.js-reveal .hero .social.rise:nth-child(4){transition-delay:685ms}
+  html.js-reveal .hero h1.rise.in{--reveal-y:0px}
+  html.js-reveal .hero .pron.rise{transition-duration:270ms;transition-delay:370ms}
+  html.js-reveal .hero .lede.rise{transition-duration:290ms;transition-delay:430ms}
+  html.js-reveal .hero .social.rise{transition-duration:150ms}
+  html.js-reveal .hero .social.rise:nth-child(1){transition-delay:560ms}
+  html.js-reveal .hero .social.rise:nth-child(2){transition-delay:610ms}
+  html.js-reveal .hero .social.rise:nth-child(3){transition-delay:660ms}
+  html.js-reveal .hero .social.rise:nth-child(4){transition-delay:710ms}
+  html.js-reveal .hero .social.rise.in.reveal-complete{
+    transition-delay:0ms;
+    transition-duration:var(--motion-interaction);
+  }
 
   [data-motion-surface]:not(.rise),
   [data-motion-cta]{
@@ -2356,25 +2365,84 @@
     transition-duration:var(--motion-press);
   }
 
-  /* Prepaint state and the compositor-only 0–900ms laboratory boot. */
+  /* Prepaint state and the compositor-only 0–900ms H/X signal-lock boot. */
   html.motion-enabled.motion-preload body::before,
   html.motion-enabled.motion-preload .atmo,
   html.motion-enabled.motion-preload .scope,
   html.motion-enabled.motion-preload .scope-tag,
   html.motion-enabled.motion-preload .topbar,
-  html.motion-enabled.motion-preload .watermark{opacity:0}
+  html.motion-enabled.motion-preload .watermark,
+  html.motion-enabled.motion-preload .hero::after{opacity:0}
   html.motion-enabled.motion-preload .topbar{transform:translate3d(0,-10px,0)}
+  .hx-lock{white-space:nowrap}
+  .hx-lock>span{display:inline-block}
+  .hx-lock__slash{transform-origin:50% 52%}
+  html.motion-enabled.motion-preload .hx-lock,
+  html.motion-enabled.is-entering .hx-lock{
+    display:inline-flex;
+    color:rgba(156,255,87,.22);
+  }
   html.motion-enabled.is-entering body::before{animation:hx-grid-in 180ms ease-out both}
   html.motion-enabled.is-entering .atmo{animation:hx-atmo-in 180ms ease-out both}
   html.motion-enabled.is-entering .topbar{animation:hx-topbar-in 220ms 100ms var(--motion-ease) both}
   html.motion-enabled.is-entering .scope,
   html.motion-enabled.is-entering .scope-tag{animation:hx-chrome-in 240ms 80ms ease-out both}
-  html.motion-enabled.is-entering .watermark{animation:hx-watermark-in 360ms 120ms ease-out both}
+  html.motion-enabled.is-entering .hero::after{animation:hx-chrome-in 240ms 100ms ease-out both}
+  html.motion-enabled.is-entering .hero::before{
+    content:"";
+    display:block;
+    position:absolute;
+    z-index:1;
+    top:0;
+    right:0;
+    left:0;
+    height:78px;
+    pointer-events:none;
+    background:linear-gradient(
+      180deg,
+      transparent,
+      rgba(156,255,87,.025) 28%,
+      rgba(156,255,87,.22) 50%,
+      rgba(156,255,87,.025) 72%,
+      transparent
+    );
+    animation:hx-signal-sweep 560ms 40ms ease-out both;
+  }
+  html.motion-enabled.is-entering .hx-lock{animation:hx-lock-field 480ms 40ms ease-out both}
+  html.motion-enabled.is-entering .hx-lock__h{animation:hx-lock-h 280ms 70ms var(--motion-ease) both}
+  html.motion-enabled.is-entering .hx-lock__x{animation:hx-lock-x 280ms 70ms var(--motion-ease) both}
+  html.motion-enabled.is-entering .hx-lock__slash{animation:hx-lock-slash 230ms 105ms var(--motion-ease) both}
   @keyframes hx-grid-in{from{opacity:0}}
   @keyframes hx-atmo-in{from{opacity:0}}
   @keyframes hx-topbar-in{from{opacity:0;transform:translate3d(0,-10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
   @keyframes hx-chrome-in{from{opacity:0}to{opacity:1}}
-  @keyframes hx-watermark-in{from{opacity:0}}
+  @keyframes hx-signal-sweep{
+    0%{opacity:0;transform:translate3d(0,-18vh,0)}
+    18%{opacity:.72}
+    82%{opacity:.36}
+    100%{opacity:0;transform:translate3d(0,96vh,0)}
+  }
+  @keyframes hx-lock-field{
+    0%{opacity:0}
+    42%{opacity:.3}
+    74%{opacity:.16}
+    100%{opacity:0}
+  }
+  @keyframes hx-lock-h{
+    0%{transform:translate3d(-.14em,0,0)}
+    72%{transform:translate3d(.012em,0,0)}
+    100%{transform:translate3d(0,0,0)}
+  }
+  @keyframes hx-lock-x{
+    0%{transform:translate3d(.14em,0,0)}
+    72%{transform:translate3d(-.012em,0,0)}
+    100%{transform:translate3d(0,0,0)}
+  }
+  @keyframes hx-lock-slash{
+    0%,20%{opacity:0;transform:scaleY(.18)}
+    72%{opacity:1;transform:scaleY(1.12)}
+    100%{opacity:1;transform:scaleY(1)}
+  }
 
   /* Destination-aware route curtain. It exists only for the 420ms handoff. */
   .route-transition{
@@ -2466,7 +2534,12 @@
     html.motion-preload .scope,
     html.motion-preload .scope-tag,
     html.motion-preload .topbar,
-    html.motion-preload .watermark{opacity:revert!important;transform:none!important}
+    html.motion-preload .watermark,
+    html.motion-preload .hero::after{opacity:revert!important;transform:none!important}
+    .hx-lock,
+    .hx-lock>span,
+    .hero::before{animation:none!important}
+    .hero::before{display:none!important}
     .rise,
     [data-motion-surface],
     [data-motion-cta]{
@@ -2507,8 +2580,8 @@
     <a class="topbar-brand" href="#home" aria-label="Harry Xin — top"><span class="dot" aria-hidden="true">◆</span><span class="topbar-name">Harry&nbsp;Xin</span></a>
     <nav class="site-nav" aria-label="Page sections / 页面章节">
       <a href="#about"><span data-lang="en">About</span><span data-lang="zh">关于</span></a>
-      <a href="#now"><span data-lang="en">Now</span><span data-lang="zh">近况</span></a>
       <a href="#creating"><span data-lang="en">Creating</span><span data-lang="zh">创作</span></a>
+      <a href="#now"><span data-lang="en">Now</span><span data-lang="zh">近况</span></a>
       <a href="#building"><span data-lang="en">Work</span><span data-lang="zh">项目</span></a>
     </nav>
     <span class="right">
@@ -2523,7 +2596,7 @@
 
   <!-- ===================== HERO ===================== -->
   <header class="hero" id="home" data-num="00" data-name="INDEX">
-    <span class="watermark" aria-hidden="true">H/X</span>
+    <span class="watermark hx-lock" aria-hidden="true"><span class="hx-lock__h">H</span><span class="hx-lock__slash">/</span><span class="hx-lock__x">X</span></span>
     <div class="hero-inner">
       <p class="eyebrow rise d1"><span data-lang="en">Personal index</span><span data-lang="zh">个人主页</span></p>
       <h1 class="rise d1">Harry&nbsp;Xin</h1>
@@ -2588,28 +2661,9 @@
     </div>
   </section>
 
-  <!-- ===================== NOW / FACTS ===================== -->
-  <section id="now" data-num="02" data-name="CURRENTLY">
-    <div class="shead"><span class="num" aria-hidden="true">02</span> <h2><span data-lang="en">Currently</span><span data-lang="zh">近况</span></h2> <span class="ln" aria-hidden="true"></span></div>
-    <div class="facts">
-      <a class="fact fact-link rise" href="https://www.ibo.org/" rel="noopener" aria-label="International Baccalaureate official website" data-motion-surface data-destination="IB DIPLOMA">
-        <span class="fact-icon" aria-hidden="true"><img src="/assets/ib-dp-logo.jpg" alt="" loading="lazy" decoding="async"></span>
-        <p class="k"><span data-lang="en">Studying</span><span data-lang="zh">在读</span></p>
-        <p class="v"><span data-lang="en">IB Diploma</span><span data-lang="zh">IB 文凭</span><br><small>HL Math AA · Physics · English&nbsp;B</small><br><span class="fact-official"><span data-lang="en">Official website</span><span data-lang="zh">IB 官方网站</span> · ibo.org ↗</span></p>
-      </a>
-      <a class="fact fact-link fact-ironpulse rise" href="https://www.ironpulse.net/" rel="noopener" aria-label="IronPulse Robotics 6941 official website" data-motion-surface data-destination="IRONPULSE">
-        <span class="fact-icon ironpulse-icon" aria-hidden="true"><img src="/assets/ironpulse-logo.svg" alt="" loading="lazy" decoding="async"></span>
-        <p class="k"><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></p>
-        <p class="v">FRC 6941 IronPulse<br><small><span data-lang="en">Shanghai Regional Champions → Houston Worlds</span><span data-lang="zh">上海区域赛冠军 → 休斯顿世界赛</span></small><br><span class="fact-official">ironpulse.net ↗</span></p>
-      </a>
-      <div class="fact rise"><p class="k"><span data-lang="en">Building</span><span data-lang="zh">在做</span></p><p class="v"><span data-lang="en">FindItem hardware</span><span data-lang="zh">FindItem 硬件</span><br><small><span data-lang="en">ESP32-C3 · open-source CLI tools</span><span data-lang="zh">ESP32-C3 · 开源命令行工具</span></small></p></div>
-    </div>
-
-  </section>
-
   <!-- ===================== CREATING ===================== -->
-  <section id="creating" data-num="03" data-name="CREATING">
-    <div class="shead"><span class="num" aria-hidden="true">03</span> <h2><span data-lang="en">Creating</span><span data-lang="zh">创作</span></h2> <span class="ln" aria-hidden="true"></span></div>
+  <section id="creating" data-num="02" data-name="CREATING">
+    <div class="shead"><span class="num" aria-hidden="true">02</span> <h2><span data-lang="en">Creating</span><span data-lang="zh">创作</span></h2> <span class="ln" aria-hidden="true"></span></div>
     <div class="media-grid">
       <a class="show-feature rise" href="https://www.youtube.com/watch?v=aE1tZ9RmhG0" rel="noopener" data-motion-surface data-destination="YOUTUBE VIDEO">
         <div class="show-cover">
@@ -2619,7 +2673,7 @@
         </div>
         <div class="show-copy">
           <div class="show-meta">
-            <span>03.01 / <span data-lang="en">Summer-school build</span><span data-lang="zh">夏校作品</span></span>
+            <span>02.01 / <span data-lang="en">Summer-school build</span><span data-lang="zh">夏校作品</span></span>
             <span>YOUTUBE · ORIGINAL</span>
           </div>
           <h3><span data-lang="en">I Built a Game Console at Summer School</span><span data-lang="zh">我在夏校做了一台游戏机</span></h3>
@@ -2638,7 +2692,7 @@
         </div>
         <div class="show-copy">
           <div class="show-meta">
-            <span>03.02 / <span data-lang="en">Campus production</span><span data-lang="zh">校园节目</span></span>
+            <span>02.02 / <span data-lang="en">Campus production</span><span data-lang="zh">校园节目</span></span>
             <span>BILIBILI · ORIGINAL</span>
           </div>
           <h3><span data-lang="en">This Is High School!</span><span data-lang="zh">这才是高中！</span></h3>
@@ -2649,6 +2703,25 @@
         </div>
       </a>
     </div>
+  </section>
+
+  <!-- ===================== NOW / FACTS ===================== -->
+  <section id="now" data-num="03" data-name="CURRENTLY">
+    <div class="shead"><span class="num" aria-hidden="true">03</span> <h2><span data-lang="en">Currently</span><span data-lang="zh">近况</span></h2> <span class="ln" aria-hidden="true"></span></div>
+    <div class="facts">
+      <a class="fact fact-link rise" href="https://www.ibo.org/" rel="noopener" aria-label="International Baccalaureate official website" data-motion-surface data-destination="IB DIPLOMA">
+        <span class="fact-icon" aria-hidden="true"><img src="/assets/ib-dp-logo.jpg" alt="" loading="lazy" decoding="async"></span>
+        <p class="k"><span data-lang="en">Studying</span><span data-lang="zh">在读</span></p>
+        <p class="v"><span data-lang="en">IB Diploma</span><span data-lang="zh">IB 文凭</span><br><small>HL Math AA · Physics · English&nbsp;B</small><br><span class="fact-official"><span data-lang="en">Official website</span><span data-lang="zh">IB 官方网站</span> · ibo.org ↗</span></p>
+      </a>
+      <a class="fact fact-link fact-ironpulse rise" href="https://www.ironpulse.net/" rel="noopener" aria-label="IronPulse Robotics 6941 official website" data-motion-surface data-destination="IRONPULSE">
+        <span class="fact-icon ironpulse-icon" aria-hidden="true"><img src="/assets/ironpulse-logo.svg" alt="" loading="lazy" decoding="async"></span>
+        <p class="k"><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></p>
+        <p class="v">FRC 6941 IronPulse<br><small><span data-lang="en">Shanghai Regional Champions → Houston Worlds</span><span data-lang="zh">上海区域赛冠军 → 休斯顿世界赛</span></small><br><span class="fact-official">ironpulse.net ↗</span></p>
+      </a>
+      <div class="fact rise"><p class="k"><span data-lang="en">Building</span><span data-lang="zh">在做</span></p><p class="v"><span data-lang="en">FindItem hardware</span><span data-lang="zh">FindItem 硬件</span><br><small><span data-lang="en">ESP32-C3 · open-source CLI tools</span><span data-lang="zh">ESP32-C3 · 开源命令行工具</span></small></p></div>
+    </div>
+
   </section>
 
   <!-- ===================== BUILDING ===================== -->
@@ -3214,7 +3287,16 @@
       window.location.assign(destinationUrl.href);
     }, routeDelay);
   });
-  window.addEventListener('pageshow', function(){ resetRoute(); });
+  window.addEventListener('pageshow', function(event){
+    resetRoute();
+    if (!event.persisted) return;
+    root.classList.remove('motion-preload','is-entering');
+    root.classList.add('is-entered');
+    var cachedHeroRise = document.querySelectorAll('.hero .rise');
+    for (var ch=0;ch<cachedHeroRise.length;ch++) {
+      cachedHeroRise[ch].classList.add('in','reveal-complete');
+    }
+  });
 
   /* Everything below is visual motion enhancement. Reduced-motion users keep
      the routing semantics above, but routeDelay=0 and all content is static. */
@@ -3232,8 +3314,8 @@
   stagger('#creating .show-feature');
   stagger('.projects > a.card');
 
-  /* Laboratory boot: the prepaint frame is held for two rAFs, then the hero
-     runs as one 0–900ms sequence. Scroll reveals remain a separate state. */
+  /* H/X signal-lock boot: the prepaint frame is held for two rAFs, then the
+     hero runs as one 0–900ms sequence. Scroll reveals remain separate. */
   var hero = document.querySelector('.hero');
   var revealElement = function(element){
     if (!element || element.classList.contains('in')) return;

@@ -141,25 +141,50 @@ test("all destination surfaces and CTAs opt into the motion contract", async () 
   }
 });
 
-test("Creating precedes Building and features the verified summer-school video", async () => {
+test("section navigation, document order, and numbering stay aligned", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
   const navMatch = homepage.match(/<nav class="site-nav"[\s\S]*?<\/nav>/);
   assert.ok(navMatch, "section navigation is missing");
-  assert.ok(
-    navMatch[0].indexOf('href="#creating"') < navMatch[0].indexOf('href="#building"'),
-    "Creating must appear before Work in section navigation",
+  assert.deepEqual(
+    openingTags(navMatch[0]).map(({ tag }) => attribute(tag, "href")),
+    ["#about", "#creating", "#now", "#building"],
+    "section navigation order changed",
   );
 
-  const creatingIndex = homepage.indexOf('<section id="creating"');
-  const buildingIndex = homepage.indexOf('<section id="building"');
-  assert.ok(creatingIndex >= 0, "Creating section is missing");
-  assert.ok(buildingIndex >= 0, "Building section is missing");
-  assert.ok(creatingIndex < buildingIndex, "Creating must appear before Building in document order");
+  const sectionTags = Array.from(
+    homepage.matchAll(/<section\s+id="(about|creating|now|building)"[^>]*>/g),
+    (match) => ({ id: match[1], index: match.index, tag: match[0] }),
+  );
+  assert.deepEqual(
+    sectionTags.map(({ id }) => id),
+    ["about", "creating", "now", "building"],
+    "section document order changed",
+  );
+
+  const expected = {
+    about: { number: "01", name: "ABOUT" },
+    creating: { number: "02", name: "CREATING" },
+    now: { number: "03", name: "CURRENTLY" },
+    building: { number: "04", name: "BUILDING" },
+  };
+  for (const section of sectionTags) {
+    const contract = expected[section.id];
+    assert.equal(attribute(section.tag, "data-num"), contract.number, `${section.id} data-num is wrong`);
+    assert.equal(attribute(section.tag, "data-name"), contract.name, `${section.id} data-name is wrong`);
+    const headingMarkup = homepage.slice(section.index, section.index + 500);
+    const visibleNumber = headingMarkup.match(/class="num"[^>]*>(\d{2})<\/span>/);
+    assert.ok(visibleNumber, `${section.id} visible section number is missing`);
+    assert.equal(visibleNumber[1], contract.number, `${section.id} visible number disagrees with data-num`);
+  }
 
   const creatingMatch = homepage.match(/<section id="creating"[\s\S]*?<\/section>/);
   assert.ok(creatingMatch, "Creating section markup is missing");
-  assert.match(creatingMatch[0], /data-num="03"/, "Creating section number must match its new position");
   assert.match(creatingMatch[0], /class="media-grid"/, "Creating videos must share the responsive media grid");
+  assert.deepEqual(
+    Array.from(creatingMatch[0].matchAll(/\b(02\.\d{2})\s*\//g), (match) => match[1]),
+    ["02.01", "02.02"],
+    "Creating item numbers must follow section 02",
+  );
   assert.match(
     creatingMatch[0],
     /href="https:\/\/www\.youtube\.com\/watch\?v=aE1tZ9RmhG0"/,
@@ -170,6 +195,10 @@ test("Creating precedes Building and features the verified summer-school video",
     /src="https:\/\/i\.ytimg\.com\/vi\/aE1tZ9RmhG0\/maxresdefault\.jpg"/,
     "verified summer-school video thumbnail is missing",
   );
+
+  const factCounter = homepage.match(/\.fact::after\s*\{[^}]*content\s*:\s*"(\d{2})\."/i);
+  assert.ok(factCounter, "Currently fact counter prefix is missing");
+  assert.equal(factCounter[1], expected.now.number, "Currently card numbers must follow section 03");
 });
 
 test("informational panels do not advertise a false navigation affordance", async () => {
@@ -275,11 +304,37 @@ test("legacy styles cannot override CTA, boot, tilt, or keyboard reveal states",
     assert.doesNotMatch(match[1], /\btransform\s*:/i, `${description} must use the shared CTA transform variables`);
   }
 
-  for (const animationName of ["hx-grid-in", "hx-atmo-in", "hx-watermark-in"]) {
+  for (const animationName of ["hx-grid-in", "hx-atmo-in"]) {
     const match = homepage.match(new RegExp(`@keyframes\\s+${animationName}\\s*\\{([^}]*(?:\\}[^}]*)?)\\}`, "i"));
     assert.ok(match, `${animationName} is missing`);
     assert.doesNotMatch(match[0], /to\s*\{\s*opacity\s*:/i, `${animationName} must settle to the element's underlying opacity`);
   }
+
+  for (const animationName of [
+    "hx-chrome-in",
+    "hx-signal-sweep",
+    "hx-lock-field",
+    "hx-lock-h",
+    "hx-lock-x",
+    "hx-lock-slash",
+  ]) {
+    assert.match(homepage, new RegExp(`@keyframes\\s+${animationName}\\b`, "i"), `${animationName} is missing`);
+  }
+  assert.match(
+    homepage,
+    /<span class="watermark hx-lock"[^>]*><span class="hx-lock__h">H<\/span><span class="hx-lock__slash">\/<\/span><span class="hx-lock__x">X<\/span><\/span>/i,
+    "the H/X signal-lock glyphs must remain decorative and separate from the hero title",
+  );
+  assert.match(
+    homepage,
+    /html\.motion-enabled\.is-entering\s+\.hero::before\s*\{[^}]*animation\s*:\s*hx-signal-sweep\b/is,
+    "the temporary hero scan must run only during the entrance state",
+  );
+  assert.match(
+    homepage,
+    /@media\s*\(prefers-reduced-motion:reduce\)[\s\S]*?\.hero::before\s*\{[^}]*display\s*:\s*none!important/is,
+    "reduced-motion mode must suppress the signal scan",
+  );
 
   assert.match(homepage, /\.is-tilting\s*\{[^}]*transition-property\s*:[^}]*\}/is);
   assert.match(homepage, /addEventListener\(['"]focusin['"][\s\S]{0,500}focus-reveal[\s\S]{0,200}reveal-complete/i);
@@ -292,9 +347,11 @@ test("legacy styles cannot override CTA, boot, tilt, or keyboard reveal states",
     ["opacity", "transform"],
     "hero title must retain only its full-glyph fade-and-rise motion",
   );
+  assert.match(heroTitleMotion[1], /overflow\s*:\s*visible/i, "hero title must expose its complete glyph bounds");
+  assert.match(heroTitleMotion[1], /padding-bottom\s*:\s*\.1em/i, "hero title needs Safari descender paint room");
   assert.doesNotMatch(
     homepage,
-    /html\.js-reveal\s+\.hero\s+h1[^{]*\{[^}]*clip-path/is,
-    "hero title motion must never clip descenders such as Harry's y",
+    /html\.js-reveal\s+\.hero\s+h1[^{]*\{[^}]*(?:clip-path|mask|overflow\s*:\s*hidden)/is,
+    "hero title motion must never clip or mask descenders such as Harry's y",
   );
 });

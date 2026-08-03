@@ -2,7 +2,7 @@
 
 ## 1. Motion principles
 
-- 视觉语义：**实验室启动 / signal acquire**。克制、精确、可中断，不做全屏加载器。
+- 视觉语义：**H/X signal lock / 信号锁定**。克制、精确、可中断，不做全屏加载器。
 - 不新增永久外框、区块底色或遮罩背景；沿用现有透明区块与连续网格背景。
 - 动画只使用 `opacity`、`transform`；标题始终以完整字形淡入，不使用会切断下伸笔画的 `clip-path`。不动画尺寸、布局、滤镜或大面积阴影。
 - 沿用现有缓动：`--ease: cubic-bezier(.2,.7,.2,1)`；强调动作使用 `--ease-spring: cubic-bezier(.16,1,.3,1)`。
@@ -16,16 +16,20 @@
 |---|---|---|
 | 首次绘制前 | 页面 | `<head>` 设置 `motion-enabled motion-preload`；双 rAF 后切换为 `is-entering`，内容保持可访问 |
 | 0–180ms | 现有网格与氛围层 | 淡入至既有环境亮度，不创建新背景 |
-| 80–320ms | H/X 装饰、顶栏与顶部线条 | 顶栏 `translateY(-10px) → 0`、淡入；现有 chrome 同步启动 |
-| 220–560ms | 栏目标签与主标题 | 完整字形 `translateY(22px) → 0` 并淡入；每个可见帧都必须保留字母下伸笔画 |
-| 360–680ms | 发音与简介 | 依次淡入并上移 |
-| 520–800ms | 社交入口 | 四项依次上移、淡入，stagger 55ms |
-| 700–900ms | 页面 | 所有对象 settle；移除 `is-entering` 与临时合成提示，保留 `is-entered` |
+| 40–600ms | 临时信号扫描 | Hero 内一条细扫描光带从上向下通过；仅在 `is-entering` 存在，不拦截指针 |
+| 40–520ms | H/X 装饰 | H 与 X 从两侧校准，斜杠纵向锁定后整体淡出；不拆分主标题 |
+| 100–320ms | 顶栏与页面 chrome | 顶栏 `translateY(-10px) → 0`、淡入；现有 chrome 同步启动 |
+| 190–440ms | 栏目标签 | 上移并淡入 |
+| 250–580ms | 主标题 | 完整字形 `translateY(14px) → 0` 并淡入；每个可见帧都必须保留字母下伸笔画 |
+| 370–720ms | 发音与简介 | 依次淡入并上移 |
+| 560–860ms | 社交入口 | 四项依次上移、淡入，stagger 50ms |
+| 860–900ms | 页面 | 所有对象 settle；移除 `is-entering` 与临时合成提示，保留 `is-entered` |
 
 实现约束：
 
 - 使用双 `requestAnimationFrame` 或一次明确的 style flush 后再从 `is-entering` 切换到 `is-entered`，不能复用当前单 rAF 的脆弱触发。
 - 无 JS 时内容默认可见；JS 只做渐进增强。
+- H/X 装饰可拆成独立字形做锁定动作；`h1` 必须始终保留为一个完整文本平面，并预留 `.1em` 底部绘制空间保护 Safari 下伸笔画。
 - 滚动显现保持 one-shot；使用 `threshold: .12`、底部 `rootMargin: -14%`，让区块进入可读区域后再播放。
 
 ## 3. Navigable block states
