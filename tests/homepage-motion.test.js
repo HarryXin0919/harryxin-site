@@ -255,10 +255,16 @@ test("About is a four-part clickable index with evidence-led destinations", asyn
     "About module destinations no longer match the four-part information architecture",
   );
 
-  assert.match(aboutMatch[0], /01\s*\/\s*TABLE TENNIS/i);
-  assert.match(aboutMatch[0], /02\s*\/\s*ROBOTICS/i);
-  assert.match(aboutMatch[0], /03\s*\/\s*GITHUB PROJECTS/i);
-  assert.match(aboutMatch[0], /04\s*\/\s*BILIBILI\s*·\s*CONTENT CREATOR/i);
+  assert.doesNotMatch(
+    aboutMatch[0],
+    /class="(?:about-index|about-cta|about-cta-meta)"/,
+    "About modules should not reintroduce conflicting micro-label chrome",
+  );
+  assert.equal(
+    tagsWithClass(aboutMatch[0], "about-arrow", ["span"]).length,
+    4,
+    "each About module should retain one minimal directional affordance",
+  );
   assert.doesNotMatch(aboutMatch[0], /\bthree things\b|三件事/i);
 
   for (const [index, { tag }] of modules.entries()) {
