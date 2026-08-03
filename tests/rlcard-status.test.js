@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { createStatusHandler, MAX_BODY_BYTES } from "../lib/rlcard-api.js";
 import { decorateStatus, sanitizeStatus } from "../lib/rlcard-status.js";
+
+const researchStyles = readFileSync(
+  new URL("../rlcard/research/styles.css", import.meta.url),
+  "utf8",
+);
 
 function validStatus(overrides = {}) {
   return {
@@ -254,6 +260,13 @@ test("research sanitizer preserves a completed run snapshot and its real series"
   assert.equal(result.research.series.length, 1);
   assert.equal(result.research.series[0].exploitability, 1.2769679026);
   assert.equal(JSON.stringify(result).includes("D:\\private"), false);
+});
+
+test("narrow layouts keep the completed-run status chip visible", () => {
+  assert.match(
+    researchStyles,
+    /@media \(max-width: 620px\)[\s\S]*?\.live-run-heading \.chip\s*\{[\s\S]*?display:\s*inline-flex;/,
+  );
 });
 
 test("research sanitizer rejects impossible progress and non-finite metrics", () => {
