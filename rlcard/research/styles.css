@@ -291,6 +291,53 @@ h2 {
   padding: clamp(36px, 5vw, 76px);
 }
 
+.study-mode-banner {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(24px, 5vw, 72px);
+  align-items: center;
+  margin-top: 16px;
+  padding: 20px 24px;
+  border: 1px solid rgba(244, 173, 75, 0.38);
+  background:
+    linear-gradient(90deg, rgba(244, 173, 75, 0.12), transparent 62%),
+    rgba(11, 15, 12, 0.92);
+  box-shadow: inset 3px 0 0 var(--amber);
+}
+
+.study-mode-banner span,
+.study-mode-banner strong {
+  display: block;
+}
+
+.study-mode-banner span {
+  margin-bottom: 8px;
+  color: var(--amber);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.study-mode-banner strong {
+  color: var(--paper);
+  font: 650 clamp(18px, 2.2vw, 30px) / 1 var(--display);
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+.study-mode-banner p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+  font: 13px/1.75 var(--serif);
+}
+
+.study-mode-banner b {
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
 .hero-copy {
   min-width: 0;
   align-self: center;
@@ -523,11 +570,12 @@ h2 {
 
 .live-run-grid strong {
   overflow: hidden;
+  overflow-wrap: anywhere;
   color: var(--paper);
   font: 620 16px/1.1 var(--display);
   letter-spacing: 0.035em;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .live-run-grid > div:first-child strong,
@@ -556,6 +604,7 @@ h2 {
   position: relative;
   min-height: 220px;
   margin-top: 18px;
+  overflow: hidden;
   border: 1px solid var(--line);
   background:
     linear-gradient(rgba(237, 242, 237, 0.025) 1px, transparent 1px),
@@ -642,6 +691,8 @@ h2 {
   background: var(--signal-soft);
 }
 
+.chip.queued,
+.chip.paused,
 .chip.idle,
 .chip.delayed {
   border-color: rgba(244, 173, 75, 0.34);
@@ -1165,11 +1216,11 @@ h2 {
   text-align: center;
 }
 
-.confirmatory .seed-grid {
+.exploratory .seed-grid {
   grid-template-columns: repeat(5, 1fr);
 }
 
-.confirmatory .seed-grid span {
+.exploratory .seed-grid span {
   color: var(--muted);
   font-size: 7px;
 }
@@ -1245,6 +1296,10 @@ h2 {
 
 .signal-rail {
   animation-delay: 80ms;
+}
+
+.study-mode-banner {
+  animation-delay: 60ms;
 }
 
 .live-run-panel {
@@ -1340,6 +1395,10 @@ h2 {
 
   .signal-rail {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .study-mode-banner {
+    grid-template-columns: 1fr;
   }
 
   .signal-rail > div:nth-child(2) {
@@ -1516,7 +1575,7 @@ h2 {
     display: none;
   }
 
-  .confirmatory .seed-grid {
+  .exploratory .seed-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -1559,7 +1618,7 @@ h2 {
 .pipeline em,
 .seed-group header,
 .seed-grid span,
-.confirmatory .seed-grid span,
+.exploratory .seed-grid span,
 .integrity-stamp span,
 .disclosure > span,
 .disclosure a,

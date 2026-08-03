@@ -1426,10 +1426,19 @@
   .card-rlcard[data-research-state="running"] .rlcard-project-kicker{
     color:var(--amber);
   }
+  .card-rlcard[data-research-state="queued"] .rlcard-project-kicker,
+  .card-rlcard[data-research-state="paused"] .rlcard-project-kicker{
+    color:#e8b54d;
+  }
   .card-rlcard[data-research-state="running"] .rlcard-project-kicker::before{
     background:var(--amber);
     box-shadow:0 0 0 4px rgba(156,255,87,.1),0 0 14px rgba(156,255,87,.65);
     animation:signal-pulse 2s ease-in-out infinite;
+  }
+  .card-rlcard[data-research-state="queued"] .rlcard-project-kicker::before,
+  .card-rlcard[data-research-state="paused"] .rlcard-project-kicker::before{
+    background:#e8b54d;
+    box-shadow:0 0 0 4px rgba(232,181,77,.1);
   }
   .card-rlcard[data-research-state="complete"] .rlcard-project-kicker{color:var(--cyan)}
   .card-rlcard[data-research-state="complete"] .rlcard-project-kicker::before{background:var(--cyan)}
@@ -1445,7 +1454,24 @@
     margin:0;
     font-size:clamp(48px,6.2vw,92px);
   }
-  .card-rlcard .pd{margin:18px 0 30px}
+  .card-rlcard .pd{margin:18px 0 18px}
+  .rlcard-amendment{
+    margin:0 0 24px;
+    padding:13px 14px;
+    border:1px solid rgba(232,181,77,.28);
+    border-left:3px solid #e8b54d;
+    color:var(--paper-dim);
+    background:rgba(232,181,77,.055);
+    font:12px/1.55 Georgia,"Times New Roman",serif;
+  }
+  .rlcard-amendment strong{
+    display:block;
+    margin-bottom:7px;
+    color:#f2ca72;
+    font:700 9px/1.25 var(--mono);
+    letter-spacing:.1em;
+  }
+  .rlcard-amendment span{display:block}
   .rlcard-project-links{
     display:flex;
     flex-wrap:wrap;
@@ -1520,11 +1546,12 @@
   }
   .research-readout-grid strong{
     overflow:hidden;
+    overflow-wrap:anywhere;
     color:var(--paper);
     font:650 clamp(18px,2vw,28px)/1 var(--display);
     letter-spacing:-.01em;
     text-overflow:ellipsis;
-    white-space:nowrap;
+    white-space:normal;
   }
   .research-readout-grid .research-current{
     grid-column:1/-1;
@@ -1580,10 +1607,11 @@
   }
   .research-run-meta strong{
     overflow:hidden;
+    overflow-wrap:anywhere;
     color:var(--paper);
     font:600 13px/1.15 var(--mono);
     text-overflow:ellipsis;
-    white-space:nowrap;
+    white-space:normal;
   }
   .research-updated{
     margin:auto 0 0;
@@ -2668,9 +2696,14 @@
             <p class="rlcard-project-kicker" id="research-card-state">
               IDLE · 尚未启动
             </p>
-            <h3 class="pt">RLCard Reward Study</h3>
+            <h3 class="pt">RLCard Exploratory Extension</h3>
             <p class="pd">
-              <span data-lang="en">Phase II tests whether reward shaping improves strategy robustness—not merely payoff against a random opponent.</span><span data-lang="zh">第二阶段研究奖励塑形能否真正提升策略稳健性，而不只是提高对随机对手的收益。</span>
+              <span data-lang="en">The Pilot promoted no reward candidate. A separate 300K extension now compares terminal with scaled as post-outcome exploration.</span><span data-lang="zh">Pilot 没有方案晋级；另立的 300K 延长现以结果后探索比较 terminal 与 scaled。</span>
+            </p>
+            <p class="rlcard-amendment">
+              <strong>POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY</strong>
+              <span>300K EXPLORATORY EXTENSION · TERMINAL VS SCALED</span>
+              <span>NO CANDIDATE PROMOTED。scaled 仅因非 control 方案中 AUC 最低、变换最简单而被选作探索，不代表 Pilot 支持其有效。</span>
             </p>
             <div class="rlcard-project-links">
               <a href="/rlcard/research/" data-motion-cta data-destination="RLCARD PHASE II"><span data-lang="en">Open Phase II observatory</span><span data-lang="zh">进入第二阶段实验台</span> ↗</a>
@@ -2685,8 +2718,8 @@
                 <strong id="research-card-phase">— / 07</strong>
               </div>
               <div>
-                <span>PILOT RUNS / 实验</span>
-                <strong id="research-card-runs">0 / 12</strong>
+                <span id="research-card-runs-label">EXPLORATORY RUNS / 探索</span>
+                <strong id="research-card-runs">0 / 20</strong>
               </div>
               <div>
                 <span>STATE / 状态</span>
@@ -2699,9 +2732,9 @@
             </div>
 
             <div class="research-progress-row">
-              <span id="research-card-progress-label">PILOT COMPLETION</span>
+              <span id="research-card-progress-label">EXPLORATORY COMPLETION</span>
               <span class="research-progress-track" aria-hidden="true"><i id="research-card-bar"></i></span>
-              <strong id="research-card-progress">0 / 12 RUNS</strong>
+              <strong id="research-card-progress">0 / 20 RUNS</strong>
             </div>
 
             <div class="research-run-meta">
@@ -2931,6 +2964,7 @@
     var researchStateEl = document.getElementById('research-card-state');
     var researchStateShortEl = document.getElementById('research-card-state-short');
     var researchPhaseEl = document.getElementById('research-card-phase');
+    var researchRunsLabelEl = document.getElementById('research-card-runs-label');
     var researchRunsEl = document.getElementById('research-card-runs');
     var researchCurrentLabelEl = document.getElementById('research-card-current-label');
     var researchCurrentEl = document.getElementById('research-card-current');
@@ -2969,11 +3003,12 @@
       researchStateEl.textContent = offline ? 'OFFLINE · 无法确认' : 'IDLE · 尚未启动';
       researchStateShortEl.textContent = offline ? 'OFFLINE' : 'IDLE';
       researchPhaseEl.textContent = '— / 07';
-      researchRunsEl.textContent = '0 / 12';
+      researchRunsLabelEl.textContent = 'EXPLORATORY RUNS / 探索';
+      researchRunsEl.textContent = '0 / 20';
       researchCurrentLabelEl.textContent = 'CURRENT RUN / 当前任务';
       researchCurrentEl.textContent = offline ? '数据暂不可用' : '尚未启动';
-      researchProgressLabelEl.textContent = 'PILOT COMPLETION';
-      researchProgressEl.textContent = '0 / 12 RUNS';
+      researchProgressLabelEl.textContent = 'EXPLORATORY COMPLETION';
+      researchProgressEl.textContent = '0 / 20 RUNS';
       researchBarEl.style.width = '0%';
       researchContextEl.textContent = '—';
       researchSpeedLabelEl.textContent = 'THROUGHPUT';
@@ -2998,22 +3033,52 @@
       var completedRuns = Number(research.completedRuns);
       var totalRuns = Number(research.totalRuns);
       var run = research.currentRun;
-      var completedSnapshot = !!run && String(run.status || '').toLowerCase() === 'complete';
-      var pilotComplete =
-        totalRuns > 0 && completedRuns >= totalRuns && rawState !== 'running';
+      var runState = String(run && run.status || '').toLowerCase();
+      var isExploratory =
+        research.cohort === 'exploratory' ||
+        research.protocolMode === 'post_outcome_exploratory';
+      var completedSnapshot = !!run && runState === 'complete';
+      var queued = rawState === 'queued' || runState === 'pending';
+      var paused = runState === 'paused';
+      var reporting =
+        isExploratory && phase === 7 && rawState === 'running';
+      var cohortComplete =
+        totalRuns > 0 &&
+        completedRuns >= totalRuns &&
+        rawState !== 'queued' &&
+        !(rawState === 'running' && phase < 7);
+      var pilotComplete = !isExploratory && cohortComplete;
+      var exploratoryComplete = isExploratory && cohortComplete;
       var awaitingSelection = pilotComplete && phase === 5;
       var visualState = (connection === 'OFFLINE' || connection === 'DELAYED')
         ? connection.toLowerCase()
-        : pilotComplete
+        : reporting
+          ? 'running'
+          : paused
+            ? 'paused'
+            : queued
+              ? 'queued'
+              : cohortComplete
           ? 'complete'
           : rawState;
       var stateText = {
+        queued:'QUEUED · 等待 GPU',
         running:'RUNNING · 训练中',
         idle:'IDLE · 暂无活动训练',
         complete:'COMPLETE · 已完成',
         blocked:'BLOCKED · 已暂停'
       }[rawState] || 'IDLE · 暂无活动训练';
-      if (connection === 'LIVE' && pilotComplete) {
+      if (connection === 'LIVE' && isExploratory) {
+        stateText = reporting
+          ? 'REPORTING · EXPLORATORY'
+          : exploratoryComplete
+            ? 'EXPLORATORY COMPLETE · 报告已保存'
+            : paused
+              ? 'PAUSED · CHECKPOINT SAVED'
+              : queued
+                ? 'QUEUED · AWAITING GPU'
+                : 'POST-OUTCOME EXPLORATORY · RUNNING';
+      } else if (connection === 'LIVE' && pilotComplete) {
         stateText = awaitingSelection
           ? 'PILOT COMPLETE · 等待选组'
           : 'PILOT COMPLETE · 已保存';
@@ -3024,9 +3089,13 @@
       researchStateEl.textContent = stateText;
       researchStateShortEl.textContent =
         connection === 'LIVE'
-          ? pilotComplete
+          ? reporting
+            ? 'REPORTING'
+            : cohortComplete
             ? 'COMPLETE'
-            : rawState.toUpperCase()
+            : paused
+              ? 'PAUSED'
+              : rawState.toUpperCase()
           : connection;
 
       researchPhaseEl.textContent = Number.isInteger(phase)
@@ -3034,6 +3103,9 @@
         : '— / 07';
       researchRunsEl.textContent =
         integer(completedRuns) + ' / ' + integer(totalRuns);
+      researchRunsLabelEl.textContent = isExploratory
+        ? 'EXPLORATORY RUNS / 探索'
+        : 'PILOT RUNS / 实验';
 
       var fraction = totalRuns > 0 ? completedRuns / totalRuns : 0;
       researchCurrentLabelEl.textContent = 'CURRENT RUN / 当前任务';
@@ -3045,12 +3117,22 @@
         if (completedSnapshot) {
           researchCurrentLabelEl.textContent = 'LAST COMPLETED RUN / 最近完成';
           researchSpeedLabelEl.textContent = 'RUN STATUS';
-          researchEtaLabelEl.textContent = 'SNAPSHOT';
+          researchEtaLabelEl.textContent = 'SAVED ARTIFACT';
+        } else if (queued) {
+          researchCurrentLabelEl.textContent = 'NEXT QUEUED RUN / 下一任务';
+          researchSpeedLabelEl.textContent = 'QUEUE STATUS';
+          researchEtaLabelEl.textContent = 'START CONDITION';
+        } else if (paused) {
+          researchCurrentLabelEl.textContent = 'PAUSED RUN / 暂停任务';
+          researchSpeedLabelEl.textContent = 'RESUME STATUS';
+          researchEtaLabelEl.textContent = 'ETA STATUS';
         }
         researchCurrentEl.textContent = armName + ' · SEED ' + seed;
         researchProgressLabelEl.textContent = completedSnapshot
           ? 'LAST COMPLETED RUN'
-          : 'CURRENT RUN';
+          : isExploratory
+            ? 'CURRENT 300K EXPLORATORY RUN'
+            : 'CURRENT RUN';
         researchProgressEl.textContent =
           integer(run.progress) + ' / ' + integer(run.target) + ' EP';
         fraction = finite(run.fraction)
@@ -3059,34 +3141,52 @@
             ? Number(run.progress) / Number(run.target)
             : 0;
         researchContextEl.textContent =
-          String(run.cohort || 'pilot').toUpperCase() + ' · ' + armName;
+          isExploratory
+            ? 'POST-OUTCOME EXPLORATORY · ' + armName
+            : String(run.cohort || 'pilot').toUpperCase() + ' · ' + armName;
         researchSpeedEl.textContent = completedSnapshot
           ? 'COMPLETE'
+          : queued
+            ? 'QUEUED'
+            : paused
+              ? 'CHECKPOINT SAVED'
           : finite(run.speed)
             ? Number(run.speed).toFixed(1) + ' /S'
             : '—';
         researchEtaEl.textContent = completedSnapshot ? 'SAVED' : eta(run.etaSeconds);
-      } else if (pilotComplete) {
+        if (queued) researchEtaEl.textContent = 'AFTER PREFLIGHT';
+        if (paused) researchEtaEl.textContent = 'RESUME PENDING';
+      } else if (cohortComplete) {
         researchCurrentLabelEl.textContent = 'LAST COMPLETED RUN / 最近完成';
-        researchCurrentEl.textContent = awaitingSelection
-          ? 'PILOT COMPLETE · 等待选组'
-          : 'PILOT COMPLETE';
-        researchProgressLabelEl.textContent = 'PILOT COMPLETION';
+        researchCurrentEl.textContent = isExploratory
+          ? reporting
+            ? '20 / 20 · REPORTING'
+            : '20 / 20 · EXPLORATORY COMPLETE'
+          : awaitingSelection
+            ? 'PILOT COMPLETE · 等待选组'
+            : 'PILOT COMPLETE';
+        researchProgressLabelEl.textContent = isExploratory
+          ? 'EXPLORATORY COMPLETION'
+          : 'PILOT COMPLETION';
         researchProgressEl.textContent =
           integer(completedRuns) + ' / ' + integer(totalRuns) + ' RUNS';
         researchContextEl.textContent = 'AWAITING SNAPSHOT';
         researchSpeedLabelEl.textContent = 'RUN STATUS';
-        researchSpeedEl.textContent = 'COMPLETE';
-        researchEtaLabelEl.textContent = 'SNAPSHOT';
-        researchEtaEl.textContent = 'PENDING';
+        researchSpeedEl.textContent = reporting ? 'REPORTING' : 'COMPLETE';
+        researchEtaLabelEl.textContent = 'SAVED ARTIFACT';
+        researchEtaEl.textContent = reporting ? 'BUILDING REPORT' : 'SNAPSHOT PENDING';
       } else {
         researchCurrentEl.textContent =
-          rawState === 'running'
+          isExploratory && rawState === 'queued'
+            ? 'NEXT RUN SNAPSHOT PENDING'
+            : rawState === 'running'
             ? 'STARTING · 正在分配任务'
             : completedRuns > 0
               ? 'NO ACTIVE RUN · 当前空闲'
               : '尚未启动';
-        researchProgressLabelEl.textContent = 'PILOT COMPLETION';
+        researchProgressLabelEl.textContent = isExploratory
+          ? 'EXPLORATORY COMPLETION'
+          : 'PILOT COMPLETION';
         researchProgressEl.textContent =
           integer(completedRuns) + ' / ' + integer(totalRuns) + ' RUNS';
         researchContextEl.textContent = '—';

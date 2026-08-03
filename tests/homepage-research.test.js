@@ -10,7 +10,7 @@ test("homepage research card starts honest and refreshes every three seconds", a
   assert.match(homepage, /id="rlcard-research-project"/);
   assert.match(homepage, /id="research-card-state">\s*IDLE · 尚未启动/);
   assert.match(homepage, /id="research-card-phase">— \/ 07/);
-  assert.match(homepage, /id="research-card-runs">0 \/ 12/);
+  assert.match(homepage, /id="research-card-runs">0 \/ 20/);
   assert.match(homepage, /href="\/rlcard\/research\/"/);
   assert.match(homepage, /setInterval\(load, 3000\)/);
 });
@@ -36,10 +36,10 @@ test("research detail page defaults to an explicit idle state", async () => {
   );
 
   assert.match(detailPage, /id="currentPhaseLabel">尚未启动 \/ AWAITING DATA/);
-  assert.match(detailPage, /id="pilotRunCount">0 \/ 12 PLANNED/);
-  assert.match(detailPage, /id="liveProgress">0 \/ 12 RUNS/);
+  assert.match(detailPage, /id="pilotRunCount">0 \/ 20 PLANNED/);
+  assert.match(detailPage, /id="liveProgress">0 \/ 20 RUNS/);
   assert.match(detailPage, /id="liveThroughputLabel">THROUGHPUT \/ ETA/);
-  assert.match(detailPage, /id="liveChartEmptyTitle">NO TRAINING SERIES YET/);
+  assert.match(detailPage, /id="liveChartEmptyTitle">EXPLORATORY SERIES AWAITING START/);
   assert.match(detailPage, /id="liveChartEmptyDetail"/);
   assert.match(
     detailPage,
@@ -71,4 +71,55 @@ test("homepage distinguishes a completed snapshot from a live run", async () => 
     homepage,
     /researchEtaEl\.textContent = completedSnapshot \? 'SAVED'/,
   );
+});
+
+test("homepage presents the extension as post-outcome exploratory", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+
+  assert.match(homepage, /POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY/);
+  assert.match(homepage, /NO CANDIDATE PROMOTED/);
+  assert.match(homepage, /300K EXPLORATORY EXTENSION/);
+  assert.match(homepage, /scaled 仅因非 control 方案中 AUC 最低、变换最简单/);
+  assert.match(homepage, /rawState === 'queued'/);
+  assert.match(homepage, /POST-OUTCOME EXPLORATORY/);
+  assert.match(homepage, /EXPLORATORY COMPLETION/);
+  assert.match(homepage, /LAST COMPLETED RUN \/ 最近完成/);
+});
+
+test("homepage inline telemetry renderer remains valid JavaScript", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const inlineScripts = Array.from(
+    homepage.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi),
+    (match) => match[1],
+  );
+
+  assert.ok(inlineScripts.length > 0);
+  inlineScripts.forEach((source) => {
+    assert.doesNotThrow(() => new Function(source));
+  });
+});
+
+test("detail page makes the failed Pilot and exploratory amendment explicit", async () => {
+  const detailPage = await readFile(
+    new URL("rlcard/research/index.html", root),
+    "utf8",
+  );
+  const detailApp = await readFile(
+    new URL("rlcard/research/app.js", root),
+    "utf8",
+  );
+
+  assert.match(detailPage, /POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY/);
+  assert.match(detailPage, /NO CANDIDATE PROMOTED/);
+  assert.match(detailPage, /300K EXPLORATORY EXTENSION/);
+  assert.match(detailPage, /scaled 仅因非 control 方案中 AUC 最低、变换最简单/);
+  assert.doesNotMatch(detailPage, /\b300K CONFIRMATION\b/);
+  assert.doesNotMatch(detailPage, /UNSEEN · PAIRED/);
+
+  assert.match(detailApp, /isExploratory/);
+  assert.match(detailApp, /POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY/);
+  assert.match(detailApp, /QUEUED · AWAITING GPU/);
+  assert.match(detailApp, /PAUSED · CHECKPOINT SAVED/);
+  assert.match(detailApp, /REPORTING · EXPLORATORY/);
+  assert.match(detailApp, /EXPLORATORY · SINGLE ARM\/SEED/);
 });

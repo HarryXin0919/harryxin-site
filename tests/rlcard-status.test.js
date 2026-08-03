@@ -262,11 +262,147 @@ test("research sanitizer preserves a completed run snapshot and its real series"
   assert.equal(JSON.stringify(result).includes("D:\\private"), false);
 });
 
+test("research sanitizer accepts the post-outcome exploratory contract", () => {
+  const input = validStatus();
+  input.research = {
+    ...input.research,
+    studyId: "leduc-reward-exploratory-scaled-v1",
+    cohort: "exploratory",
+    protocolMode: "post_outcome_exploratory",
+    sourceStudyId: "leduc-reward-study-v1",
+    selection: {
+      status: "no_candidate_promoted",
+      selectedArm: null,
+      exploratoryArm: "scaled",
+      localArtifact: "D:\\private\\selection.json",
+      hashes: { pilot: "secret" },
+    },
+    phase: 6,
+    phaseLabel: "300K EXPLORATORY EXTENSION",
+    state: "queued",
+    completedRuns: 0,
+    totalRuns: 20,
+    currentRun: {
+      cohort: "exploratory",
+      arm: "terminal",
+      seed: 31415,
+      progress: 0,
+      target: 300000,
+      fraction: 0,
+      speed: 0,
+      etaSeconds: null,
+      latestExploitability: null,
+      latestPayoff: null,
+      status: "pending",
+      checkpoint: "D:\\private\\checkpoint.pt",
+    },
+    arms: [
+      {
+        id: "terminal",
+        label: "TERMINAL",
+        status: "pending",
+        completedRuns: 0,
+        totalRuns: 10,
+        progress: 0,
+        target: 3000000,
+        fraction: 0,
+        latestExploitability: null,
+        latestPayoff: null,
+      },
+      {
+        id: "scaled",
+        label: "SCALED",
+        status: "pending",
+        completedRuns: 0,
+        totalRuns: 10,
+        progress: 0,
+        target: 3000000,
+        fraction: 0,
+        latestExploitability: null,
+        latestPayoff: null,
+      },
+    ],
+  };
+
+  const result = sanitizeStatus(input);
+
+  assert.equal(result.schemaVersion, 1);
+  assert.equal(result.research.cohort, "exploratory");
+  assert.equal(result.research.protocolMode, "post_outcome_exploratory");
+  assert.equal(result.research.sourceStudyId, "leduc-reward-study-v1");
+  assert.equal(result.research.state, "queued");
+  assert.equal(result.research.currentRun.cohort, "exploratory");
+  assert.deepEqual(result.research.selection, {
+    status: "no_candidate_promoted",
+    selectedArm: null,
+    exploratoryArm: "scaled",
+  });
+  assert.equal(JSON.stringify(result).includes("D:\\private"), false);
+  assert.equal(JSON.stringify(result).includes("secret"), false);
+});
+
+test("exploratory selection contract rejects contradictory promotion data", () => {
+  const input = validStatus();
+  input.research.cohort = "exploratory";
+  input.research.protocolMode = "post_outcome_exploratory";
+  input.research.sourceStudyId = "leduc-reward-study-v1";
+  input.research.selection = {
+    status: "no_candidate_promoted",
+    selectedArm: "scaled",
+    exploratoryArm: "scaled",
+  };
+
+  assert.throws(
+    () => sanitizeStatus(input),
+    /selectedArm must be null when no candidate was promoted/,
+  );
+});
+
+test("exploratory cohort rejects incomplete or differently scoped contracts", () => {
+  const complete = validStatus();
+  complete.research.cohort = "exploratory";
+  complete.research.protocolMode = "post_outcome_exploratory";
+  complete.research.sourceStudyId = "leduc-reward-study-v1";
+  complete.research.selection = {
+    status: "no_candidate_promoted",
+    selectedArm: null,
+    exploratoryArm: "scaled",
+  };
+
+  for (const field of ["protocolMode", "sourceStudyId", "selection"]) {
+    const incomplete = structuredClone(complete);
+    delete incomplete.research[field];
+    assert.throws(
+      () => sanitizeStatus(incomplete),
+      new RegExp(`exploratory cohort requires research\\.${field}`),
+    );
+  }
+
+  const wrongFollowUp = structuredClone(complete);
+  wrongFollowUp.research.selection.exploratoryArm = "terminal";
+  assert.throws(
+    () => sanitizeStatus(wrongFollowUp),
+    /research\.selection\.exploratoryArm must equal scaled/,
+  );
+});
+
 test("narrow layouts keep the completed-run status chip visible", () => {
   assert.match(
     researchStyles,
     /@media \(max-width: 620px\)[\s\S]*?\.live-run-heading \.chip\s*\{[\s\S]*?display:\s*inline-flex;/,
   );
+});
+
+test("narrow layouts wrap long exploratory labels without clipping the chart", () => {
+  assert.match(
+    researchStyles,
+    /\.live-run-grid strong\s*\{[\s\S]*?overflow-wrap:\s*anywhere;[\s\S]*?white-space:\s*normal;/,
+  );
+  assert.match(
+    researchStyles,
+    /\.live-chart-shell\s*\{[\s\S]*?overflow:\s*hidden;/,
+  );
+  assert.match(researchStyles, /\.chip\.queued/);
 });
 
 test("research sanitizer rejects impossible progress and non-finite metrics", () => {
