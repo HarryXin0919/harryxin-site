@@ -59,6 +59,47 @@ test("research detail page defaults to an explicit idle state", async () => {
   );
 });
 
+test("frozen endpoint title keeps two intentional Chinese lines", async () => {
+  const [detailPage, detailStyles] = await Promise.all([
+    readFile(new URL("rlcard/research/index.html", root), "utf8"),
+    readFile(new URL("rlcard/research/styles.css", root), "utf8"),
+  ]);
+  const endpoint = detailPage.match(
+    /<aside class="panel endpoint-panel reveal" id="protocol">([\s\S]*?)<\/aside>/,
+  );
+
+  assert.ok(endpoint, "frozen endpoint panel is missing");
+  assert.match(endpoint[1], /class="panel-heading endpoint-heading"/);
+  assert.deepEqual(
+    Array.from(
+      endpoint[1].matchAll(/class="endpoint-title-line">([^<]+)<\/span>/g),
+      (match) => match[1],
+    ),
+    ["先写规则，", "再看结果。"],
+  );
+  assert.doesNotMatch(endpoint[1], /<h2>[\s\S]*?<br\s*\/?>/i);
+  assert.match(
+    detailStyles,
+    /\.endpoint-heading\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto;/s,
+  );
+  assert.match(
+    detailStyles,
+    /grid-template-areas:\s*"meta status"\s*"title title";/s,
+  );
+  assert.match(
+    detailStyles,
+    /\.endpoint-title-line\s*\{[^}]*display:\s*block;[^}]*white-space:\s*nowrap;/s,
+  );
+  assert.match(
+    detailStyles,
+    /\.endpoint-panel h2\s*\{[^}]*line-height:\s*1(?:\.\d+)?;[^}]*word-break:\s*keep-all;[^}]*line-break:\s*strict;/s,
+  );
+  assert.match(
+    detailStyles,
+    /\.formula p\s*\{[^}]*white-space:\s*nowrap;/s,
+  );
+});
+
 test("homepage distinguishes a completed snapshot from a live run", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
 
