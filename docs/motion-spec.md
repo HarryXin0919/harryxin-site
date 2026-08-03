@@ -34,7 +34,7 @@
 
 ## 3. Navigable block states
 
-适用对象：`.fact-link`、块级 `.card` 链接、`.show-feature`、`.social`、`.signal-link`、`.rlcard-project-links a`、`.footer-social`。导航与正文文本链接使用同一状态语义的轻量版本。
+适用对象：`.about-area`、`.fact-link`、块级 `.card` 链接、`.show-feature`、`.social`、`.signal-link`、`.rlcard-project-links a`、`.footer-social`。导航与正文文本链接使用同一状态语义的轻量版本。
 
 | 状态 | 视觉与时序 |
 |---|---|

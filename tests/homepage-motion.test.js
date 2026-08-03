@@ -78,6 +78,13 @@ test("all destination surfaces and CTAs opt into the motion contract", async () 
       description: "hero social",
     },
     {
+      className: "about-area",
+      count: 4,
+      contract: "data-motion-surface",
+      destinations: ["TABLE TENNIS MEDIA", "IRONPULSE", "GITHUB PROJECTS", "CONTENT CREATOR"],
+      description: "about module",
+    },
+    {
       className: "fact-link",
       count: 2,
       contract: "data-motion-surface",
@@ -199,6 +206,62 @@ test("section navigation, document order, and numbering stay aligned", async () 
   const factCounter = homepage.match(/\.fact::after\s*\{[^}]*content\s*:\s*"(\d{2})\."/i);
   assert.ok(factCounter, "Currently fact counter prefix is missing");
   assert.equal(factCounter[1], expected.now.number, "Currently card numbers must follow section 03");
+});
+
+test("About is a four-part clickable index with evidence-led destinations", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const aboutMatch = homepage.match(/<section id="about"[\s\S]*?<\/section>/);
+  assert.ok(aboutMatch, "About section markup is missing");
+
+  const modules = tagsWithClass(aboutMatch[0], "about-area");
+  assert.equal(modules.length, 4, "About must expose exactly four clickable modules");
+  assert.deepEqual(
+    modules.map(({ tag }) => attribute(tag, "href")),
+    [
+      "https://www.instagram.com/harryalexanderxin/",
+      "https://www.ironpulse.net/",
+      "#building",
+      "#creating",
+    ],
+    "About module destinations no longer match the four-part information architecture",
+  );
+
+  assert.match(aboutMatch[0], /01\s*\/\s*TABLE TENNIS/i);
+  assert.match(aboutMatch[0], /02\s*\/\s*ROBOTICS/i);
+  assert.match(aboutMatch[0], /03\s*\/\s*GITHUB PROJECTS/i);
+  assert.match(aboutMatch[0], /04\s*\/\s*BILIBILI\s*·\s*CONTENT CREATOR/i);
+  assert.doesNotMatch(aboutMatch[0], /\bthree things\b|三件事/i);
+
+  for (const [index, { tag }] of modules.entries()) {
+    assert.ok(/^<a\b/i.test(tag), `About module ${index + 1} must keep native link semantics`);
+    assert.ok(hasAttribute(tag, "data-motion-surface"), `About module ${index + 1} is missing motion feedback`);
+    assertDestinationLabel(tag, `About module ${index + 1}`);
+  }
+
+  assert.match(aboutMatch[0], /class="[^"]*\babout-repo-preview\b[^"]*"/, "GitHub module needs project summary rows");
+  assert.match(aboutMatch[0], /class="[^"]*\babout-video-preview\b[^"]*"/, "Content Creator module needs the two-video preview");
+  assert.match(aboutMatch[0], /aE1tZ9RmhG0/, "Content Creator module is missing the summer-school video");
+  assert.match(aboutMatch[0], /cross-club-variety-cover\.jpg/, "Content Creator module is missing the Bilibili video");
+});
+
+test("public project cards link to their exact GitHub repositories", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const buildingMatch = homepage.match(/<section id="building"[\s\S]*?<\/section>/);
+  assert.ok(buildingMatch, "Building section markup is missing");
+
+  const projectCards = tagsWithClass(buildingMatch[0], "card");
+  assert.deepEqual(
+    projectCards.map(({ tag }) => attribute(tag, "href")),
+    [
+      "https://github.com/HarryXin0919/factlens",
+      "https://github.com/HarryXin0919/FindItem",
+      "https://github.com/HarryXin0919/viralens",
+      "https://github.com/HarryXin0919/looming",
+      "https://github.com/HarryXin0919/skilltree",
+      "https://github.com/HarryXin0919/ctxtax",
+    ],
+    "project cards must route directly to the matching public repository",
+  );
 });
 
 test("informational panels do not advertise a false navigation affordance", async () => {
