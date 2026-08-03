@@ -1595,11 +1595,16 @@
   }
 
   #creating .prose{max-width:880px}
+  .media-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+  }
   .show-feature{
     position:relative;
     display:grid;
-    grid-template-columns:minmax(0,1.18fr) minmax(360px,.82fr);
-    min-height:430px;
+    grid-template-rows:auto 1fr;
+    min-height:0;
     padding:0;
     overflow:hidden;
     border:1px solid var(--line);
@@ -1611,7 +1616,6 @@
   .show-feature:hover{
     border-color:rgba(156,255,87,.45);
     background-color:rgba(156,255,87,.035);
-    transform:translateY(-2px);
   }
   .show-feature:focus-visible{
     outline:2px solid var(--amber);
@@ -1620,9 +1624,10 @@
   .show-cover{
     position:relative;
     min-width:0;
-    min-height:430px;
+    min-height:0;
+    aspect-ratio:16/9;
     overflow:hidden;
-    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
     background:#050706;
     isolation:isolate;
   }
@@ -1651,8 +1656,9 @@
   .show-cover img{
     display:block;
     width:100%;
-    height:100%;
-    min-height:430px;
+    height:auto;
+    min-height:0;
+    aspect-ratio:16/9;
     object-fit:cover;
     object-position:center;
     filter:saturate(.9) contrast(1.04) brightness(.86);
@@ -1708,6 +1714,7 @@
   .show-copy{
     display:flex;
     min-width:0;
+    min-height:330px;
     padding:clamp(30px,3.2vw,50px);
     flex-direction:column;
   }
@@ -1725,7 +1732,7 @@
     max-width:600px;
     margin:0 0 18px;
     color:var(--paper);
-    font:700 clamp(36px,4vw,60px)/1.02 var(--headline);
+    font:700 clamp(32px,3.2vw,48px)/1.04 var(--headline);
     letter-spacing:-.025em;
   }
   html.lang-zh .show-feature h3{
@@ -2049,7 +2056,9 @@
       border-right:0;
       border-bottom:1px solid var(--line);
     }
+    .media-grid{grid-template-columns:minmax(0,1fr)}
     .show-feature{grid-template-columns:minmax(0,1fr)}
+    .show-copy{min-height:0}
     .show-cover{
       min-height:0;
       aspect-ratio:16/9;
@@ -2501,8 +2510,8 @@
     <nav class="site-nav" aria-label="Page sections / 页面章节">
       <a href="#about"><span data-lang="en">About</span><span data-lang="zh">关于</span></a>
       <a href="#now"><span data-lang="en">Now</span><span data-lang="zh">近况</span></a>
+      <a href="#creating"><span data-lang="en">Creating</span><span data-lang="zh">创作</span></a>
       <a href="#building"><span data-lang="en">Work</span><span data-lang="zh">项目</span></a>
-      <a href="#creating"><span data-lang="en">Media</span><span data-lang="zh">创作</span></a>
     </nav>
     <span class="right">
       <span class="loc">SHANGHAI · 31°N &nbsp;·&nbsp; <span class="clk" id="clk">--:--</span> CST</span>
@@ -2600,9 +2609,53 @@
 
   </section>
 
+  <!-- ===================== CREATING ===================== -->
+  <section id="creating" data-num="03" data-name="CREATING">
+    <div class="shead"><span class="num" aria-hidden="true">03</span> <h2><span data-lang="en">Creating</span><span data-lang="zh">创作</span></h2> <span class="ln" aria-hidden="true"></span></div>
+    <div class="media-grid">
+      <a class="show-feature rise" href="https://www.youtube.com/watch?v=aE1tZ9RmhG0" rel="noopener" data-motion-surface data-destination="YOUTUBE VIDEO">
+        <div class="show-cover">
+          <img src="https://i.ytimg.com/vi/aE1tZ9RmhG0/maxresdefault.jpg" width="1280" height="720" loading="lazy" decoding="async" alt="">
+          <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 6.7v10.6L17 12 8.5 6.7z"/></svg></span>
+          <span class="show-duration" aria-hidden="true">01:08</span>
+        </div>
+        <div class="show-copy">
+          <div class="show-meta">
+            <span>03.01 / <span data-lang="en">Summer-school build</span><span data-lang="zh">夏校作品</span></span>
+            <span>YOUTUBE · ORIGINAL</span>
+          </div>
+          <h3><span data-lang="en">I Built a Game Console at Summer School</span><span data-lang="zh">我在夏校做了一台游戏机</span></h3>
+          <p>
+            <span data-lang="en">Aaron Zheng, Vincent Yan, and I built a five-level memory game on the Adafruit Circuit Playground Express, with two buttons and increasingly difficult light sequences.</span><span data-lang="zh">我和 Aaron Zheng、Vincent Yan 基于 Adafruit Circuit Playground Express 做了一台五关灯光记忆游戏机，用两个按键挑战难度不断提升的灯光序列。</span>
+          </p>
+          <span class="show-title"><span data-lang="en">Watch on YouTube ↗</span><span data-lang="zh">前往 YouTube 观看 ↗</span></span>
+        </div>
+      </a>
+
+      <a class="show-feature rise" href="https://www.bilibili.com/video/BV18XN3z5EGH/" rel="noopener" data-motion-surface data-destination="BILIBILI VIDEO">
+        <div class="show-cover">
+          <img src="/assets/cross-club-variety-cover.jpg" width="1939" height="1091" loading="lazy" decoding="async" alt="">
+          <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 6.7v10.6L17 12 8.5 6.7z"/></svg></span>
+          <span class="show-duration" aria-hidden="true">24:31</span>
+        </div>
+        <div class="show-copy">
+          <div class="show-meta">
+            <span>03.02 / <span data-lang="en">Campus production</span><span data-lang="zh">校园节目</span></span>
+            <span>BILIBILI · ORIGINAL</span>
+          </div>
+          <h3><span data-lang="en">This Is High School!</span><span data-lang="zh">这才是高中！</span></h3>
+          <p>
+            <span data-lang="en">I produced a zero-script campus collaboration that brought IronPulse robotics and FORMULAP racing together through technology, teamwork, and genuine high-school fun.</span><span data-lang="zh">我制作了一档零剧本校园跨社团综艺，让 IronPulse 机器人社与 FORMULAP 赛车社在技术交流、团队协作和真实的校园趣味中碰撞。</span>
+          </p>
+          <span class="show-title"><span data-lang="en">Watch on Bilibili ↗</span><span data-lang="zh">前往 Bilibili 观看 ↗</span></span>
+        </div>
+      </a>
+    </div>
+  </section>
+
   <!-- ===================== BUILDING ===================== -->
-  <section id="building" data-num="03" data-name="BUILDING">
-    <div class="shead"><span class="num" aria-hidden="true">03</span> <h2><span data-lang="en">Building</span><span data-lang="zh">在做的项目</span></h2> <span class="ln" aria-hidden="true"></span> <a class="arr-link" href="https://github.com/HarryXin0919" rel="noopener" data-motion-cta data-destination="GITHUB"><span data-lang="en">all on GitHub</span><span data-lang="zh">全部在 GitHub</span> <span class="ar">↗</span></a></div>
+  <section id="building" data-num="04" data-name="BUILDING">
+    <div class="shead"><span class="num" aria-hidden="true">04</span> <h2><span data-lang="en">Building</span><span data-lang="zh">在做的项目</span></h2> <span class="ln" aria-hidden="true"></span> <a class="arr-link" href="https://github.com/HarryXin0919" rel="noopener" data-motion-cta data-destination="GITHUB"><span data-lang="en">all on GitHub</span><span data-lang="zh">全部在 GitHub</span> <span class="ar">↗</span></a></div>
     <div class="projects">
 
       <article
@@ -2749,29 +2802,6 @@
       </a>
 
     </div>
-  </section>
-
-  <!-- ===================== CREATING ===================== -->
-  <section id="creating" data-num="04" data-name="CREATING">
-    <div class="shead"><span class="num" aria-hidden="true">04</span> <h2><span data-lang="en">Creating</span><span data-lang="zh">创作</span></h2> <span class="ln" aria-hidden="true"></span></div>
-    <a class="show-feature rise" href="https://www.bilibili.com/video/BV18XN3z5EGH/" rel="noopener" data-motion-surface data-destination="BILIBILI VIDEO">
-      <div class="show-cover">
-        <img src="/assets/cross-club-variety-cover.jpg" width="1939" height="1091" loading="lazy" decoding="async" alt="社团联动综艺《这才是高中！》视频封面">
-        <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 6.7v10.6L17 12 8.5 6.7z"/></svg></span>
-        <span class="show-duration" aria-hidden="true">24:31</span>
-      </div>
-      <div class="show-copy">
-        <div class="show-meta">
-          <span>04.01 / <span data-lang="en">Campus production</span><span data-lang="zh">校园节目</span></span>
-          <span>BILIBILI · ORIGINAL ↗</span>
-        </div>
-        <h3><span data-lang="en">Cross-club variety project</span><span data-lang="zh">社团联动综艺</span></h3>
-        <p>
-          <span data-lang="en">I produced a zero-script campus collaboration that brought IronPulse robotics and FORMULAP racing together through technology, teamwork, and genuine high-school fun.</span><span data-lang="zh">我制作了一档零剧本校园跨社团综艺，让 IronPulse 机器人社与 FORMULAP 赛车社在技术交流、团队协作和真实的校园趣味中碰撞。</span>
-        </p>
-        <span class="show-title"><span data-lang="en">Watch: “This Is High School!”</span><span data-lang="zh">观看：《这才是高中！首场跨社团综艺团建，这就是我们不被定义的青春！》</span></span>
-      </div>
-    </a>
   </section>
 
   </main>
@@ -3201,6 +3231,7 @@
     for (i=0;i<els.length;i++) els[i].style.setProperty('--i', Math.min(i,6));
   };
   stagger('.facts .fact');
+  stagger('#creating .show-feature');
   stagger('.projects > a.card');
 
   /* Laboratory boot: the prepaint frame is held for two rAFs, then the hero

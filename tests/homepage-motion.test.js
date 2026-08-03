@@ -93,9 +93,9 @@ test("all destination surfaces and CTAs opt into the motion contract", async () 
     },
     {
       className: "show-feature",
-      count: 1,
+      count: 2,
       contract: "data-motion-surface",
-      destinations: ["BILIBILI VIDEO"],
+      destinations: ["YOUTUBE VIDEO", "BILIBILI VIDEO"],
       description: "media feature",
     },
     {
@@ -139,6 +139,37 @@ test("all destination surfaces and CTAs opt into the motion contract", async () 
       `${description} exposes the wrong destination label`,
     );
   }
+});
+
+test("Creating precedes Building and features the verified summer-school video", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const navMatch = homepage.match(/<nav class="site-nav"[\s\S]*?<\/nav>/);
+  assert.ok(navMatch, "section navigation is missing");
+  assert.ok(
+    navMatch[0].indexOf('href="#creating"') < navMatch[0].indexOf('href="#building"'),
+    "Creating must appear before Work in section navigation",
+  );
+
+  const creatingIndex = homepage.indexOf('<section id="creating"');
+  const buildingIndex = homepage.indexOf('<section id="building"');
+  assert.ok(creatingIndex >= 0, "Creating section is missing");
+  assert.ok(buildingIndex >= 0, "Building section is missing");
+  assert.ok(creatingIndex < buildingIndex, "Creating must appear before Building in document order");
+
+  const creatingMatch = homepage.match(/<section id="creating"[\s\S]*?<\/section>/);
+  assert.ok(creatingMatch, "Creating section markup is missing");
+  assert.match(creatingMatch[0], /data-num="03"/, "Creating section number must match its new position");
+  assert.match(creatingMatch[0], /class="media-grid"/, "Creating videos must share the responsive media grid");
+  assert.match(
+    creatingMatch[0],
+    /href="https:\/\/www\.youtube\.com\/watch\?v=aE1tZ9RmhG0"/,
+    "verified summer-school game video URL is missing",
+  );
+  assert.match(
+    creatingMatch[0],
+    /src="https:\/\/i\.ytimg\.com\/vi\/aE1tZ9RmhG0\/maxresdefault\.jpg"/,
+    "verified summer-school video thumbnail is missing",
+  );
 });
 
 test("informational panels do not advertise a false navigation affordance", async () => {
