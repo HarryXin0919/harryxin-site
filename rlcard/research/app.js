@@ -145,7 +145,12 @@ function formatEta(seconds) {
   return `ETA ${(seconds / 3600).toFixed(1)}H`;
 }
 
-function renderLiveChart(series) {
+function setLiveChartEmpty(title, detail) {
+  byId("liveChartEmptyTitle").textContent = title;
+  byId("liveChartEmptyDetail").textContent = detail;
+}
+
+function renderLiveChart(series, { completed = false, run = null } = {}) {
   const shell = byId("liveMetricChart").parentElement;
   const grid = byId("liveChartGrid");
   const line = byId("liveChartLine");
@@ -160,6 +165,17 @@ function renderLiveChart(series) {
     Number.isFinite(point.exploitability),
   );
   const metricKey = useExploitability ? "exploitability" : "payoff";
+  const metricLabel = useExploitability ? "exploitability" : "payoff";
+  const armName = run
+    ? armLabels[run.arm] || String(run.arm || "").toUpperCase()
+    : "Pilot";
+  const runContext = run ? `${armName} · SEED ${run.seed}` : "Pilot";
+  byId("liveChartTitle").textContent = completed
+    ? `最近完成运行的真实 ${metricLabel} 曲线`
+    : `当前训练的实时 ${metricLabel} 曲线`;
+  byId("liveChartDescription").textContent = completed
+    ? `${runContext} 的真实本机 CSV 指标；这里只展示这一运行，不是跨 seed 汇总。`
+    : `${runContext} 的实时本机 CSV 指标。`;
   const points = series
     .filter(
       (point) =>
@@ -173,9 +189,6 @@ function renderLiveChart(series) {
   }
 
   shell.classList.add("has-data");
-  byId("liveChartTitle").textContent = useExploitability
-    ? "当前训练的实时 exploitability 曲线"
-    : "当前训练对 RandomAgent 的实时 payoff 曲线";
 
   const width = 980;
   const height = 220;
@@ -311,13 +324,19 @@ function resetResearchSignal(data) {
   });
 
   byId("liveArm").textContent = apiReachable ? "尚未启动" : "STATUS UNAVAILABLE";
+  byId("liveRunHeading").textContent = "实时研究数据 / Live Run";
   byId("liveSeed").textContent = "—";
   byId("liveProgress").textContent = "0 / 12 RUNS";
   byId("liveExploitability").textContent = "—";
   byId("livePayoff").textContent = "—";
+  byId("liveThroughputLabel").textContent = "THROUGHPUT / ETA";
   byId("liveThroughput").textContent = "—";
   byId("liveProgressFill").style.width = "0%";
   byId("liveProgressTrack").setAttribute("aria-valuenow", "0");
+  setLiveChartEmpty(
+    "NO TRAINING SERIES YET",
+    "遥测链路会保持在线；Pilot 启动后这里只显示真实 CSV 指标。",
+  );
   renderLiveChart([]);
 
   if (apiReachable && data?.capturedAt) {
@@ -347,6 +366,13 @@ function applyResearchSignal(data) {
   }
 
   const phase = research.phase;
+  const run = research.currentRun;
+  const completedRuns = Number(research.completedRuns);
+  const totalRuns = Number(research.totalRuns);
+  const pilotComplete =
+    totalRuns > 0 && completedRuns >= totalRuns && research.state !== "running";
+  const completedSnapshot = run?.status === "complete";
+  const awaitingSelection = pilotComplete && phase === 5;
   byId("heroPhaseCode").textContent = `R2—${String(phase).padStart(2, "0")}`;
   byId("phaseNumber").textContent = String(phase).padStart(2, "0");
   byId("phaseDial").style.setProperty(
@@ -359,18 +385,32 @@ function applyResearchSignal(data) {
 
   const researchState = research.state.toUpperCase();
   const effectiveState =
-    connection === "LIVE" ? research.state : connection.toLowerCase();
+    connection === "LIVE"
+      ? pilotComplete
+        ? "complete"
+        : research.state
+      : connection.toLowerCase();
   liveChip.classList.add(effectiveState);
-  if (connection === "LIVE" && research.state === "running") {
+  if (connection === "LIVE" && pilotComplete) {
+    liveChip.textContent = awaitingSelection
+      ? "PILOT COMPLETE · AWAITING SELECTION"
+      : "PILOT COMPLETE · TELEMETRY LIVE";
+  } else if (connection === "LIVE" && research.state === "running") {
     liveChip.textContent = "TRAINING LIVE";
   } else if (connection === "LIVE" && research.state === "idle") {
     liveChip.textContent = "TELEMETRY LIVE · TRAINING IDLE";
   } else {
     liveChip.textContent = `${connection} · ${researchState}`;
   }
-  byId("researchTelemetryState").textContent = `${connection} · ${researchState}`;
-  byId("phaseCaptionRight").textContent =
-    research.state === "running" ? "EXPERIMENT ACTIVE" : `${researchState} · VERIFIED`;
+  byId("researchTelemetryState").textContent =
+    connection === "LIVE" && pilotComplete
+      ? "LIVE · PILOT COMPLETE"
+      : `${connection} · ${researchState}`;
+  byId("phaseCaptionRight").textContent = awaitingSelection
+    ? "PILOT COMPLETE · SELECT NEXT"
+    : research.state === "running"
+      ? "EXPERIMENT ACTIVE"
+      : `${researchState} · VERIFIED`;
   const pipelineChip = byId("pipelineChip");
   const pipelineState =
     connection === "LIVE" ? research.state : connection.toLowerCase();
@@ -412,8 +452,21 @@ function applyResearchSignal(data) {
     }
   });
 
-  const run = research.currentRun;
+  byId("liveRunHeading").textContent = "实时研究数据 / Live Run";
+  byId("liveThroughputLabel").textContent = "THROUGHPUT / ETA";
+  setLiveChartEmpty(
+    "NO TRAINING SERIES YET",
+    "遥测链路会保持在线；Pilot 启动后这里只显示真实 CSV 指标。",
+  );
   if (run) {
+    if (completedSnapshot) {
+      byId("liveRunHeading").textContent = "最近完成运行 / Latest Completed Run";
+      byId("liveThroughputLabel").textContent = "RUN STATUS";
+      setLiveChartEmpty(
+        "COMPLETED SNAPSHOT PENDING",
+        "Pilot 已完成；正在等待最近一次真实 CSV 快照同步。",
+      );
+    }
     byId("liveArm").textContent = armLabels[run.arm] || run.arm.toUpperCase();
     byId("liveSeed").textContent = String(run.seed);
     byId("liveProgress").textContent =
@@ -423,11 +476,30 @@ function applyResearchSignal(data) {
       3,
     );
     byId("livePayoff").textContent = formatMetric(run.latestPayoff, 3, true);
-    byId("liveThroughput").textContent =
-      `${formatMetric(run.speed, 1)} /S · ${formatEta(run.etaSeconds)}`;
+    byId("liveThroughput").textContent = completedSnapshot
+      ? "COMPLETE · SAVED"
+      : `${formatMetric(run.speed, 1)} /S · ${formatEta(run.etaSeconds)}`;
     const percent = Math.max(0, Math.min(100, run.fraction * 100));
     byId("liveProgressFill").style.width = `${percent}%`;
     byId("liveProgressTrack").setAttribute("aria-valuenow", percent.toFixed(1));
+  } else if (pilotComplete) {
+    byId("liveRunHeading").textContent = "Pilot 已完成 / Pilot Complete";
+    byId("liveArm").textContent = awaitingSelection
+      ? "AWAITING SELECTION"
+      : "PILOT COMPLETE";
+    byId("liveSeed").textContent = "—";
+    byId("liveProgress").textContent =
+      `${research.completedRuns} / ${research.totalRuns} RUNS`;
+    byId("liveExploitability").textContent = "—";
+    byId("livePayoff").textContent = "—";
+    byId("liveThroughputLabel").textContent = "RUN STATUS";
+    byId("liveThroughput").textContent = "COMPLETED SNAPSHOT PENDING";
+    byId("liveProgressFill").style.width = "100%";
+    byId("liveProgressTrack").setAttribute("aria-valuenow", "100");
+    setLiveChartEmpty(
+      "PILOT COMPLETE",
+      "12 / 12 个 Pilot 已完成；最近运行的真实 CSV 快照正在同步。",
+    );
   } else {
     byId("liveArm").textContent =
       research.state === "running" ? "STARTING RUN" : "NO ACTIVE RUN";
@@ -441,7 +513,10 @@ function applyResearchSignal(data) {
     byId("liveProgressTrack").setAttribute("aria-valuenow", "0");
   }
 
-  renderLiveChart(research.series);
+  renderLiveChart(research.series, {
+    completed: completedSnapshot || pilotComplete,
+    run,
+  });
   const captured = new Date(data.capturedAt);
   const capturedLabel = Number.isNaN(captured.getTime())
     ? "—"
@@ -451,11 +526,13 @@ function applyResearchSignal(data) {
     : "AGE —";
   byId("lastSignal").textContent = `LAST SIGNAL ${capturedLabel} CST · ${age}`;
   byId("disclosureLiveState").textContent =
-    connection === "LIVE"
-      ? research.state === "running"
-        ? "训练与遥测均处于实时状态。"
-        : "遥测在线，但当前没有活动训练进程。"
-      : `数据链路当前为 ${connection}。`;
+    connection === "LIVE" && pilotComplete
+      ? "Pilot 12 / 12 已完成；遥测在线，正在等待按预注册规则锁定候选。"
+      : connection === "LIVE"
+        ? research.state === "running"
+          ? "训练与遥测均处于实时状态。"
+          : "遥测在线，但当前没有活动训练进程。"
+        : `数据链路当前为 ${connection}。`;
 }
 
 function applyComputeSignal(data) {

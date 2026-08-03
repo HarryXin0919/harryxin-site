@@ -2367,7 +2367,7 @@
                 <strong id="research-card-state-short">IDLE</strong>
               </div>
               <div class="research-current">
-                <span>CURRENT RUN / 当前任务</span>
+                <span id="research-card-current-label">CURRENT RUN / 当前任务</span>
                 <strong id="research-card-current">尚未启动</strong>
               </div>
             </div>
@@ -2384,11 +2384,11 @@
                 <strong id="research-card-context">—</strong>
               </div>
               <div>
-                <span>THROUGHPUT</span>
+                <span id="research-card-speed-label">THROUGHPUT</span>
                 <strong id="research-card-speed">—</strong>
               </div>
               <div>
-                <span>ETA</span>
+                <span id="research-card-eta-label">ETA</span>
                 <strong id="research-card-eta">—</strong>
               </div>
             </div>
@@ -2629,12 +2629,15 @@
     var researchStateShortEl = document.getElementById('research-card-state-short');
     var researchPhaseEl = document.getElementById('research-card-phase');
     var researchRunsEl = document.getElementById('research-card-runs');
+    var researchCurrentLabelEl = document.getElementById('research-card-current-label');
     var researchCurrentEl = document.getElementById('research-card-current');
     var researchProgressLabelEl = document.getElementById('research-card-progress-label');
     var researchProgressEl = document.getElementById('research-card-progress');
     var researchBarEl = document.getElementById('research-card-bar');
     var researchContextEl = document.getElementById('research-card-context');
+    var researchSpeedLabelEl = document.getElementById('research-card-speed-label');
     var researchSpeedEl = document.getElementById('research-card-speed');
+    var researchEtaLabelEl = document.getElementById('research-card-eta-label');
     var researchEtaEl = document.getElementById('research-card-eta');
     var researchUpdatedEl = document.getElementById('research-card-updated');
     var timer = null;
@@ -2664,12 +2667,15 @@
       researchStateShortEl.textContent = offline ? 'OFFLINE' : 'IDLE';
       researchPhaseEl.textContent = '— / 07';
       researchRunsEl.textContent = '0 / 12';
+      researchCurrentLabelEl.textContent = 'CURRENT RUN / 当前任务';
       researchCurrentEl.textContent = offline ? '数据暂不可用' : '尚未启动';
       researchProgressLabelEl.textContent = 'PILOT COMPLETION';
       researchProgressEl.textContent = '0 / 12 RUNS';
       researchBarEl.style.width = '0%';
       researchContextEl.textContent = '—';
+      researchSpeedLabelEl.textContent = 'THROUGHPUT';
       researchSpeedEl.textContent = '—';
+      researchEtaLabelEl.textContent = 'ETA';
       researchEtaEl.textContent = '—';
       researchUpdatedEl.textContent = offline
         ? 'RESEARCH TELEMETRY UNAVAILABLE'
@@ -2685,38 +2691,63 @@
 
       var connection = String(data.connectionState || 'OFFLINE').toUpperCase();
       var rawState = String(research.state || 'idle').toLowerCase();
+      var phase = Number(research.phase);
+      var completedRuns = Number(research.completedRuns);
+      var totalRuns = Number(research.totalRuns);
+      var run = research.currentRun;
+      var completedSnapshot = !!run && String(run.status || '').toLowerCase() === 'complete';
+      var pilotComplete =
+        totalRuns > 0 && completedRuns >= totalRuns && rawState !== 'running';
+      var awaitingSelection = pilotComplete && phase === 5;
       var visualState = (connection === 'OFFLINE' || connection === 'DELAYED')
         ? connection.toLowerCase()
-        : rawState;
+        : pilotComplete
+          ? 'complete'
+          : rawState;
       var stateText = {
         running:'RUNNING · 训练中',
         idle:'IDLE · 暂无活动训练',
         complete:'COMPLETE · 已完成',
         blocked:'BLOCKED · 已暂停'
       }[rawState] || 'IDLE · 暂无活动训练';
+      if (connection === 'LIVE' && pilotComplete) {
+        stateText = awaitingSelection
+          ? 'PILOT COMPLETE · 等待选组'
+          : 'PILOT COMPLETE · 已保存';
+      }
       if (connection === 'DELAYED') stateText = 'DELAYED · 数据延迟';
       if (connection === 'OFFLINE') stateText = 'OFFLINE · 数据已过期';
       researchPanel.setAttribute('data-research-state', visualState);
       researchStateEl.textContent = stateText;
       researchStateShortEl.textContent =
-        connection === 'LIVE' ? rawState.toUpperCase() : connection;
+        connection === 'LIVE'
+          ? pilotComplete
+            ? 'COMPLETE'
+            : rawState.toUpperCase()
+          : connection;
 
-      var phase = Number(research.phase);
-      var completedRuns = Number(research.completedRuns);
-      var totalRuns = Number(research.totalRuns);
       researchPhaseEl.textContent = Number.isInteger(phase)
         ? String(phase).padStart(2, '0') + ' / 07'
         : '— / 07';
       researchRunsEl.textContent =
         integer(completedRuns) + ' / ' + integer(totalRuns);
 
-      var run = research.currentRun;
       var fraction = totalRuns > 0 ? completedRuns / totalRuns : 0;
+      researchCurrentLabelEl.textContent = 'CURRENT RUN / 当前任务';
+      researchSpeedLabelEl.textContent = 'THROUGHPUT';
+      researchEtaLabelEl.textContent = 'ETA';
       if (run) {
         var armName = researchArmNames[run.arm] || String(run.arm || '').toUpperCase();
         var seed = Number.isInteger(Number(run.seed)) ? String(run.seed) : '—';
+        if (completedSnapshot) {
+          researchCurrentLabelEl.textContent = 'LAST COMPLETED RUN / 最近完成';
+          researchSpeedLabelEl.textContent = 'RUN STATUS';
+          researchEtaLabelEl.textContent = 'SNAPSHOT';
+        }
         researchCurrentEl.textContent = armName + ' · SEED ' + seed;
-        researchProgressLabelEl.textContent = 'CURRENT RUN';
+        researchProgressLabelEl.textContent = completedSnapshot
+          ? 'LAST COMPLETED RUN'
+          : 'CURRENT RUN';
         researchProgressEl.textContent =
           integer(run.progress) + ' / ' + integer(run.target) + ' EP';
         fraction = finite(run.fraction)
@@ -2726,10 +2757,25 @@
             : 0;
         researchContextEl.textContent =
           String(run.cohort || 'pilot').toUpperCase() + ' · ' + armName;
-        researchSpeedEl.textContent = finite(run.speed)
-          ? Number(run.speed).toFixed(1) + ' /S'
-          : '—';
-        researchEtaEl.textContent = eta(run.etaSeconds);
+        researchSpeedEl.textContent = completedSnapshot
+          ? 'COMPLETE'
+          : finite(run.speed)
+            ? Number(run.speed).toFixed(1) + ' /S'
+            : '—';
+        researchEtaEl.textContent = completedSnapshot ? 'SAVED' : eta(run.etaSeconds);
+      } else if (pilotComplete) {
+        researchCurrentLabelEl.textContent = 'LAST COMPLETED RUN / 最近完成';
+        researchCurrentEl.textContent = awaitingSelection
+          ? 'PILOT COMPLETE · 等待选组'
+          : 'PILOT COMPLETE';
+        researchProgressLabelEl.textContent = 'PILOT COMPLETION';
+        researchProgressEl.textContent =
+          integer(completedRuns) + ' / ' + integer(totalRuns) + ' RUNS';
+        researchContextEl.textContent = 'AWAITING SNAPSHOT';
+        researchSpeedLabelEl.textContent = 'RUN STATUS';
+        researchSpeedEl.textContent = 'COMPLETE';
+        researchEtaLabelEl.textContent = 'SNAPSHOT';
+        researchEtaEl.textContent = 'PENDING';
       } else {
         researchCurrentEl.textContent =
           rawState === 'running'

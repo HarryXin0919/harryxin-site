@@ -38,16 +38,37 @@ test("research detail page defaults to an explicit idle state", async () => {
   assert.match(detailPage, /id="currentPhaseLabel">尚未启动 \/ AWAITING DATA/);
   assert.match(detailPage, /id="pilotRunCount">0 \/ 12 PLANNED/);
   assert.match(detailPage, /id="liveProgress">0 \/ 12 RUNS/);
+  assert.match(detailPage, /id="liveThroughputLabel">THROUGHPUT \/ ETA/);
+  assert.match(detailPage, /id="liveChartEmptyTitle">NO TRAINING SERIES YET/);
+  assert.match(detailPage, /id="liveChartEmptyDetail"/);
   assert.match(
     detailPage,
     /id="pipelineChip" class="chip idle" data-state="idle">IDLE · NO LIVE PHASE/,
   );
   assert.match(detailApp, /pipelineChip\.dataset\.state = pipelineState/);
+  assert.match(detailApp, /PILOT COMPLETE · AWAITING SELECTION/);
+  assert.match(detailApp, /最近完成运行 \/ Latest Completed Run/);
+  assert.match(detailApp, /COMPLETED SNAPSHOT PENDING/);
+  assert.match(detailApp, /COMPLETE · SAVED/);
   assert.match(detailApp, /document\.addEventListener\("visibilitychange"/);
   assert.match(detailApp, /if \(!document\.hidden\) \{\s*researchRefreshTimer = setInterval/);
   assert.match(detailStyles, /\.chip\.live,\s*\.chip\.running/);
   assert.match(
     detailStyles,
     /\.phase-caption,[\s\S]*\.page-footer \{\s*font-size: 10px;/,
+  );
+});
+
+test("homepage distinguishes a completed snapshot from a live run", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+
+  assert.match(homepage, /id="research-card-current-label">CURRENT RUN \/ 当前任务/);
+  assert.match(homepage, /id="research-card-speed-label">THROUGHPUT/);
+  assert.match(homepage, /id="research-card-eta-label">ETA/);
+  assert.match(homepage, /LAST COMPLETED RUN \/ 最近完成/);
+  assert.match(homepage, /PILOT COMPLETE · 等待选组/);
+  assert.match(
+    homepage,
+    /researchEtaEl\.textContent = completedSnapshot \? 'SAVED'/,
   );
 });

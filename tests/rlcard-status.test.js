@@ -216,6 +216,46 @@ test("research sanitizer strips secrets from every nested collection", () => {
   assert.equal(JSON.stringify(result).includes("private log"), false);
 });
 
+test("research sanitizer preserves a completed run snapshot and its real series", () => {
+  const input = validStatus();
+  input.research.phase = 5;
+  input.research.phaseLabel = "LOCK ONE CANDIDATE";
+  input.research.completedRuns = 12;
+  input.research.currentRun = {
+    cohort: "pilot",
+    arm: "pbrs-cfr-a025",
+    seed: 2026,
+    progress: 50000,
+    target: 50000,
+    fraction: 1,
+    speed: 51.6,
+    etaSeconds: null,
+    latestExploitability: 1.2769679026,
+    latestPayoff: 0.31125,
+    status: "complete",
+    checkpoint: "D:\\private\\final.pt",
+  };
+  input.research.series = [
+    {
+      arm: "pbrs-cfr-a025",
+      seed: 2026,
+      progress: 50000,
+      exploitability: 1.2769679026,
+      payoff: 0.31125,
+      localCsv: "D:\\private\\training.csv",
+    },
+  ];
+
+  const result = sanitizeStatus(input);
+
+  assert.equal(result.research.currentRun.status, "complete");
+  assert.equal(result.research.currentRun.arm, "pbrs-cfr-a025");
+  assert.equal(result.research.currentRun.seed, 2026);
+  assert.equal(result.research.series.length, 1);
+  assert.equal(result.research.series[0].exploitability, 1.2769679026);
+  assert.equal(JSON.stringify(result).includes("D:\\private"), false);
+});
+
 test("research sanitizer rejects impossible progress and non-finite metrics", () => {
   const impossible = validStatus();
   impossible.research.currentRun = {
