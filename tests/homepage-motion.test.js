@@ -283,4 +283,9 @@ test("legacy styles cannot override CTA, boot, tilt, or keyboard reveal states",
 
   assert.match(homepage, /\.is-tilting\s*\{[^}]*transition-property\s*:[^}]*\}/is);
   assert.match(homepage, /addEventListener\(['"]focusin['"][\s\S]{0,500}focus-reveal[\s\S]{0,200}reveal-complete/i);
+  assert.match(
+    homepage,
+    /html\.js-reveal\s+\.hero\s+h1\.rise\.in\.reveal-complete\s*\{[^}]*clip-path\s*:\s*none[^}]*\}/i,
+    "the completed hero reveal must release its clip so descenders such as Harry's y remain visible",
+  );
 });
