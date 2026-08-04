@@ -391,7 +391,7 @@ test("the Bilibili cover follows the selected site language", async () => {
   );
 });
 
-test("public project cards link to their exact GitHub repositories", async () => {
+test("project cards preserve public sources while FindItem opens its internal case study", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
   const buildingMatch = homepage.match(/<section id="building"[\s\S]*?<\/section>/);
   assert.ok(buildingMatch, "Building section markup is missing");
@@ -401,13 +401,13 @@ test("public project cards link to their exact GitHub repositories", async () =>
     projectCards.map(({ tag }) => attribute(tag, "href")),
     [
       "https://github.com/HarryXin0919/factlens",
-      "https://github.com/HarryXin0919/FindItem",
+      "/projects/finditem",
       "https://github.com/HarryXin0919/viralens",
       "https://github.com/HarryXin0919/looming",
       "https://github.com/HarryXin0919/skilltree",
       "https://github.com/HarryXin0919/ctxtax",
     ],
-    "project cards must route directly to the matching public repository",
+    "only FindItem should route through the internal portfolio case study",
   );
 });
 

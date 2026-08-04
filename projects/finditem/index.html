@@ -1,0 +1,2443 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寻物 FindItem — 开源零件定位系统</title>
+    <meta name="description" content="FindItem 是 Harry Xin 的开源智能零件定位项目：从单箱 ESP32-C3 原型，走向规划中的 30 箱学校部署。页面包含静态交互模拟，不控制实体设备。">
+    <meta name="author" content="Harry Xin">
+    <meta name="theme-color" content="#0A0C0F" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+    <meta name="color-scheme" content="light dark">
+    <link rel="canonical" href="https://harryxin.com/projects/finditem">
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="寻物 FindItem — 开源零件定位系统">
+    <meta property="og:description" content="从单箱 ESP32-C3 原型到规划中的 30 箱学校部署：搜索、亮灯、响铃，快速定位零件。">
+    <meta property="og:url" content="https://harryxin.com/projects/finditem">
+    <meta property="og:site_name" content="Harry Xin">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="寻物 FindItem — 开源零件定位系统">
+    <meta name="twitter:description" content="从单箱 ESP32-C3 原型到规划中的 30 箱学校部署。页面为静态交互模拟。">
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: auto; scroll-padding-top: 52px; }  /* snap removed: inertia smooth-scroll handles motion */
+        body {
+            font-family: var(--font-body);
+            background: var(--bg); color: var(--text); overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            transition: background 0.4s, color 0.4s;
+        }
+        /* Local system faces keep the page fast and compatible with harryxin.com's strict CSP. */
+        h1, h2, h3, .section-title, .nav-brand, .stat-num, .step-num, .tl-title,
+        .demo-box h3, .confirm-stat-value, .locate-part-name { font-family: var(--font-display); }
+
+        /* Smooth day/night switch: a uniform cross-fade applied only while toggling */
+        .theme-transition,
+        .theme-transition *,
+        .theme-transition *::before,
+        .theme-transition *::after {
+            transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease,
+                        fill 0.5s ease, stroke 0.5s ease, box-shadow 0.5s ease,
+                        opacity 0.5s ease, filter 0.5s ease !important;
+        }
+        :root {
+            --bg-img-opacity: 0.5;
+            --accent: #61C4E3;
+            --accent-ink: #61C4E3;
+            --accent-dim: rgba(97, 196, 227, 0.12);
+            --accent-on: #05222C;            /* dark ink for text sitting on bright-cyan fills */
+            --accent-hero: #61C4E3;          /* hero headline highlight — bright cyan (dark theme) */
+            --accent-2: #3E96E6;             /* electric-blue 2nd accent — hue≈206°, glow/surface only, NEVER text */
+            --accent-grad: linear-gradient(115deg, #61C4E3 0%, #61C4E3 38%, #3E96E6 100%);
+            --glow: 0 6px 22px rgba(97,196,227,.30), 0 10px 40px rgba(62,150,230,.16);
+            --grid-dot: rgba(97,196,227,.07);
+            --accent-hover: #4db8d9;          /* darker cyan — button hover (was bare #4db8d9) */
+            --state-ok: #2FB7A0;              /* success: teal-green, harmonized to cyan (not iOS green) */
+            --state-ok-hover: #259a86;
+            --state-ok-dim: rgba(47,183,160,0.15);
+            --state-ok-on: #0B0E11;           /* dark text on bright ok bg — meets ≥4.5:1 in dark mode */
+            --portfolio-accent: #9CFF57;
+            --portfolio-accent-dim: rgba(156, 255, 87, 0.10);
+            --portfolio-accent-border: rgba(156, 255, 87, 0.30);
+            --font-display: 'Aptos Display', 'SF Pro Display', 'Segoe UI Variable Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --font-body: 'Aptos', 'SF Pro Text', 'Segoe UI Variable Text', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --font-mono: 'Cascadia Code', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+            --text: #f5f5f7;
+            --text-dim: #a1a1a6;
+            --text-dimmer: #86868b;
+            --section-title: #ffffff;
+            --surface: rgba(255, 255, 255, 0.06);
+            --surface-border: rgba(255, 255, 255, 0.12);
+            --surface-hover: rgba(255, 255, 255, 0.16);
+            --card-bg: rgba(255, 255, 255, 0.045);
+            --card-hover: rgba(255, 255, 255, 0.09);
+            --bg: #0A0C0F;
+            --bg-elev: #12151A;
+            --nav-bg: rgba(10, 12, 15, 0.72);
+            --nav-border: rgba(255, 255, 255, 0.08);
+            --hero-glow: rgba(97, 196, 227, 0.1);
+            --stat-bg: #0A0C0F;
+            --feature-bg: #0A0C0F;
+            --feature-hover-bg: var(--surface);
+            --footer-bg: #0A0C0F;
+            --footer-text: rgba(255, 255, 255, 0.6);
+            --footer-text-hover: rgba(255, 255, 255, 0.9);
+            --footer-dot: rgba(255, 255, 255, 0.25);
+            --input-bg: rgba(255, 255, 255, 0.04);
+            --input-color: #fff;
+            --demo-item-hover-border: rgba(255, 255, 255, 0.18);
+            --demo-active-bg: rgba(97, 196, 227, 0.08);
+            --timeline-line: rgba(255, 255, 255, 0.15);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 10px 34px rgba(0, 0, 0, 0.5);
+            --text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            /* Section background gradients — tokenized so the light theme can override them */
+            --grad-hero:     radial-gradient(circle at 50% 32%, rgba(97,196,227,0.28), rgba(97,196,227,0.04) 42%, #0A0C0F 72%);
+            --grad-stats:    linear-gradient(135deg, #0A0C0F 0%, #11171D 60%, #0e1a22 100%);
+            --grad-how:      radial-gradient(circle at 28% 42%, rgba(97,196,227,0.18), rgba(10,12,15,0) 55%), #0A0C0F;
+            --grad-features: linear-gradient(160deg, #0d1622 0%, #0A0C0F 70%);
+            --grad-architecture: radial-gradient(circle at 18% 20%, rgba(156,255,87,0.08), transparent 36%), linear-gradient(145deg, #0A0C0F 0%, #0f1820 52%, #0b1210 100%);
+            --grad-roadmap:  radial-gradient(circle at 72% 48%, rgba(46,155,196,0.20), rgba(10,12,15,0) 58%), #0A0C0F;
+            --grad-demo:     linear-gradient(205deg, #0e1820 0%, #0A0C0F 65%);
+        }
+
+        /* Light theme */
+        [data-theme="light"] {
+            --bg-img-opacity: 1;
+            --accent: #61C4E3;
+            --accent-ink: #0A7099;
+            --accent-dim: rgba(97, 196, 227, 0.08);
+            --accent-on: #06303d;            /* dark ink on bright-cyan fills (~7.5:1 on #61C4E3) */
+            --accent-hero: #1593C0;          /* hero headline highlight — brighter cyan, ~3:1 on light (large text) */
+            --accent-2: #2E7FCB;             /* light: deeper electric-blue, glow only — NEVER text */
+            --state-ok: #0E7F6A;              /* dark enough for white text ~4.8:1 */
+            --state-ok-hover: #0B6A59;        /* preserves white-text contrast on hover */
+            --state-ok-on: #ffffff;           /* light mode: white text on dark ok bg */
+            --portfolio-accent: #2F7F16;
+            --portfolio-accent-dim: rgba(47,127,22,0.08);
+            --portfolio-accent-border: rgba(47,127,22,0.24);
+            --accent-grad: linear-gradient(115deg, #61C4E3 0%, #61C4E3 40%, #3E96E6 100%);
+            --glow: 0 6px 18px rgba(21,147,192,.20);
+            --grid-dot: rgba(10,112,153,.12);
+            --text: #1d1d1f;
+            --text-dim: #6e6e73;
+            --text-dimmer: #6b6b70;
+            --section-title: #1d1d1f;
+            --surface: rgba(0, 0, 0, 0.03);
+            --surface-border: rgba(0, 0, 0, 0.1);
+            --surface-hover: rgba(0, 0, 0, 0.06);
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-hover: #ffffff;
+            --bg: #f5f5f7;
+            --bg-elev: #ffffff;
+            --nav-bg: rgba(245, 245, 247, 0.72);
+            --nav-border: rgba(0, 0, 0, 0.08);
+            --hero-glow: rgba(97, 196, 227, 0.08);
+            --stat-bg: #fff;
+            --feature-bg: #fff;
+            --feature-hover-bg: var(--surface);
+            --footer-bg: #f5f5f7;
+            --footer-text: rgba(0, 0, 0, 0.55);
+            --footer-text-hover: rgba(0, 0, 0, 0.8);
+            --footer-dot: rgba(0, 0, 0, 0.15);
+            --input-bg: rgba(0, 0, 0, 0.03);
+            --input-color: #1d1d1f;
+            --demo-item-hover-border: rgba(0, 0, 0, 0.12);
+            --demo-active-bg: rgba(97, 196, 227, 0.08);
+            --timeline-line: rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --text-shadow: none;
+            /* Section background gradients — light: soft cyan → off-white, genuinely light */
+            --grad-hero:     radial-gradient(circle at 50% 30%, rgba(97,196,227,0.20), rgba(97,196,227,0.05) 45%, #f5f5f7 72%);
+            --grad-stats:    linear-gradient(135deg, #ffffff 0%, #eef4f7 60%, #e7f1f5 100%);
+            --grad-how:      radial-gradient(circle at 28% 42%, rgba(97,196,227,0.14), rgba(245,245,247,0) 55%), #f5f5f7;
+            --grad-features: linear-gradient(160deg, #eef4f7 0%, #f5f5f7 70%);
+            --grad-architecture: radial-gradient(circle at 18% 20%, rgba(47,127,22,0.08), transparent 36%), linear-gradient(145deg, #f5f5f7 0%, #edf5f8 52%, #f1f6ef 100%);
+            --grad-roadmap:  radial-gradient(circle at 72% 48%, rgba(46,155,196,0.12), rgba(245,245,247,0) 58%), #f5f5f7;
+            --grad-demo:     linear-gradient(205deg, #eef5f8 0%, #f5f5f7 65%);
+        }
+
+        /* Accessibility utilities */
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+        }
+
+        /* Nav */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: var(--nav-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 0.5px solid var(--nav-border);
+            transition: background 0.4s, border-color 0.4s;
+        }
+        .nav-inner {
+            max-width: 1280px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
+            height: 52px; padding: 0 24px;
+        }
+        .nav-identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .parent-site-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--portfolio-accent); text-decoration: none;
+            font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+            letter-spacing: .13em; text-transform: uppercase; white-space: nowrap;
+            transition: color .2s ease, transform .2s ease;
+        }
+        .parent-site-link::after { content: ''; width: 1px; height: 18px; margin-left: 5px; background: var(--surface-border); }
+        .parent-site-link:hover { color: var(--text); transform: translateX(-2px); }
+        .nav-brand { font-size: 17px; font-weight: 600; color: var(--text); text-decoration: none; letter-spacing: -0.02em; }
+        .nav-brand .it { color: var(--accent-ink); }
+        .nav-brand .cn-name { font-size: 17px; font-weight: 600; color: var(--text); margin-left: 8px; letter-spacing: 0.08em; }
+        .nav-right { display: flex; align-items: center; gap: 18px; }
+        .nav-links { display: flex; gap: 22px; list-style: none; }
+        .nav-links a { font-size: 14px; color: var(--text-dim); text-decoration: none; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--text); }
+        .nav-cta { background: var(--accent) !important; color: var(--accent-on) !important; padding: 7px 18px; border-radius: 980px; font-weight: 600; }
+        .nav-cta:hover { box-shadow: var(--glow); }
+        .nav-icon-btn {
+            background: none; border: 1px solid var(--surface-border); color: var(--text-dim);
+            width: 40px; height: 40px; border-radius: 980px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s; padding: 0;
+        }
+        .nav-icon-btn:hover { border-color: var(--surface-hover); color: var(--text); }
+        .nav-icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        @media (max-width: 1040px) { .parent-site-link span { display: none; } }
+        @media (max-width: 768px) {
+            .nav-links, .parent-site-link { display: none; }
+            .nav-icon-btn { width: 44px; height: 44px; }
+            .nav-inner { padding: 0 14px; }
+            .nav-right { gap: 8px; }
+        }
+
+        /* Mobile nav: a real menu drawer, not a hidden desktop bar */
+        .nav-toggle { display: none; }
+        .nav-toggle svg { width: 18px; height: 18px; }
+        @media (max-width: 768px) { .nav-toggle { display: flex; } }
+        @media (min-width: 769px) { .mobile-menu { display: none; } }
+        .mobile-menu {
+            position: fixed; inset: 0; z-index: 95;
+            background: var(--nav-bg); backdrop-filter: saturate(180%) blur(22px); -webkit-backdrop-filter: saturate(180%) blur(22px);
+            display: flex; flex-direction: column; justify-content: center; gap: 2px;
+            padding: 64px 28px 32px;
+            opacity: 0; visibility: hidden; transform: translateY(-6px);
+            transition: opacity .3s ease, transform .3s ease, visibility .3s;
+        }
+        .mobile-menu.open { opacity: 1; visibility: visible; transform: translateY(0); }
+        .mobile-menu a {
+            font-family: var(--font-display); font-size: 26px; font-weight: 600; letter-spacing: -0.01em;
+            color: var(--text); text-decoration: none; padding: 18px 6px;
+            border-bottom: 1px solid var(--surface-border); transition: color .2s;
+        }
+        .mobile-menu a:active { color: var(--accent-ink); }
+        .mobile-menu a.mm-cta {
+            margin-top: 24px; border-bottom: none; text-align: center;
+            background: var(--accent); color: var(--accent-on); border-radius: 980px; padding: 16px;
+        }
+        .mobile-menu a.mobile-parent-link {
+            color: var(--portfolio-accent); font-family: var(--font-mono);
+            font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
+        }
+        /* Skip-to-content link for keyboard users */
+        .skip-link { position: fixed; top: 10px; left: 10px; z-index: 10000; background: var(--accent); color: var(--accent-on);
+            padding: 9px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none;
+            transform: translateY(-160%); transition: transform 0.2s ease; }
+        .skip-link:focus { transform: translateY(0); }
+
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+        /* Section backgrounds */
+        .section-bg {
+            position: relative; overflow: hidden;
+        }
+        .section-bg::before {
+            content: ''; position: absolute; inset: 0;
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            filter: none;
+            opacity: var(--bg-img-opacity, 1);
+            transition: background-position 0.15s ease-out;
+            animation: kenBurns 50s ease-in-out infinite alternate;
+            will-change: transform;
+        }
+        @keyframes kenBurns {
+            0% { transform: scale(1.04) translate(0, 0); }
+            50% { transform: scale(1.07) translate(-0.5%, -0.5%); }
+            100% { transform: scale(1.04) translate(0.5%, 0.5%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .section-bg::before { animation: none; }
+        }
+        .section-bg::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(180deg, var(--bg) 2%, rgba(0,0,0,0.2) 32%, rgba(0,0,0,0.2) 68%, var(--bg) 98%);
+            pointer-events: none;
+        }
+        /* 蓝/白/黑品牌渐变背景(替换原比赛照片);具体色值在 :root / [data-theme=light] 的 --grad-* 令牌里,深浅两套各自定义 */
+        .hero-bg::before     { background-image: var(--grad-hero); }
+        .stats-bg::before    { background-image: var(--grad-stats); }
+        .how-bg::before      { background-image: var(--grad-how); }
+        .features-bg::before { background-image: var(--grad-features); }
+        .roadmap-bg::before  { background-image: var(--grad-roadmap); }
+        .demo-bg::before     { background-image: var(--grad-demo); }
+
+        .section-bg > * { position: relative; z-index: 1; }
+
+        [data-theme="light"] .section-bg::before { filter: none; }
+        [data-theme="light"] .section-bg::after {
+            background: linear-gradient(180deg, var(--bg) 3%, rgba(245,245,247,0.45) 20%, rgba(245,245,247,0.45) 80%, var(--bg) 97%);
+        }
+
+        /* Section spacing */
+        .section-spacer {
+            height: 120px;
+        }
+        @media (max-width: 768px) {
+            .section-spacer { display: none; }
+            .hero-bg::before { background-size: 200%; background-position: 50% 35%; }
+            .hero { min-height: 100vh; min-height: 100dvh; height: auto; padding: 70px 20px 40px; scroll-snap-align: start; box-sizing: border-box; }
+            .stats { height: auto; min-height: auto; padding: 40px 20px; }
+            .stat { padding: 24px 16px; background: var(--card-bg); }
+            .stat-num { font-size: 32px; }
+            .stat-unit { font-size: 18px; }
+            .how { min-height: 100vh; min-height: 100dvh; height: auto; padding: 56px 16px; display: flex; flex-direction: column; justify-content: center; scroll-snap-align: start; box-sizing: border-box; }
+            .step { padding: 20px 16px; background: var(--card-bg); }
+            .step-num { font-size: 36px; margin-bottom: 8px; }
+            .step h3 { font-size: 17px; margin-bottom: 4px; }
+            .step p { font-size: 13px; }
+            .features { min-height: 100vh; min-height: 100dvh; height: auto; padding: 56px 16px; display: flex; flex-direction: column; justify-content: center; scroll-snap-align: start; box-sizing: border-box; }
+            .feature { padding: 16px; background: var(--card-bg); }
+            .feature h3 { font-size: 15px; margin-bottom: 2px; }
+            .feature p { font-size: 12px; line-height: 1.4; }
+            .demo { min-height: 100vh; min-height: 100dvh; height: auto; padding: 56px 16px; display: flex; flex-direction: column; justify-content: center; scroll-snap-align: start; box-sizing: border-box; }
+            .demo-box { padding: 24px 16px; background: var(--card-bg); }
+            .roadmap { min-height: 100vh; min-height: 100dvh; height: auto; padding: 56px 16px; display: flex; flex-direction: column; justify-content: center; scroll-snap-align: start; box-sizing: border-box; }
+            .tl-item { padding: 8px 12px; margin-bottom: 8px; background: var(--card-bg); }
+            .tl-title { font-size: 14px; margin-bottom: 2px; }
+            .tl-desc { font-size: 11px; line-height: 1.4; }
+            .tl-phase { font-size: 10px; margin-bottom: 2px; }
+            .timeline { padding-left: 28px; }
+            .tl-item::before { left: -23px; width: 8px; height: 8px; }
+            .timeline::before { left: 8px; }
+            .how .container, .features .container, .demo .container, .roadmap .container {
+                background: transparent; padding: 0;
+            }
+            .stats .container { background: none; padding: 0; }
+            .section-eyebrow { margin-bottom: 4px; font-size: 13px; }
+            .section-title { font-size: 24px; margin-bottom: 16px; }
+            .section-title, .section-eyebrow { text-shadow: var(--text-shadow); }
+            .stat-label { color: var(--text-dim); font-size: 12px; }
+            .step p, .feature p, .tl-desc { color: var(--text-dim); }
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+            padding: 120px 24px 80px; position: relative;
+        }
+        .hero-glow {
+            position: absolute; width: 800px; height: 800px; border-radius: 50%;
+            background: radial-gradient(circle, var(--hero-glow) 0%, transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -60%); pointer-events: none;
+            z-index: 1;
+        }
+        /* Hero dot-matrix canvas — (0,2,1) specificity locks position:absolute over `.section-bg > *{position:relative}` */
+        .hero.section-bg .hero-grid { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .hero-label {
+            font-family: var(--font-mono);
+            font-size: 13px; font-weight: 600; color: var(--accent-ink);
+            text-transform: uppercase; letter-spacing: 0.1em;
+            margin-bottom: 20px; position: relative; z-index: 2;
+            opacity: 0.12; transform: translateY(20px); animation: fadeUp 0.8s ease forwards 0.2s;
+            text-shadow: var(--text-shadow);
+        }
+        .hero h1 {
+            font-size: clamp(48px, 9vw, 92px); font-weight: 700; letter-spacing: -0.035em;
+            line-height: 1.05; margin-bottom: 24px; position: relative; z-index: 1;
+            color: var(--text);
+            opacity: 0.12; transform: translateY(30px); animation: fadeUp 1s ease forwards 0.4s;
+            text-shadow: var(--text-shadow);
+        }
+        .hero h1 .it { color: var(--accent-hero); }
+        .hero h1 .dim { color: var(--text); }
+        /* CJK 不吃负字距：中文标题字距归位，西文(en)保留紧排 */
+        html[lang="zh"] .hero h1 { letter-spacing: -0.006em; }
+        html[lang="zh"] .section-title { letter-spacing: -0.008em; }
+        .hero-sub {
+            font-size: clamp(17px, 2.5vw, 22px); color: var(--text-dim); max-width: 480px;
+            line-height: 1.5; margin-bottom: 48px; position: relative; z-index: 1;
+            opacity: 0.12; transform: translateY(20px); animation: fadeUp 0.8s ease forwards 0.7s;
+            text-shadow: var(--text-shadow);
+        }
+        .hero-actions {
+            display: flex; gap: 16px; position: relative; z-index: 1;
+            opacity: 0.12; transform: translateY(20px); animation: fadeUp 0.8s ease forwards 0.9s;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 16px 32px; border-radius: 980px; font-size: 17px;
+            font-weight: 500; text-decoration: none; transition: all 0.3s; border: none; cursor: pointer;
+        }
+        .btn-fill { background: var(--accent); color: var(--accent-on); }
+        .btn-fill:hover { background: var(--accent-hover); --btn-s: 1.02; box-shadow: var(--glow); }
+        .btn-ghost { background: transparent; color: var(--accent-ink); }
+        .btn-ghost:hover { background: var(--accent-dim); }
+        .hero-srclink { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; color: var(--text-dim); text-decoration: none; align-self: center; transition: color 0.2s; }
+        .hero-srclink:hover { color: var(--text); }
+        .hero-srclink svg { width: 16px; height: 16px; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes panelIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Hero isometric illustration (hand-built SVG — a parts bin that lights up & beeps when located) */
+        .hero-visual {
+            width: 100%; max-width: 360px; margin: 52px auto 0; position: relative; z-index: 1;
+            opacity: 0.12; transform: translateY(20px); animation: fadeUp 0.9s ease forwards 1.1s;
+        }
+        .hero-visual svg { width: 100%; height: auto; display: block; overflow: visible;
+            filter: drop-shadow(0 22px 40px rgba(97,196,227,0.20)); }
+        .fi-float { animation: fiFloat 5.5s ease-in-out infinite; }
+        @keyframes fiFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+        .fi-led { animation: fiLed 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        @keyframes fiLed { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+        .fi-signal { animation: fiSignal 2.6s ease-out infinite; }
+        @keyframes fiSignal { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) {
+            .fi-float, .fi-led, .fi-signal { animation: none; }
+            .fi-signal { opacity: 0.55; }
+        }
+        @media (max-width: 768px) { .hero-visual { max-width: 250px; margin-top: 36px; } }
+
+        /* ===== Live Locator (hero mini dashboard) — reuses loader .lbox bins ===== */
+        .hero-visual.loc { max-width: min(340px, 90vw); margin: clamp(24px, 4vh, 52px) auto 0; cursor: pointer; }
+        .hero-visual .lbox:not(.lit) svg { filter: none; }   /* kill inherited .hero-visual svg drop-shadow on the 12 mini-bins; lit keeps its own glow */
+        .loc-card {
+            background: var(--card-bg); border: 1px solid var(--surface-border);
+            border-radius: 18px; padding: 18px; box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            text-align: left;
+            transition: border-color .3s, box-shadow .3s;
+        }
+        .hero-visual.loc:hover .loc-card { border-color: rgba(97,196,227,0.35); box-shadow: var(--glow); }
+        .loc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .loc-status { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); }
+        .loc-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: locDot 1.6s ease-in-out infinite; }
+        @keyframes locDot { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+        .loc-box { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--accent-ink); font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'zero' 1; }
+        .loc-name { font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 14px; min-height: 23px; }
+        .loc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 6px; margin-bottom: 14px; }
+        .loc-foot { display: flex; align-items: center; gap: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dimmer); letter-spacing: .04em; }
+        .loc-meta { font-variant-numeric: tabular-nums; }
+        .loc-beepwrap { display: inline-flex; align-items: center; gap: 6px; opacity: 0; transition: opacity .3s; }
+        .loc-beepwrap.on { opacity: 1; }
+        .loc-beep { color: var(--accent-ink); }
+        .loc-wave { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+        .loc-wave i { width: 2.5px; background: var(--accent); border-radius: 2px; animation: locWave .5s ease-in-out infinite alternate; }
+        .loc-wave i:nth-child(1) { height: 5px; animation-delay: 0s; }
+        .loc-wave i:nth-child(2) { height: 10px; animation-delay: .08s; }
+        .loc-wave i:nth-child(3) { height: 12px; animation-delay: .14s; }
+        .loc-wave i:nth-child(4) { height: 8px; animation-delay: .2s; }
+        .loc-wave i:nth-child(5) { height: 5px; animation-delay: .26s; }
+        @keyframes locWave { from { transform: scaleY(.4); } to { transform: scaleY(1); } }
+        /* tighter ping in the compact 4×3 grid so the ring doesn't clip / invade neighbors */
+        .hero-visual .lbox.lit::after { animation: locPing 1s ease-out; }
+        .hero-visual .lbox.lit::before { animation: locPing 1s ease-out .18s; }
+        @keyframes locPing { 0% { transform: scale(.6); opacity: .8; } 100% { transform: scale(1.35); opacity: 0; } }
+        @media (max-width: 768px) { .hero-visual.loc { max-width: min(320px, 90vw); } }
+        @media (max-height: 820px) { .loc-card { padding: 14px; } .loc-grid { gap: 8px; margin-bottom: 10px; } .loc-name { font-size: 16px; margin-bottom: 10px; } }
+        @media (max-height: 640px) { .hero-visual.loc { display: none; } }
+        @media (prefers-reduced-motion: reduce) { .loc-wave i, .loc-dot { animation: none !important; } .hero-visual .lbox.lit::after, .hero-visual .lbox.lit::before { animation: none !important; } }
+
+        /* ===== Cinematic loader (counts to 100%, fades into the experience) ===== */
+        #curtain {
+            position: fixed; inset: 0; z-index: 9999; background: var(--bg);
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            transition: opacity 0.8s ease, transform 1.1s cubic-bezier(0.76,0,0.24,1);
+            will-change: opacity, transform;
+        }
+        #curtain.done { opacity: 0; transform: scale(1.06); pointer-events: none; }
+        .curtain-brand { font-family: var(--font-display); font-size: clamp(28px,5vw,46px); font-weight: 600;
+            letter-spacing: -0.02em; color: var(--text); display: inline-block;
+            opacity: 0; transform: translateY(14px); animation: curtainIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards 0.15s; }
+        .curtain-brand .it { color: var(--accent-ink); }
+        .curtain-meta { position: absolute; bottom: 11vh; left: 0; right: 0; display: flex; flex-direction: column;
+            align-items: center; gap: 7px; opacity: 0; animation: curtainIn 0.7s ease forwards 0.4s; }
+        .curtain-num { display: flex; align-items: baseline; font-family: var(--font-display); color: var(--text); }
+        .curtain-pct { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'zero' 1; }
+        .curtain-pct-sign { font-size: 17px; font-weight: 600; color: var(--text-dim); margin-left: 2px; }
+        .curtain-tag { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-dim); transition: color 0.3s; }
+        .curtain-inner { display: flex; flex-direction: column; align-items: center; }
+        /* loader bin grid */
+        .loader-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 13px;
+            width: min(330px, 72vw); margin: 30px auto 0; opacity: 0; animation: curtainIn 0.7s ease forwards 0.3s; }
+        .lbox { position: relative; width: 100%; aspect-ratio: 48 / 44; }
+        .lbox svg { width: 100%; height: 100%; display: block; overflow: visible; transition: filter 0.3s; }
+        .lbox path { fill: var(--accent); fill-opacity: 0.04; stroke: var(--accent-ink); stroke-opacity: 0.28;
+            stroke-width: 1.6; stroke-linejoin: round; transition: stroke-opacity 0.25s, fill-opacity 0.25s, stroke 0.25s; }
+        .lbox .lb-led { fill: var(--accent-ink); opacity: 0.25; transition: opacity 0.25s, fill 0.25s; }
+        .lbox.scan path { stroke-opacity: 0.78; }
+        .lbox.scan .lb-led { opacity: 0.85; }
+        .lbox.scan svg { filter: drop-shadow(0 0 5px rgba(97,196,227,0.45)); }
+        .lbox.dim { opacity: 0.26; transition: opacity 0.5s ease; }     /* spotlight: everything else recedes */
+        .lbox.lit { z-index: 1; animation: lbPop 0.55s cubic-bezier(0.2,1.5,0.4,1) both; }
+        .lbox.lit path { stroke: var(--accent); stroke-opacity: 1; fill-opacity: 0.24; }
+        .lbox.lit .lb-led { opacity: 1; fill: var(--accent); }
+        .lbox.lit svg { filter: drop-shadow(0 0 15px rgba(97,196,227,0.95)); }
+        .lbox.lit::after, .lbox.lit::before { content: ''; position: absolute; inset: -6px;
+            border: 2px solid var(--accent); border-radius: 13px; opacity: 0; }
+        .lbox.lit::after { animation: lbPing 1s ease-out; }
+        .lbox.lit::before { animation: lbPing 1s ease-out 0.18s; }      /* twin ping = a confident "lock" */
+        @keyframes lbPing { 0% { transform: scale(0.55); opacity: 0.85; } 100% { transform: scale(1.85); opacity: 0; } }
+        @keyframes lbPop { 0% { transform: scale(0.8); } 55% { transform: scale(1.16); } 100% { transform: scale(1); } }
+        @keyframes curtainIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* Hold the hero entrance until the curtain lifts */
+        html.loading .hero-label, html.loading .hero h1, html.loading .hero-sub,
+        html.loading .hero-actions, html.loading .hero-visual { animation-play-state: paused; }
+
+        /* ===== Wave-split heading reveal (words/chars rise behind a mask) ===== */
+        .wave-split .ws-word { display: inline-block; overflow: hidden; vertical-align: top; line-height: 1.14; }
+        .wave-split .ws-inner { display: inline-block; transform: translateY(110%); transition: transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+        .wave-split.visible .ws-inner { transform: translateY(0); }
+        /* wave-split titles drop the block-level slide (the word mask is the motion) */
+        .wave-split.reveal, .wave-split.reveal.visible, .wave-split.reveal:not(.visible) { transform: none; }
+
+        @media (prefers-reduced-motion: reduce) {
+            #curtain { display: none; }
+            .wave-split .ws-inner { transform: none; transition: none; }
+            .lbox.lit, .lbox.lit::after, .lbox.lit::before { animation: none !important; }
+            .reveal { transform: none !important; opacity: 1 !important; transition: none !important; }
+        }
+
+        /* ===== Unbox scroll scene (scroll-scrubbed: trigger → open → stats rise) ===== */
+        .unbox { position: relative; height: 200vh; }
+        .unbox-stage { position: sticky; top: 0; height: 100vh; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; }
+        .unbox-box { width: 100%; max-width: 400px; will-change: transform, opacity; }
+        .unbox-box svg { width: 100%; height: auto; display: block; overflow: visible;
+            filter: drop-shadow(0 26px 46px rgba(97,196,227,0.22)); }
+        .ub-lid { transform-box: view-box; transform-origin: 220px 84px; }
+        .unbox-stats { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 24px; pointer-events: none; }
+        .unbox-stats .stats-grid { width: 100%; max-width: 1080px; opacity: 0; transform: translateY(70px); pointer-events: auto; will-change: transform, opacity; }
+        .unbox-hint { position: absolute; bottom: 6vh; left: 0; right: 0; text-align: center; color: var(--text-dim);
+            font-size: 13px; letter-spacing: 0.08em; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .unbox-hint svg { width: 20px; height: 20px; animation: ubHintBob 1.8s ease-in-out infinite; }
+        @keyframes ubHintBob { 0%, 100% { transform: translateY(0); opacity: 0.65; } 50% { transform: translateY(5px); opacity: 1; } }
+        @media (max-width: 768px) { .unbox { height: 168vh; } .unbox-box { max-width: 280px; } }
+        @media (prefers-reduced-motion: reduce) {
+            .unbox { height: auto; padding: 90px 0; }
+            .unbox-stage { position: static; height: auto; overflow: visible; }
+            .unbox-box { display: none; }
+            .unbox-stats { position: static; padding: 0 24px; }
+            .unbox-stats .stats-grid { opacity: 1; transform: none; margin: 0 auto; }
+            .unbox-hint { display: none; }
+        }
+
+        /* Reveal */
+        .reveal {
+            transform: translateY(16px);
+            transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s, border-color 0.4s, background 0.4s;
+        }
+        .reveal:not(.visible) { opacity: 0.12; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* Stats */
+        .stats { padding: 150px 24px; }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 1px; background: var(--surface-border); border-radius: 16px; overflow: hidden;
+        }
+        .stat { background: var(--card-bg); padding: 48px 32px; text-align: center; transition: background 0.3s; }
+        .stat:hover { background: var(--card-hover); }
+        .stat-num { font-size: clamp(36px, 5vw, 54px); font-weight: 600; letter-spacing: -0.03em; color: var(--accent-ink); line-height: 1; }
+        .stat-unit { font-size: clamp(20px, 3vw, 32px); }
+        .stat-label { font-size: 14px; color: var(--text-dim); margin-top: 8px; letter-spacing: 0.02em; }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        /* How */
+        .how { padding: 150px 24px; }
+        .section-eyebrow { font-size: 13px; font-weight: 600; color: var(--accent-ink); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+        .section-eyebrow::before { content: '// '; font-family: var(--font-mono); color: var(--text-dimmer); letter-spacing: .2em; }
+        .section-bg .section-title { color: var(--section-title); text-shadow: var(--text-shadow); }
+        .section-bg .section-eyebrow { text-shadow: var(--text-shadow); }
+        .section-title { font-size: clamp(32px, 5vw, 54px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.12; margin-bottom: 64px; max-width: 600px; color: var(--section-title); }
+        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .step {
+            padding: 40px 32px; background: var(--card-bg);
+            border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: var(--shadow-sm);
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s, background 0.3s;
+        }
+        .step:hover { transform: translateY(-4px); border-color: rgba(97,196,227,0.35); box-shadow: var(--shadow-md); }
+        .step-num { font-size: 60px; font-weight: 600; color: var(--accent-ink); opacity: 0.55; line-height: 1; margin-bottom: 24px; letter-spacing: -0.02em; }
+        .step h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 12px; color: var(--text); }
+        .step p { font-size: 15px; color: var(--text-dim); line-height: 1.6; }
+        .step-more { margin-top: 16px; font-size: 14px; font-weight: 500; color: var(--accent-ink); opacity: 0.9; transition: opacity 0.3s, transform 0.3s; }
+        .step:hover .step-more { opacity: 1; transform: translateX(3px); }
+        .demo-back-btn { display: inline-flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-dim); font-size: 14px; font-weight: 500; cursor: pointer; min-width: 44px; min-height: 44px; padding: 0 8px; margin-bottom: 14px; transition: color 0.2s; border-radius: 8px; }
+        .demo-back-btn:hover { color: var(--text); background: var(--surface); }
+        @media (max-width: 768px) { .steps { grid-template-columns: 1fr; gap: 16px; } }
+
+        /* Features */
+        .features { padding: 150px 24px; }
+        .feature-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1px; background: var(--surface-border); border-radius: 20px; overflow: hidden;
+        }
+        .feature { background: var(--card-bg); padding: 40px 32px; transition: background 0.3s; }
+        .feature:hover { background: var(--card-hover); }
+        .feature.wide { grid-column: span 2; }
+        .feature-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: var(--accent-dim); display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+            border: 1px solid rgba(0,0,0,0.3);
+        }
+        .feature-icon svg { width: 22px; height: 22px; stroke: var(--accent-ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .feature h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 8px; color: var(--text); }
+        .feature p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+        @media (max-width: 768px) { .feature-grid { grid-template-columns: 1fr; } .feature.wide { grid-column: span 1; } }
+
+        /* Architecture evolution — a project decision log, not a deployment claim */
+        .architecture { padding: 150px 24px; background-image: var(--grad-architecture); }
+        .architecture .section-title { max-width: 820px; margin-bottom: 28px; }
+        .architecture-lead {
+            display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+            gap: clamp(28px, 6vw, 84px); align-items: end; margin-bottom: 54px;
+        }
+        .architecture-copy { max-width: 660px; color: var(--text-dim); font-size: clamp(16px, 1.8vw, 20px); line-height: 1.7; }
+        .architecture-copy strong { color: var(--text); font-weight: 650; }
+        .architecture-status {
+            display: flex; align-items: center; justify-content: space-between; gap: 18px;
+            padding: 18px 20px; border: 1px solid var(--portfolio-accent-border);
+            background: var(--portfolio-accent-dim); border-radius: 14px;
+            font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+        }
+        .architecture-status b { color: var(--portfolio-accent); }
+        .architecture-status span:last-child { color: var(--text-dim); text-align: right; }
+        .evolution-track {
+            position: relative; display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px;
+            align-items: stretch; margin-bottom: 26px;
+        }
+        .evolution-node {
+            position: relative; min-height: 210px; padding: 30px;
+            border: 1px solid var(--surface-border); border-radius: 18px;
+            background: var(--card-bg); box-shadow: var(--shadow-sm);
+        }
+        .evolution-node .node-state {
+            display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px;
+            border: 1px solid var(--surface-border); border-radius: 999px;
+            font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .11em;
+            color: var(--accent-ink); text-transform: uppercase; margin-bottom: 26px;
+        }
+        .evolution-node.planned .node-state { color: var(--portfolio-accent); border-color: var(--portfolio-accent-border); background: var(--portfolio-accent-dim); }
+        .evolution-node h3 { color: var(--text); font-size: clamp(24px, 3vw, 36px); letter-spacing: -.035em; margin-bottom: 12px; }
+        .evolution-node p { color: var(--text-dim); font-size: 15px; line-height: 1.65; max-width: 48ch; }
+        .evolution-arrow {
+            align-self: center; color: var(--accent-ink); font-family: var(--font-mono);
+            font-size: 22px; letter-spacing: -.15em;
+        }
+        .cost-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+        .cost-card {
+            position: relative; min-height: 188px; padding: 24px;
+            border: 1px solid var(--surface-border); border-radius: 16px; background: var(--card-bg);
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .cost-card.current { border-color: var(--portfolio-accent-border); background: linear-gradient(145deg, var(--portfolio-accent-dim), var(--card-bg)); }
+        .cost-card .cost-kicker {
+            color: var(--text-dimmer); font-family: var(--font-mono); font-size: 10px;
+            font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+        }
+        .cost-card.current .cost-kicker { color: var(--portfolio-accent); }
+        .cost-card strong { color: var(--text); font-size: clamp(34px, 4vw, 48px); letter-spacing: -.05em; line-height: 1; }
+        .cost-card p { color: var(--text-dim); font-size: 13px; line-height: 1.55; margin-top: auto; }
+        .architecture-note {
+            margin-top: 20px; padding-left: 16px; border-left: 2px solid var(--accent-ink);
+            color: var(--text-dim); font-size: 13px; line-height: 1.65;
+        }
+        @media (max-width: 900px) {
+            .architecture-lead { grid-template-columns: 1fr; align-items: start; }
+            .cost-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 640px) {
+            .architecture { padding: 92px 16px; }
+            .evolution-track { grid-template-columns: 1fr; }
+            .evolution-arrow { transform: rotate(90deg); justify-self: center; }
+            .cost-grid { grid-template-columns: 1fr; }
+            .architecture-status { align-items: flex-start; flex-direction: column; }
+            .architecture-status span:last-child { text-align: left; }
+        }
+
+        /* Demo */
+        .demo { padding: 150px 24px; }
+
+        /* Flow Steps */
+        .flow-steps {
+            display: flex; justify-content: center; align-items: flex-start; gap: 0; margin-bottom: 48px;
+        }
+        .flow-step {
+            display: flex; align-items: center; gap: 0;
+            min-width: 44px; min-height: 44px; justify-content: center;
+            padding: 0 4px;
+        }
+        .flow-step-dot {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--surface); border: 2px solid var(--surface-border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 700; color: var(--text-dimmer);
+            transition: all 0.4s;
+            flex-shrink: 0;
+        }
+        .flow-step.active .flow-step-dot {
+            background: var(--accent); border-color: var(--accent); color: var(--accent-on);
+            box-shadow: 0 0 20px rgba(97,196,227,0.3);
+        }
+        .flow-step.done .flow-step-dot {
+            background: var(--accent); border-color: var(--accent); color: var(--accent-on);
+        }
+        .flow-step-label {
+            position: absolute; top: 100%; left: 50%; transform: translateX(-50%); white-space: nowrap;
+            font-size: 12px; color: var(--text-dimmer); margin-top: 6px; text-align: center;
+            transition: color 0.3s;
+        }
+        .flow-step.active .flow-step-label { color: var(--accent-ink); }
+        .flow-step.done .flow-step-label { color: var(--accent-ink); }
+        .flow-step-line {
+            width: 48px; height: 2px; background: var(--surface-border);
+            margin: 0 4px; transition: background 0.4s;
+            align-self: center;
+        }
+        .flow-step-inner { display: flex; flex-direction: column; align-items: center; position: relative; min-height: 44px; justify-content: center; }
+
+        /* Entry Cards */
+        .entry-cards {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+            max-width: 520px; margin: 0 auto 40px;
+        }
+        .entry-card {
+            background: var(--card-bg); border: 1px solid var(--surface-border);
+            border-radius: 16px; padding: 28px 20px; text-align: center;
+            box-shadow: var(--shadow-sm); transition: all 0.3s; cursor: pointer;
+        }
+        .entry-card:hover { border-color: rgba(97,196,227,0.4); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .entry-card-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: var(--accent-dim); margin: 0 auto 14px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .entry-card-icon svg { width: 24px; height: 24px; stroke: var(--accent-ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .entry-card h4 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .entry-card p { font-size: 12px; color: var(--text-dimmer); line-height: 1.5; }
+
+        /* Demo panels */
+        .demo-panels { max-width: 720px; margin: 0 auto; min-height: 420px; display: flex; flex-direction: column; justify-content: center; }
+        .demo-panel { display: none; width: 100%; }
+        .demo-panel.active { display: block; animation: panelIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        @media (max-width: 768px) { .demo-panels { min-height: 0; display: block; } }
+
+        .demo-box {
+            background: var(--card-bg); border: 1px solid var(--surface-border);
+            border-radius: 20px; padding: 48px 40px;
+            box-shadow: var(--shadow-sm); transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+        }
+        .demo-box:hover { border-color: rgba(97,196,227,0.35); box-shadow: var(--shadow-md); }
+        .demo-box h3 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; color: var(--text); }
+        .demo-box > p { font-size: 15px; color: var(--text-dim); margin-bottom: 32px; }
+        .demo-input-wrap { position: relative; margin-bottom: 20px; }
+        .demo-input-wrap svg {
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            width: 18px; height: 18px; stroke: var(--text-dimmer); fill: none; stroke-width: 2; stroke-linecap: round;
+        }
+        .demo-input {
+            width: 100%; padding: 16px 18px 16px 46px; border-radius: 12px;
+            border: 1px solid var(--surface-border); background: var(--input-bg);
+            color: var(--input-color); font-size: 16px; outline: none; transition: border-color 0.3s, background 0.4s, color 0.4s;
+        }
+        .demo-input:focus { border-color: var(--accent); }
+        .demo-input::placeholder { color: var(--text-dimmer); }
+        .demo-results { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+        .demo-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 16px; background: var(--surface);
+            border: 1px solid var(--surface-border); border-radius: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .demo-item:hover { border-color: var(--demo-item-hover-border); }
+        .demo-item.active { border-color: var(--accent); background: var(--demo-active-bg); }
+        .demo-item-name { font-size: 15px; font-weight: 500; }
+        .demo-item-meta { font-size: 12px; color: var(--text-dimmer); margin-top: 2px; }
+        .demo-btn {
+            padding: 6px 16px; border-radius: 980px; border: none;
+            background: var(--accent); color: var(--accent-on); font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .demo-btn:hover { background: var(--accent-hover); }
+        .demo-btn.active { background: var(--accent); color: var(--accent-on); }
+
+        /* Demo result buttons — full-width card, left-right layout, word wrap */
+        .demo-item-btn {
+            display: flex; justify-content: space-between; align-items: center; gap: 12px;
+            width: 100%; min-height: 44px; padding: 10px 16px;
+            background: var(--surface);
+            border: 1px solid var(--surface-border); border-radius: 12px;
+            cursor: pointer; transition: all 0.2s;
+            font: inherit; text-align: left; color: var(--text);
+        }
+        .demo-item-btn:hover { border-color: var(--demo-item-hover-border); background: var(--surface-hover); }
+        .demo-item-btn.active { border-color: var(--accent); background: var(--demo-active-bg); }
+        .demo-item-btn:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+        .demo-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .demo-item-name { font-size: 15px; font-weight: 500; word-break: break-word; line-height: 1.4; }
+        .demo-item-meta { font-size: 12px; color: var(--text-dimmer); word-break: break-word; line-height: 1.4; }
+        .demo-btn-label {
+            flex-shrink: 0; padding: 6px 14px; border-radius: 980px;
+            background: var(--accent); color: var(--accent-on);
+            font-size: 13px; font-weight: 600; white-space: nowrap;
+        }
+        .demo-item-btn.active .demo-btn-label { background: var(--state-ok); color: var(--state-ok-on); }
+
+        /* Demo status / live region */
+        .demo-status {
+            min-height: 20px; font-size: 13px; color: var(--text-dim);
+            margin-bottom: 8px; padding: 0 2px;
+        }
+
+        @media (max-width: 375px) {
+            .demo-item-btn { padding: 10px 12px; gap: 8px; }
+            .demo-btn-label { padding: 5px 10px; font-size: 12px; }
+            .demo-item-name { font-size: 14px; }
+        }
+
+        /* Locate animation — isometric bin, unified with the loader / Live Locator bin motif */
+        .locate-panel { text-align: center; }
+        .locate-box-visual {
+            margin: 28px auto 8px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+        .locate-bin { width: 156px; height: auto; overflow: visible; transition: filter 0.3s; }
+        .locate-bin .lb-top, .locate-bin .lb-left, .locate-bin .lb-right {
+            fill: var(--accent); fill-opacity: 0.05; stroke: var(--accent-ink); stroke-width: 2; stroke-linejoin: round;
+            transition: fill-opacity 0.3s, stroke 0.3s;
+        }
+        .locate-bin .lb-led { fill: var(--text-dimmer); transition: fill 0.3s; }
+        .locate-box-visual.locating .locate-bin .lb-top { fill-opacity: 0.22; }
+        .locate-box-visual.locating .locate-bin .lb-top,
+        .locate-box-visual.locating .locate-bin .lb-left,
+        .locate-box-visual.locating .locate-bin .lb-right { stroke: var(--accent); }
+        .locate-box-visual.locating .locate-bin .lb-led { fill: var(--accent); }
+        .locate-box-visual.locating .locate-bin { filter: drop-shadow(0 0 16px rgba(97,196,227,0.6)); animation: binPulse 0.85s ease-in-out infinite; }
+        @keyframes binPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.74; } }
+        .locate-box-visual .locate-box-id {
+            font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--accent-ink);
+        }
+        .locate-box-visual .locate-buzzer { font-size: 11px; color: var(--text-dimmer); }
+        .locate-info { font-size: 15px; color: var(--text-dim); margin-bottom: 8px; }
+        .locate-part-name { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .locate-sound-waves {
+            display: flex; justify-content: center; gap: 4px; margin-top: 12px; opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .locate-box-visual.locating ~ .locate-sound-waves,
+        .locate-sound-waves.active { opacity: 1; }
+        .sound-bar {
+            width: 4px; background: var(--accent); border-radius: 2px;
+            animation: soundWave 0.4s ease-in-out infinite alternate;
+        }
+        .sound-bar:nth-child(1) { height: 12px; animation-delay: 0s; }
+        .sound-bar:nth-child(2) { height: 20px; animation-delay: 0.1s; }
+        .sound-bar:nth-child(3) { height: 28px; animation-delay: 0.15s; }
+        .sound-bar:nth-child(4) { height: 20px; animation-delay: 0.2s; }
+        .sound-bar:nth-child(5) { height: 12px; animation-delay: 0.3s; }
+        @keyframes soundWave {
+            from { transform: scaleY(0.4); } to { transform: scaleY(1); }
+        }
+
+        /* Confirm panel */
+        .confirm-success {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: var(--state-ok-dim); border: 2px solid var(--state-ok);
+            display: flex; align-items: center; justify-content: center;
+            margin: 32px auto;
+            animation: successPop 0.5s cubic-bezier(0.16,1,0.3,1);
+        }
+        .confirm-success svg { width: 36px; height: 36px; stroke: var(--state-ok); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        @keyframes successPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .confirm-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0;
+        }
+        .confirm-stat {
+            background: var(--surface); border-radius: 12px; padding: 16px; text-align: center;
+        }
+        .confirm-stat-value { font-size: 24px; font-weight: 700; color: var(--accent-ink); }
+        #confirm-box { font-family: var(--font-mono); font-weight: 600; letter-spacing: .04em; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'zero' 1; }
+        .confirm-stat-label { font-size: 12px; color: var(--text-dimmer); margin-top: 4px; }
+
+        /* Action buttons */
+        .demo-action-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 32px; border-radius: 980px; border: none;
+            font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+        }
+        .demo-action-btn.primary { background: var(--accent); color: var(--accent-on); }
+        .demo-action-btn.primary:hover { background: var(--accent-hover); --btn-s: 1.02; box-shadow: var(--glow); }
+        .demo-action-btn.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--surface-border); }
+        .demo-action-btn.secondary:hover { border-color: var(--surface-hover); }
+        .demo-action-btn.success { background: var(--state-ok); color: var(--state-ok-on); }
+        .demo-action-btn.success:hover { background: var(--state-ok-hover); color: var(--state-ok-on); }
+        .demo-actions { display: flex; gap: 12px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+
+        @media (max-width: 768px) {
+            .entry-cards { grid-template-columns: 1fr; }
+            .confirm-stats { grid-template-columns: 1fr; }
+            .flow-steps { gap: 0; }
+            .flow-step-line { width: 24px; }
+        }
+
+        /* card / demo-box / locate-box / confirm-stat backgrounds are now theme-aware via --card-bg / --surface — no light override needed */
+        [data-theme="light"] .flow-step-dot { background: var(--card-hover); border-color: rgba(0,0,0,0.12); }
+        [data-theme="light"] .flow-step-label { color: var(--text-dim); }
+
+        /* Roadmap */
+        .roadmap { padding: 150px 24px; }
+        .timeline { position: relative; padding-left: 48px; max-width: 640px; }
+        .timeline::before { content: ''; position: absolute; left: 15px; top: 8px; bottom: 8px; width: 1px; background: var(--timeline-line); }
+        .tl-item { position: relative; margin-bottom: 48px; padding: 16px 20px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--surface-border); box-shadow: var(--shadow-sm); transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s; }
+        .tl-item:hover { transform: translateX(4px); border-color: var(--surface-hover); box-shadow: var(--shadow-md); }
+        .tl-item::before { content: ''; position: absolute; left: -40px; top: 6px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+        .tl-item.dim::before { background: var(--text-dimmer); }
+        .tl-phase { font-size: 12px; font-weight: 600; color: var(--accent-ink); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+        .tl-item.dim .tl-phase { color: var(--text-dimmer); }
+        .tl-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; color: var(--text); }
+        .tl-desc { font-size: 15px; color: var(--text-dim); line-height: 1.6; }
+
+        /* Footer */
+        footer {
+            text-align: center; padding: 48px 24px; background: var(--footer-bg);
+            color: var(--footer-text); font-size: 14px; border-top: 0.5px solid var(--surface-border);
+            transition: background 0.4s, color 0.4s;
+        }
+        .footer-inner { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .footer-inner span { color: var(--footer-text); }
+        .footer-inner a { color: var(--footer-text); text-decoration: none; transition: color 0.3s; }
+        .footer-inner a:hover { color: var(--footer-text-hover); }
+        .footer-copy { margin-top: 14px; font-size: 13px; color: var(--footer-text); opacity: 0.85; letter-spacing: 0.01em; }
+        .footer-copy .it { color: var(--accent-ink); }
+        /* Light mode now uses dark text on genuinely light backgrounds — no readability shadow needed. */
+        /* stat / step / feature / demo-box / tl-item are now theme-aware via --card-bg + --surface-border + --shadow-* — light overrides removed */
+
+        @media (max-width: 480px) {
+            .hero-actions { flex-direction: column; width: 100%; }
+            .btn { justify-content: center; width: 100%; }
+        }
+
+        /* Lang switch transition — opacity only.
+           IMPORTANT: never put `transform` on <body>. A transform on the body makes it the
+           containing block for position:fixed descendants, so #feature-modal would anchor to the
+           (full-height) body box instead of the viewport and render far off-screen. */
+        .lang-fade {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        body:not(.lang-fade) {
+            opacity: 1;
+            transition: opacity 0.35s ease;
+        }
+
+        /* Keyboard focus rings — shown for keyboard users only, not on mouse click */
+        a:focus-visible, button:focus-visible,
+        .step:focus-visible, .feature:focus-visible, .entry-card:focus-visible,
+        .flow-step:focus-visible, .demo-item:focus-visible, .nav-icon-btn:focus-visible {
+            outline: 2px solid var(--accent-ink);
+            outline-offset: 3px;
+            border-radius: 10px;
+        }
+        .demo-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        /* ===== Magnetic buttons + faint companion ring (desktop fine-pointer; native cursor kept) ===== */
+        .btn, .nav-cta, .demo-action-btn { transform: translate(var(--mx, 0), var(--my, 0)) scale(var(--btn-s, 1)); }
+        .cursor-ring {
+            position: fixed; left: 0; top: 0; width: 28px; height: 28px; margin: -14px 0 0 -14px;
+            border-radius: 50%; border: 1.5px solid var(--accent-ink); opacity: .35;
+            pointer-events: none; z-index: 10001; will-change: transform;
+            transition: opacity .2s, border-color .2s;
+        }
+        .cursor-ring.hot { border-color: var(--accent); opacity: .5; }
+    </style>
+    <script>(function(){var t=null;try{t=localStorage.getItem('finditem-theme');}catch(e){}if(!t){var h=new Date().getHours();t=(h>=7&&h<19)?'light':'dark';}document.documentElement.setAttribute('data-theme',t);document.documentElement.classList.add('loading');})()</script>
+</head>
+<body>
+
+    <!-- Loader: search the bins, light a random one at 100% -->
+    <div id="curtain" aria-hidden="true">
+        <div class="curtain-inner">
+            <span class="curtain-brand">Find<span class="it">Item</span> 寻<span class="it">物</span></span>
+            <div class="loader-grid" id="loader-grid"></div>
+        </div>
+        <div class="curtain-meta">
+            <span class="curtain-num"><span class="curtain-pct" id="curtain-pct">0</span><span class="curtain-pct-sign">%</span></span>
+            <span class="curtain-tag" id="curtain-tag" data-i18n="loading_tag">正在定位零件…</span>
+        </div>
+    </div>
+
+    <a class="skip-link" href="#main" data-i18n="skip_main">跳到主内容</a>
+
+    <!-- Nav -->
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-identity">
+                <a href="/#building" class="parent-site-link" aria-label="返回 Harry Xin 项目列表"><b>← HX</b><span>Projects</span></a>
+                <a href="#main" class="nav-brand">Find<span class="it">Item</span> <span class="cn-name">寻<span class="it">物</span></span></a>
+            </div>
+            <div class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="#how" data-i18n="nav_how">原理</a></li>
+                    <li><a href="#features" data-i18n="nav_features">功能</a></li>
+                    <li><a href="#architecture" data-i18n="nav_architecture">架构</a></li>
+                    <li><a href="#demo" data-i18n="nav_demo">演示</a></li>
+                    <li><a href="#roadmap" data-i18n="nav_roadmap">路线图</a></li>
+                    <li><a href="#demo" class="nav-cta" data-i18n="nav_cta">开始使用</a></li>
+                </ul>
+                <button class="nav-icon-btn nav-toggle" id="nav-toggle" aria-label="菜单 / Menu" aria-expanded="false" aria-controls="mobile-menu">
+                    <svg class="ico-ham" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    <svg class="ico-close" viewBox="0 0 24 24" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <button class="nav-icon-btn" onclick="toggleLang()" id="lang-btn" title="Switch Language" aria-label="Switch language / 切换语言">EN</button>
+                <button class="nav-icon-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle Theme" aria-label="Toggle light / dark theme / 切换深浅主题">
+                    <svg id="theme-icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <svg id="theme-icon-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile menu — a designed drawer, not a hidden desktop bar -->
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true" inert>
+        <a class="mobile-parent-link" href="/#building" data-i18n="nav_parent">← Harry Xin / 项目</a>
+        <a href="#how" data-i18n="nav_how">原理</a>
+        <a href="#features" data-i18n="nav_features">功能</a>
+        <a href="#architecture" data-i18n="nav_architecture">架构</a>
+        <a href="#demo" data-i18n="nav_demo">演示</a>
+        <a href="#roadmap" data-i18n="nav_roadmap">路线图</a>
+        <a href="#demo" class="mm-cta" data-i18n="nav_cta">开始使用</a>
+    </div>
+
+    <main>
+
+    <!-- Hero -->
+    <section class="hero section-bg hero-bg" id="main" tabindex="-1" style="outline:none">
+        <canvas class="hero-grid" aria-hidden="true"></canvas>
+        <div class="hero-glow"></div>
+        <div class="hero-label" data-i18n="hero_label">FindItem 项目案例 · ESP32-C3 + MQTT 参考原型</div>
+        <h1 data-i18n="hero_h1" data-i18n-html><span class="it">快速</span><br>找到你要的<span class="it">零件</span></h1>
+        <p class="hero-sub" data-i18n="hero_sub">单箱参考原型已完成；30 箱学校部署仍在评估 · 本页为静态互动模拟</p>
+        <div class="hero-actions">
+            <a href="#demo" class="btn btn-fill" data-i18n="hero_cta1">试试看 →</a>
+            <a href="#how" class="btn btn-ghost" data-i18n="hero_cta2">了解原理</a>
+            <a href="https://github.com/HarryXin0919/FindItem" target="_blank" rel="noopener" class="hero-srclink"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span data-i18n="hero_cta3">查看源码</span></a>
+        </div>
+        <div class="hero-visual loc" role="button" tabindex="0" aria-label="打开体验模拟" id="hero-locator">
+            <div class="loc-card">
+                <div class="loc-head">
+                    <span class="loc-status"><span class="loc-dot"></span><span id="loc-state">定位中…</span></span>
+                    <span class="loc-box" id="loc-box">FINDIT-003</span>
+                </div>
+                <div class="loc-name" id="loc-name">杯头 M3×10</div>
+                <div class="loc-grid" id="loc-grid"></div>
+                <div class="loc-foot">
+                    <span class="loc-beepwrap" id="loc-beepwrap"><span class="loc-wave"><i></i><i></i><i></i><i></i><i></i></span><span class="loc-beep" id="loc-beep">♪</span></span>
+                    <span class="loc-meta">设计目标</span>
+                    <span class="loc-meta" id="loc-users">规划中</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Unbox scene: scroll triggers the bin (LED + beep), the lid opens, the stats rise out -->
+    <section class="unbox" id="unbox">
+        <div class="unbox-stage">
+            <div class="unbox-box" aria-hidden="true">
+                <svg viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="ubTop" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#61C4E3" stop-opacity="0.34"/>
+                            <stop offset="1" stop-color="#61C4E3" stop-opacity="0.10"/>
+                        </linearGradient>
+                        <radialGradient id="ubLedG" cx="0.5" cy="0.5" r="0.5">
+                            <stop offset="0" stop-color="#9BECFF"/>
+                            <stop offset="0.6" stop-color="#61C4E3"/>
+                            <stop offset="1" stop-color="#1593C0"/>
+                        </radialGradient>
+                        <radialGradient id="ubInner" cx="0.5" cy="0.5" r="0.5">
+                            <stop offset="0" stop-color="#BFF1FF" stop-opacity="0.95"/>
+                            <stop offset="1" stop-color="#61C4E3" stop-opacity="0"/>
+                        </radialGradient>
+                        <linearGradient id="ubBeamG" x1="0" y1="1" x2="0" y2="0">
+                            <stop offset="0" stop-color="#61C4E3" stop-opacity="0.5"/>
+                            <stop offset="1" stop-color="#61C4E3" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    <ellipse cx="220" cy="392" rx="150" ry="26" fill="#61C4E3" fill-opacity="0.10"/>
+                    <path class="ub-beam" d="M150 180 L290 180 L334 26 L106 26 Z" fill="url(#ubBeamG)" opacity="0"/>
+                    <ellipse class="ub-inner" cx="220" cy="196" rx="84" ry="44" fill="url(#ubInner)" opacity="0"/>
+                    <g class="ub-rings" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" opacity="0">
+                        <path d="M312 226 q34 -34 74 -20"/>
+                        <path d="M320 208 q50 -48 104 -26" opacity="0.6"/>
+                        <path d="M328 190 q66 -62 134 -32" opacity="0.32"/>
+                    </g>
+                    <path d="M220 244 L360 164 L360 280 L220 360 Z" fill="#61C4E3" fill-opacity="0.06" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/>
+                    <path d="M80 164 L220 244 L220 360 L80 280 Z" fill="#61C4E3" fill-opacity="0.13" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/>
+                    <g stroke="var(--accent)" stroke-width="1.5" stroke-opacity="0.5" stroke-linecap="round">
+                        <line x1="80" y1="208" x2="220" y2="288"/>
+                        <line x1="80" y1="244" x2="220" y2="324"/>
+                    </g>
+                    <circle class="ub-ledglow" cx="300" cy="226" r="26" fill="#61C4E3" fill-opacity="0.16"/>
+                    <circle class="ub-led" cx="300" cy="226" r="9.5" fill="url(#ubLedG)"/>
+                    <path class="ub-lid" d="M220 84 L360 164 L220 244 L80 164 Z" fill="url(#ubTop)" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="unbox-stats">
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-num">30<span class="stat-unit" data-i18n="stat_unit_box">箱</span></div>
+                        <div class="stat-label" data-i18n="stat_boxes">学校部署目标（规划中）</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num">3<span class="stat-unit" data-i18n="stat_unit_rows">排</span></div>
+                        <div class="stat-label" data-i18n="stat_concurrent">现场布局</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num">10<span class="stat-unit" data-i18n="stat_unit_each">箱/排</span></div>
+                        <div class="stat-label" data-i18n="stat_time">每排箱数</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num">¥108</div>
+                        <div class="stat-label" data-i18n="stat_cost">分排控制估算</div>
+                    </div>
+                </div>
+            </div>
+            <div class="unbox-hint" aria-hidden="true">
+                <span data-i18n="unbox_hint">向下滑动 · 开箱</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how section-bg how-bg" id="how">
+        <div class="container">
+            <div class="section-eyebrow reveal" data-i18n="how_eyebrow">原理</div>
+            <h2 class="section-title reveal reveal-delay-1 wave-split" data-i18n="how_title">三步找到零件</h2>
+            <div class="steps">
+                <div class="step reveal reveal-delay-1" onclick="openStep(1)" style="cursor:pointer">
+                    <div class="step-num">01</div>
+                    <h3 data-i18n="step1_title">搜索</h3>
+                    <p data-i18n="step1_desc">手机扫码打开网页，输入零件名称或型号</p>
+                    <div class="step-more" data-i18n="step_more">查看详情 →</div>
+                </div>
+                <div class="step reveal reveal-delay-2" onclick="openStep(2)" style="cursor:pointer">
+                    <div class="step-num">02</div>
+                    <h3 data-i18n="step2_title">定位</h3>
+                    <p data-i18n="step2_desc">对应零件箱自动响铃闪灯，颜色和节奏区分不同用户</p>
+                    <div class="step-more" data-i18n="step_more">查看详情 →</div>
+                </div>
+                <div class="step reveal reveal-delay-3" onclick="openStep(3)" style="cursor:pointer">
+                    <div class="step-num">03</div>
+                    <h3 data-i18n="step3_title">取件</h3>
+                    <p data-i18n="step3_desc">拿到零件，点击确认，停止响铃</p>
+                    <div class="step-more" data-i18n="step_more">查看详情 →</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features section-bg features-bg" id="features">
+        <div class="container">
+            <div class="section-eyebrow reveal" data-i18n="feat_eyebrow">功能</div>
+            <h2 class="section-title reveal reveal-delay-1 wave-split" data-i18n="feat_title">为机器人社打造</h2>
+            <div class="feature-grid reveal reveal-delay-2">
+                <div class="feature" onclick="openFeature(1)" style="cursor:pointer">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+                    <h3 data-i18n="feat1_title">关键词搜索</h3>
+                    <p data-i18n="feat1_desc">输入名称、型号或类别，实时匹配，不用翻箱倒柜</p>
+                </div>
+                <div class="feature" onclick="openFeature(2)" style="cursor:pointer">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                    <h3 data-i18n="feat2_title">多人并发（规划中）</h3>
+                    <p data-i18n="feat2_desc">规划中：多人同时查找，每人分配不同颜色和节奏</p>
+                </div>
+                <div class="feature" onclick="openFeature(3)" style="cursor:pointer">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                    <h3 data-i18n="feat3_title">飞书登录（规划中）</h3>
+                    <p data-i18n="feat3_desc">规划中：可选 OAuth 身份验证，自托管可控</p>
+                </div>
+                <div class="feature" onclick="openFeature(4)" style="cursor:pointer">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
+                    <h3 data-i18n="feat4_title">电量监控（规划中）</h3>
+                    <p data-i18n="feat4_desc">规划中：电池电压监测与低电量通知</p>
+                </div>
+                <div class="feature wide" onclick="openFeature(5)" style="cursor:pointer">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+                    <h3 data-i18n="feat5_title">零件管理（规划中）</h3>
+                    <p data-i18n="feat5_desc">规划中：管理员后台 CRUD，按名称/型号/类别搜索</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture evolution -->
+    <section class="architecture section-bg" id="architecture" aria-labelledby="architecture-title">
+        <div class="container">
+            <div class="section-eyebrow reveal" data-i18n="arch_eyebrow">架构演进</div>
+            <div class="architecture-lead">
+                <div>
+                    <h2 class="section-title reveal reveal-delay-1 wave-split" id="architecture-title" data-i18n="arch_title">从单箱原型到 30 箱部署</h2>
+                    <p class="architecture-copy reveal reveal-delay-2" data-i18n="arch_intro" data-i18n-html><strong>已完成的是一套单箱参考原型。</strong>学校现场约 30 箱，布局为 3排×10；集中式与分排式仍在评估，尚未采购或完成真机端到端验证。</p>
+                </div>
+                <div class="architecture-status reveal reveal-delay-2">
+                    <span><b>PLANNED / 评估中</b></span>
+                    <span data-i18n="arch_status">先验证一排，再决定全场拓扑</span>
+                </div>
+            </div>
+
+            <div class="evolution-track reveal reveal-delay-2">
+                <article class="evolution-node">
+                    <span class="node-state" data-i18n="arch_v1_state">PROTOTYPE / 已完成</span>
+                    <h3 data-i18n="arch_v1_title">V1 · 单箱 ESP32-C3</h3>
+                    <p data-i18n="arch_v1_desc">LED、蜂鸣器和 MQTT 指令构成可验证的定位闭环；本页交互仍使用静态示意数据。</p>
+                </article>
+                <div class="evolution-arrow" aria-hidden="true">→</div>
+                <article class="evolution-node planned">
+                    <span class="node-state">PLANNED / 评估中</span>
+                    <h3 data-i18n="arch_v2_title">V2 · 30 箱学校现场</h3>
+                    <p data-i18n="arch_v2_desc">目标布局为 3排×10。当前比较单箱独立、集中控制和每排隔离三种故障域与布线方式。</p>
+                </article>
+            </div>
+
+            <div class="cost-grid reveal reveal-delay-3" aria-label="控制硬件成本比较">
+                <article class="cost-card">
+                    <span class="cost-kicker" data-i18n="cost_a_kicker">独立节点</span>
+                    <strong>¥360</strong>
+                    <p data-i18n="cost_a_desc">30 × ESP32，每箱独立；维护与配网成本最高。</p>
+                </article>
+                <article class="cost-card">
+                    <span class="cost-kicker" data-i18n="cost_b_kicker">集中式最低</span>
+                    <strong>¥76</strong>
+                    <p data-i18n="cost_b_desc">1 × ESP32 + 2 × 16 路扩展；成本最低但故障域最大。</p>
+                </article>
+                <article class="cost-card current">
+                    <span class="cost-kicker" data-i18n="cost_c_kicker">当前评估基线</span>
+                    <strong>¥108</strong>
+                    <p data-i18n="cost_c_desc">1 × ESP32 + 每排 1 个扩展模块；布线按三排分区。</p>
+                </article>
+                <article class="cost-card">
+                    <span class="cost-kicker" data-i18n="cost_d_kicker">排级隔离</span>
+                    <strong>¥132</strong>
+                    <p data-i18n="cost_d_desc">3 × ESP32 + 3 ×扩展模块；单排故障不影响其余两排。</p>
+                </article>
+            </div>
+            <p class="architecture-note reveal" data-i18n="arch_note">估算仅包含 ESP32（¥12/块）与扩展模块（¥32/块），不含 LED、蜂鸣器、电源、线束、端子和安装成本。以上均为规划数据，不代表已经部署。</p>
+        </div>
+    </section>
+
+    <!-- Demo simulation disclaimer -->
+    <section class="demo-disclaimer" id="demo-disclaimer" style="background: var(--accent-dim); border-top: 1px solid var(--surface-border); border-bottom: 1px solid var(--surface-border); padding: 16px 24px; text-align: center;">
+        <div style="max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span style="font-size: 14px; color: var(--text); font-weight: 500;" data-i18n="demo_disclaimer">交互模拟 · 使用示意数据 · 不会控制实体设备</span>
+        </div>
+    </section>
+
+    <!-- Demo -->
+    <section class="demo section-bg demo-bg" id="demo">
+        <div class="container">
+            <div class="section-eyebrow reveal" data-i18n="demo_eyebrow">操控演示</div>
+            <h2 class="section-title reveal reveal-delay-1 wave-split" data-i18n="demo_title">完整操控流程</h2>
+
+            <!-- Flow Steps -->
+            <div class="flow-steps reveal reveal-delay-1" id="flow-steps">
+                <div class="flow-step active" data-step="1">
+                    <div class="flow-step-inner">
+                        <div class="flow-step-dot">1</div>
+                        <div class="flow-step-label" data-i18n="flow_step1">进入</div>
+                    </div>
+                </div>
+                <div class="flow-step-line"></div>
+                <div class="flow-step" data-step="2">
+                    <div class="flow-step-inner">
+                        <div class="flow-step-dot">2</div>
+                        <div class="flow-step-label" data-i18n="flow_step2">搜索</div>
+                    </div>
+                </div>
+                <div class="flow-step-line"></div>
+                <div class="flow-step" data-step="3">
+                    <div class="flow-step-inner">
+                        <div class="flow-step-dot">3</div>
+                        <div class="flow-step-label" data-i18n="flow_step3">定位</div>
+                    </div>
+                </div>
+                <div class="flow-step-line"></div>
+                <div class="flow-step" data-step="4">
+                    <div class="flow-step-inner">
+                        <div class="flow-step-dot">4</div>
+                        <div class="flow-step-label" data-i18n="flow_step4">确认</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sr-only" id="demo-step-status" role="status" aria-live="polite" aria-atomic="true"></div>
+
+            <div class="demo-panels reveal reveal-delay-2">
+
+                <!-- Step 1: Entry -->
+                <div class="demo-panel active" id="panel-entry">
+                    <div class="entry-cards">
+                        <button class="entry-card" type="button" onclick="goToStep(2)">
+                            <div class="entry-card-icon">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                            </div>
+                            <h4 data-i18n="entry_qr_title">二维码入口（规划中）</h4>
+                            <p data-i18n="entry_qr_desc">规划中：未来为箱体贴码；本页点击仅继续静态模拟</p>
+                        </button>
+                        <button class="entry-card" type="button" onclick="goToStep(2)">
+                            <div class="entry-card-icon">
+                                <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                            </div>
+                            <h4 data-i18n="entry_chat_title">飞书机器人（规划中）</h4>
+                            <p data-i18n="entry_chat_desc">规划中：在飞书群中 @机器人 发送零件名称</p>
+                        </button>
+                    </div>
+                    <div style="text-align:center;color:var(--text-dimmer);font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg><span data-i18n="entry_hint">点击任意方式继续演示</span></div>
+                </div>
+
+                <!-- Step 2: Search -->
+                <div class="demo-panel" id="panel-search">
+                    <div class="demo-box">
+                        <button class="demo-back-btn" onclick="goToStep(1)" data-i18n="demo_back_entry">← 返回</button>
+                        <h3 data-i18n="demo_search_title">搜索零件</h3>
+                        <p data-i18n="demo_search_desc">输入零件名称、型号或类别，实时匹配</p>
+                        <div class="demo-input-wrap">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" class="demo-input" id="demo-input" aria-label="搜索零件 Search parts" data-i18n-placeholder="demo_placeholder" placeholder="M3 螺丝、轴承、齿轮..." oninput="demoSearch()">
+                        </div>
+                        <div class="demo-status" id="demo-status" role="status" aria-live="polite"></div>
+                        <div class="demo-results" id="demo-results"></div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Locate -->
+                <div class="demo-panel" id="panel-locate">
+                    <div class="demo-box locate-panel">
+                        <div class="locate-info" data-i18n="locate_info">正在定位零件...</div>
+                        <div class="locate-part-name" id="locate-part-name"></div>
+                        <div class="locate-box-visual" id="locate-box-visual">
+                            <svg class="locate-bin" viewBox="0 0 120 112" aria-hidden="true">
+                                <path class="lb-top"   d="M60 12 L108 40 L60 68 L12 40 Z"/>
+                                <path class="lb-left"  d="M12 40 L60 68 L60 100 L12 72 Z"/>
+                                <path class="lb-right" d="M60 68 L108 40 L108 72 L60 100 Z"/>
+                                <circle class="lb-led" cx="84" cy="56" r="6"/>
+                            </svg>
+                            <div class="locate-box-id" id="locate-box-id"></div>
+                            <div class="locate-buzzer" style="display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg><span data-i18n="locate_buzzer">蜂鸣器响铃中</span></div>
+                        </div>
+                        <div class="locate-sound-waves" id="sound-waves">
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                        </div>
+                        <div class="demo-actions">
+                            <button class="demo-action-btn success" onclick="confirmPickup()" data-i18n="locate_confirm_btn">✓ 已取到零件</button>
+                            <button class="demo-action-btn secondary" onclick="goToStep(2)" data-i18n="locate_back_btn">← 重新搜索</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Confirm -->
+                <div class="demo-panel" id="panel-confirm">
+                    <div class="demo-box" style="text-align:center">
+                        <div class="confirm-success">
+                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <h3 style="margin-top:8px" data-i18n="confirm_title">定位完成</h3>
+                        <p data-i18n="confirm_desc">零件已找到，响铃已停止</p>
+                        <div class="confirm-stats">
+                            <div class="confirm-stat">
+                                <div class="confirm-stat-value" id="confirm-time">3s</div>
+                                <div class="confirm-stat-label" data-i18n="confirm_time_label">定位用时</div>
+                            </div>
+                            <div class="confirm-stat">
+                                <div class="confirm-stat-value" id="confirm-box"></div>
+                                <div class="confirm-stat-label" data-i18n="confirm_box_label">目标箱号</div>
+                            </div>
+                            <div class="confirm-stat">
+                                <div class="confirm-stat-value" data-i18n="confirm_status_done">完成</div>
+                                <div class="confirm-stat-label" data-i18n="confirm_status_label">状态</div>
+                            </div>
+                        </div>
+                        <div class="demo-actions">
+                            <button class="demo-action-btn primary" onclick="resetDemo()" data-i18n="confirm_again_btn">再找一个 →</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Roadmap -->
+    <section class="roadmap section-bg roadmap-bg" id="roadmap">
+        <div class="container">
+            <div class="section-eyebrow reveal" data-i18n="road_eyebrow">路线图</div>
+            <h2 class="section-title reveal reveal-delay-1 wave-split" data-i18n="road_title">一步一步来</h2>
+            <div class="timeline reveal reveal-delay-2">
+                <div class="tl-item">
+                    <div class="tl-phase">Phase 1 · <span data-i18n="road1_when">第 1-2 周</span></div>
+                    <div class="tl-title" data-i18n="road1_title">MVP 原型</div>
+                    <div class="tl-desc" data-i18n="road1_desc">1 箱、面包板、基础搜索+响铃</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-phase">Phase 2 · <span data-i18n="road2_when">现在</span></div>
+                    <div class="tl-title" data-i18n="road2_title">30 箱架构评估</div>
+                    <div class="tl-desc" data-i18n="road2_desc">比较独立、集中和分排控制，冻结一排试点方案</div>
+                </div>
+                <div class="tl-item dim">
+                    <div class="tl-phase">Phase 3 · <span data-i18n="road3_when">规划中</span></div>
+                    <div class="tl-title" data-i18n="road3_title">一排试点</div>
+                    <div class="tl-desc" data-i18n="road3_desc">10 箱线束、供电、通道标签与故障恢复验证</div>
+                </div>
+                <div class="tl-item dim">
+                    <div class="tl-phase">Phase 4 · <span data-i18n="road4_when">规划中</span></div>
+                    <div class="tl-title" data-i18n="road4_title">学校部署</div>
+                    <div class="tl-desc" data-i18n="road4_desc">约 30 箱、3 排分区、录入目录并分阶段上线</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-inner">
+            <a href="/#building" data-i18n="footer_projects">← Harry Xin / 项目</a>
+            <span class="footer-dot">·</span>
+            <a href="https://github.com/HarryXin0919/FindItem#readme" target="_blank" rel="noopener" data-i18n="footer_docs">项目文档</a>
+            <span class="footer-dot">·</span>
+            <a href="https://github.com/HarryXin0919/FindItem" target="_blank" rel="noopener" data-i18n="footer_source">源码</a>
+            <span class="footer-dot">·</span>
+            <span data-i18n="footer_license">MIT 开源协议</span>
+        </div>
+        <div class="footer-copy" data-i18n="footer_copy" data-i18n-html>寻<span class="it">物</span> Find<span class="it">Item</span> · 开源零件定位系统</div>
+    </footer>
+
+    <script>
+        // ========== Theme ==========
+        const FINDITEM_THEME_KEY = 'finditem-theme';
+
+        function readStoredTheme() {
+            try { return localStorage.getItem(FINDITEM_THEME_KEY); } catch (error) { return null; }
+        }
+
+        function getPreferredTheme() {
+            const saved = readStoredTheme();
+            if (saved) return saved;
+            // No manual choice yet → pick by the visitor's LOCAL time (reflects their timezone): day = light, night = dark
+            const hour = new Date().getHours();
+            return (hour >= 7 && hour < 19) ? 'light' : 'dark';
+        }
+
+        function applyTheme(theme, persist = false) {
+            document.documentElement.setAttribute('data-theme', theme);
+            if (persist) {
+                try { localStorage.setItem(FINDITEM_THEME_KEY, theme); } catch (error) {}
+            }
+            const moon = document.getElementById('theme-icon-moon');
+            const sun = document.getElementById('theme-icon-sun');
+            if (theme === 'light') {
+                moon.style.display = 'none';
+                sun.style.display = 'block';
+            } else {
+                moon.style.display = 'block';
+                sun.style.display = 'none';
+            }
+        }
+
+        function toggleTheme() {
+            const root = document.documentElement;
+            const current = root.getAttribute('data-theme') || 'dark';
+            root.classList.add('theme-transition');
+            void root.offsetWidth; // flush styles so the cross-fade is active before the theme flips
+            applyTheme(current === 'dark' ? 'light' : 'dark', true);
+            clearTimeout(window.__themeTransitionTO);
+            window.__themeTransitionTO = setTimeout(() => root.classList.remove('theme-transition'), 650);
+        }
+
+        // Init theme immediately (before render)
+        applyTheme(getPreferredTheme());
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+            if (!readStoredTheme()) applyTheme(e.matches ? 'light' : 'dark');
+        });
+
+        // ========== i18n ==========
+        const zh = {
+            nav_parent: '← Harry Xin / 项目', nav_how: '原理', nav_features: '功能', nav_architecture: '架构', nav_demo: '体验模拟', nav_roadmap: '路线图', nav_cta: '开始使用',
+            loading_tag: '正在定位零件…',
+            skip_main: '跳到主内容',
+            hero_label: 'Harry Xin / Building Project · ESP32 + MQTT',
+            hero_h1: '<span class="it">快速</span><br>找到你要的<span class="it">零件</span>',
+            hero_sub: '从单箱 ESP32-C3 参考原型，走向规划中的 30 箱学校部署',
+            hero_cta1: '试试看 →', hero_cta2: '了解原理', hero_cta3: '查看源码',
+            stat_unit_box: '箱', stat_unit_rows: '排', stat_unit_each: '箱/排',
+            stat_boxes: '学校部署目标（规划中）', stat_concurrent: '现场布局', stat_time: '每排箱数', stat_cost: '分排控制估算',
+            unbox_hint: '向下滑动 · 开箱',
+            loc_locating: '定位中…', loc_locked: '已锁定', loc_beep: '蜂鸣中', loc_users: '规划中',
+            how_eyebrow: '原理', how_title: '三步找到零件',
+            step1_title: '搜索', step1_desc: '在静态模拟中输入零件名称、型号或类别',
+            step2_title: '定位', step2_desc: '单箱参考原型可亮灯响铃；本页仅模拟定位状态',
+            step3_title: '取件', step3_desc: '本页点击确认只结束模拟；现场联动仍待试点验证',
+            step_more: '查看详情 →',
+            feat_eyebrow: '功能', feat_title: '为机器人社打造',
+            feat1_title: '关键词搜索', feat1_desc: '输入名称、型号或类别，实时匹配，不用翻箱倒柜',
+            feat2_title: '多人并发（规划中）', feat2_desc: '规划中：多人同时查找，每人分配不同颜色和节奏',
+            feat3_title: '飞书登录（规划中）', feat3_desc: '规划中：可选 OAuth 身份验证，自托管可控',
+            feat4_title: '电量监控（规划中）', feat4_desc: '规划中：电池电压监测与低电量通知',
+            feat5_title: '零件管理（规划中）', feat5_desc: '规划中：管理员后台 CRUD，按名称/型号/类别搜索',
+            arch_eyebrow: '架构演进',
+            arch_title: '从单箱原型到 30 箱部署',
+            arch_intro: '<strong>已完成的是一套单箱参考原型。</strong>学校现场约 30 箱，布局为 3排×10；集中式与分排式仍在评估，尚未采购或完成真机端到端验证。',
+            arch_status: '先验证一排，再决定全场拓扑',
+            arch_v1_state: 'PROTOTYPE / 已完成',
+            arch_v1_title: 'V1 · 单箱 ESP32-C3',
+            arch_v1_desc: 'LED、蜂鸣器和 MQTT 指令构成可验证的定位闭环；本页交互仍使用静态示意数据。',
+            arch_v2_title: 'V2 · 30 箱学校现场',
+            arch_v2_desc: '目标布局为 3排×10。当前比较单箱独立、集中控制和每排隔离三种故障域与布线方式。',
+            cost_a_kicker: '独立节点', cost_a_desc: '30 × ESP32，每箱独立；维护与配网成本最高。',
+            cost_b_kicker: '集中式最低', cost_b_desc: '1 × ESP32 + 2 × 16 路扩展；成本最低但故障域最大。',
+            cost_c_kicker: '当前评估基线', cost_c_desc: '1 × ESP32 + 每排 1 个扩展模块；布线按三排分区。',
+            cost_d_kicker: '排级隔离', cost_d_desc: '3 × ESP32 + 3 ×扩展模块；单排故障不影响其余两排。',
+            arch_note: '估算仅包含 ESP32（¥12/块）与扩展模块（¥32/块），不含 LED、蜂鸣器、电源、线束、端子和安装成本。以上均为规划数据，不代表已经部署。',
+            demo_eyebrow: '体验模拟', demo_title: '模拟操控流程',
+            flow_step1: '进入', flow_step2: '搜索', flow_step3: '定位', flow_step4: '确认',
+            demo_back_entry: '← 返回',
+            entry_qr_title: '二维码入口（规划中）', entry_qr_desc: '规划中：未来为箱体贴码；本页点击仅继续静态模拟',
+            entry_chat_title: '飞书机器人（规划中）', entry_chat_desc: '规划中：在飞书群中 @机器人 发送零件名称',
+            entry_hint: '点击任意方式继续演示',
+            demo_search_title: '搜索零件', demo_search_desc: '输入零件名称、型号或类别，实时匹配',
+            demo_placeholder: 'M3 螺丝、轴承、齿轮...',
+            demo_locate: '定位', demo_found: '已找到', demo_no_match: '无匹配结果',
+            locate_info: '正在模拟定位...', locate_buzzer: '模拟：蜂鸣器响铃中',
+            locate_confirm_btn: '✓ 已取到零件', locate_back_btn: '← 重新搜索',
+            confirm_title: '模拟完成', confirm_desc: '静态定位流程已完成；未向实体设备发送指令',
+            confirm_time_label: '定位用时', confirm_box_label: '目标箱号',
+            confirm_status_done: '完成', confirm_status_label: '状态',
+            confirm_again_btn: '再找一个 →',
+            road_eyebrow: '路线图', road_title: '一步一步来',
+            road1_when: '第 1-2 周', road1_title: 'MVP 原型', road1_desc: '1 箱、面包板、基础搜索+响铃',
+            road2_when: '现在', road2_title: '30 箱架构评估', road2_desc: '比较独立、集中和分排控制，冻结一排试点方案',
+            road3_when: '规划中', road3_title: '一排试点', road3_desc: '10 箱线束、供电、通道标签与故障恢复验证',
+            road4_when: '规划中', road4_title: '学校部署', road4_desc: '约 30 箱、3 排分区、录入目录并分阶段上线',
+            footer_projects: '← Harry Xin / 项目',
+            footer_docs: '项目文档',
+            footer_source: '源码',
+            footer_license: 'MIT 开源协议',
+            footer_copy: '寻<span class="it">物</span> Find<span class="it">Item</span> · 开源零件定位系统',
+            demo_disclaimer: '交互模拟 · 使用示意数据 · 不会控制实体设备',
+        };
+
+        const en = {
+            nav_parent: '← Harry Xin / Projects', nav_how: 'How', nav_features: 'Features', nav_architecture: 'Architecture', nav_demo: 'Simulation', nav_roadmap: 'Roadmap', nav_cta: 'Get Started',
+            loading_tag: 'Locating part…',
+            skip_main: 'Skip to content',
+            hero_label: 'Harry Xin / Building Project · ESP32 + MQTT',
+            hero_h1: 'Find <span class="it">any part</span><br><span class="it">quickly</span>',
+            hero_sub: 'From a one-bin ESP32-C3 reference prototype toward a planned 30-bin school deployment',
+            hero_cta1: 'Try It →', hero_cta2: 'How It Works', hero_cta3: 'View Source',
+            stat_unit_box: ' bins', stat_unit_rows: ' rows', stat_unit_each: ' bins/row',
+            stat_boxes: 'School rollout target (planned)', stat_concurrent: 'On-site layout', stat_time: 'Bins per row', stat_cost: 'Row-organized control estimate',
+            unbox_hint: 'Scroll to open',
+            loc_locating: 'Locating…', loc_locked: 'Locked', loc_beep: 'Beeping', loc_users: 'planned',
+            how_eyebrow: 'How It Works', how_title: 'Three steps to any part',
+            step1_title: 'Search', step1_desc: 'Type a part name, model, or category in the static simulation',
+            step2_title: 'Locate', step2_desc: 'The one-bin prototype can light and beep; this page only simulates that state',
+            step3_title: 'Pick Up', step3_desc: 'Confirming here only ends the simulation; site control still needs pilot validation',
+            step_more: 'Learn more →',
+            feat_eyebrow: 'Features', feat_title: 'For makerspaces, labs & workshops',
+            feat1_title: 'Smart Search', feat1_desc: 'Search by name, model, or category with keyword matching',
+            feat2_title: 'Multi-user (planned)', feat2_desc: 'Planned: multiple concurrent users with unique colors and rhythms',
+            feat3_title: 'Feishu Login (planned)', feat3_desc: 'Planned: optional OAuth auth, self-hostable and under your control',
+            feat4_title: 'Battery Monitor (planned)', feat4_desc: 'Planned: battery voltage monitoring and low-battery alerts',
+            feat5_title: 'Parts Management (planned)', feat5_desc: 'Planned: admin CRUD, search by name/model/category',
+            arch_eyebrow: 'Architecture evolution',
+            arch_title: 'From a one-bin prototype to a 30-bin deployment',
+            arch_intro: '<strong>What exists today is a one-bin reference prototype.</strong> The school site has about 30 bins in a 3 rows×10 layout. Central and row-organized control remain under evaluation; no purchase or real-hardware end-to-end rollout is being claimed.',
+            arch_status: 'Validate one row before freezing the full topology',
+            arch_v1_state: 'PROTOTYPE / COMPLETE',
+            arch_v1_title: 'V1 · One-bin ESP32-C3',
+            arch_v1_desc: 'An LED, buzzer and MQTT command form a testable locate loop; this page still uses static demonstration data.',
+            arch_v2_title: 'V2 · 30-bin school site',
+            arch_v2_desc: 'Target layout: 3 rows×10. The current study compares per-bin, central and row-isolated fault domains and wiring.',
+            cost_a_kicker: 'Per-bin nodes', cost_a_desc: '30 × ESP32, one per bin; highest provisioning and maintenance overhead.',
+            cost_b_kicker: 'Central minimum', cost_b_desc: '1 × ESP32 + 2 × 16-channel expanders; lowest cost, largest fault domain.',
+            cost_c_kicker: 'Evaluation baseline', cost_c_desc: '1 × ESP32 + one expander per row; wiring stays organized by row.',
+            cost_d_kicker: 'Row isolation', cost_d_desc: '3 × ESP32 + 3 × expanders; one row can fail without taking down the other two.',
+            arch_note: 'Estimate includes only ESP32 boards (¥12 each) and expansion modules (¥32 each). LEDs, buzzers, power, harnesses, connectors and installation are excluded. These are planning figures, not a deployment claim.',
+            demo_eyebrow: 'Interactive Simulation', demo_title: 'Simulated Control Flow',
+            flow_step1: 'Enter', flow_step2: 'Search', flow_step3: 'Locate', flow_step4: 'Confirm',
+            demo_back_entry: '← Back',
+            entry_qr_title: 'QR entry (planned)', entry_qr_desc: 'Planned: add labels to future bins; clicking here only continues the static simulation',
+            entry_chat_title: 'Feishu Bot (planned)', entry_chat_desc: 'Planned: @FindItem bot in group chat to locate parts',
+            entry_hint: 'Click any method to continue',
+            demo_search_title: 'Search Parts', demo_search_desc: 'Type part name, model, or category for instant matching',
+            demo_placeholder: 'M3 screw, bearing, gear...',
+            demo_locate: 'Locate', demo_found: 'Found', demo_no_match: 'No matches',
+            locate_info: 'Simulating locate...', locate_buzzer: 'Simulation: buzzer active',
+            locate_confirm_btn: '✓ Part Retrieved', locate_back_btn: '← Search Again',
+            confirm_title: 'Simulation complete', confirm_desc: 'The static locate flow is complete; no command was sent to physical hardware',
+            confirm_time_label: 'Time', confirm_box_label: 'Target Box',
+            confirm_status_done: 'Done', confirm_status_label: 'Status',
+            confirm_again_btn: 'Find Another →',
+            road_eyebrow: 'Roadmap', road_title: 'Step by step',
+            road1_when: 'Week 1-2', road1_title: 'MVP', road1_desc: '1 box, breadboard, basic search + beep',
+            road2_when: 'Now', road2_title: '30-bin architecture study', road2_desc: 'Compare per-bin, central and row-organized control; freeze the one-row pilot',
+            road3_when: 'Planned', road3_title: 'One-row pilot', road3_desc: 'Validate a 10-bin harness, power, channel labels and fault recovery',
+            road4_when: 'Planned', road4_title: 'School rollout', road4_desc: 'About 30 bins across 3 rows, cataloged and released in stages',
+            footer_projects: '← Harry Xin / Projects',
+            footer_docs: 'Docs',
+            footer_source: 'Source',
+            footer_license: 'MIT License',
+            footer_copy: 'Find<span class="it">Item</span> · Open-source Parts Locator',
+            demo_disclaimer: 'Interactive simulation · Uses demo data · Does not control physical devices',
+        };
+
+        let lang = (() => {
+            try {
+                const saved = localStorage.getItem('lang');
+                if (saved === 'zh' || saved === 'en') return saved;
+            } catch (error) {}
+            return (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        })();
+
+        function applyLang() {
+            const dict = lang === 'zh' ? zh : en;
+            document.title = lang === 'zh' ? '寻物 FindItem — 开源零件定位系统' : 'FindItem — Smart Parts Locator';
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (key in dict) {
+                    if (el.hasAttribute('data-i18n-html')) {
+                        el.innerHTML = dict[key];
+                    } else {
+                        el.textContent = dict[key];
+                    }
+                }
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (dict[key]) el.placeholder = dict[key];
+            });
+            document.documentElement.lang = lang === 'zh' ? 'zh' : 'en';
+            document.getElementById('lang-btn').textContent = lang === 'zh' ? 'EN' : '中';
+            // Re-render demo if there's a search
+            demoSearch();
+            // applyLang rewrote the wave-split headings' textContent — re-split them into masked words
+            splitWave();
+            // Live Locator: repaint its runtime text (state / box / part name) in the new language
+            if (window.refreshLocator) window.refreshLocator();
+        }
+
+        function toggleLang() {
+            lang = lang === 'zh' ? 'en' : 'zh';
+            try { localStorage.setItem('lang', lang); } catch (error) {}
+            document.body.classList.add('lang-fade');
+            setTimeout(() => {
+                applyLang();
+                requestAnimationFrame(() => {
+                    document.body.classList.remove('lang-fade');
+                });
+            }, 200);
+        }
+
+        // ========== Scroll Reveal ==========
+        const revealObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    obs.unobserve(e.target);   // reveal once, then stop — no opacity:0.12 replay on scroll-out
+                }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        // ========== Demo-only (no live API) ==========
+        // 本站仅为静态演示，不连接真实后端。
+        // All search/locate/stop logic is local simulation.
+
+        // ========== Demo Flow ==========
+        let currentStep = 1;
+        let locatedPart = null;
+        let locateStartTime = null;
+
+        function goToStep(step) {
+            currentStep = step;
+            const dict = lang === 'zh' ? zh : en;
+            // Update flow steps
+            const steps = document.querySelectorAll('.flow-step');
+            const lines = document.querySelectorAll('.flow-step-line');
+            steps.forEach((el, i) => {
+                const s = i + 1;
+                el.classList.remove('active', 'done');
+                if (s < step) el.classList.add('done');
+                else if (s === step) el.classList.add('active');
+            });
+            syncFlowStepAccessibility();
+            lines.forEach((el, i) => {
+                el.style.background = (i + 1 < step) ? 'var(--accent)' : '';
+            });
+            // Show panel first (so the target is visible before focus/announce)
+            document.querySelectorAll('.demo-panel').forEach(p => p.classList.remove('active'));
+            const panelId = ['panel-entry', 'panel-search', 'panel-locate', 'panel-confirm'][step - 1];
+            document.getElementById(panelId).classList.add('active');
+            // Announce step change via persistent live region (outside panels, always present)
+            const stepSr = document.getElementById('demo-step-status');
+            if (stepSr) {
+                const stepKey = ['flow_step1', 'flow_step2', 'flow_step3', 'flow_step4'][step - 1];
+                const stepName = dict[stepKey] || step;
+                stepSr.textContent = (lang === 'zh' ? '步骤：' : 'Step: ') + stepName;
+            }
+            // Focus management per step
+            if (step === 1) {
+                setTimeout(() => {
+                    const firstCard = document.querySelector('#panel-entry .entry-card');
+                    if (firstCard) firstCard.focus();
+                }, 300);
+            } else if (step === 2) {
+                setTimeout(() => document.getElementById('demo-input').focus(), 300);
+            } else if (step === 3) {
+                setTimeout(() => {
+                    const confirmBtn = document.querySelector('#panel-locate .demo-action-btn.success');
+                    if (confirmBtn) confirmBtn.focus();
+                }, 300);
+            } else if (step === 4) {
+                setTimeout(() => {
+                    const againBtn = document.querySelector('#panel-confirm .demo-action-btn');
+                    if (againBtn) againBtn.focus();
+                }, 300);
+            }
+            // Start locate animation
+            if (step === 3 && locatedPart) {
+                startLocateAnimation();
+            }
+        }
+
+        function syncFlowStepAccessibility() {
+            document.querySelectorAll('#flow-steps .flow-step').forEach(el => {
+                const step = parseInt(el.getAttribute('data-step'), 10);
+                const available = Boolean(step && (step <= currentStep || step === 2));
+                el.style.cursor = available ? 'pointer' : 'default';
+                el.setAttribute('role', 'button');
+                el.setAttribute('tabindex', available ? '0' : '-1');
+                el.setAttribute('aria-disabled', available ? 'false' : 'true');
+            });
+        }
+
+        // Top flow-step indicators can jump back to an available step (or to Search).
+        document.querySelectorAll('#flow-steps .flow-step').forEach(el => {
+            el.addEventListener('click', () => {
+                const s = parseInt(el.getAttribute('data-step'), 10);
+                if (s && (s <= currentStep || s === 2)) goToStep(s);
+            });
+        });
+        syncFlowStepAccessibility();
+
+        function startLocateAnimation() {
+            const box = document.getElementById('locate-box-visual');
+            const waves = document.getElementById('sound-waves');
+            locateStartTime = Date.now();
+            box.classList.add('locating');
+            waves.classList.add('active');
+        }
+
+        function confirmPickup() {
+            const box = document.getElementById('locate-box-visual');
+            const waves = document.getElementById('sound-waves');
+            box.classList.remove('locating');
+            waves.classList.remove('active');
+            // 停止响铃（live 模式会调后端）
+            // demo-only: no real stop command
+            const elapsed = ((Date.now() - locateStartTime) / 1000).toFixed(1);
+            document.getElementById('confirm-time').textContent = elapsed + 's';
+            document.getElementById('confirm-box').textContent = locatedPart ? locatedPart.box : '';
+            goToStep(4);
+        }
+
+        function resetDemo() {
+            locatedPart = null;
+            activePart = null;
+            document.getElementById('demo-input').value = '';
+            document.getElementById('demo-results').innerHTML = '';
+            goToStep(1);
+        }
+
+        // ========== Demo Search ==========
+        const PARTS = [
+            { name: "M3 杯头螺丝 M3×8/10/12/16", name_en: "M3 Socket Head Cap Screws M3×8/10/12/16", box: "FINDIT-003", cat: "螺丝", cat_en: "Screws" },
+            { name: "M4 杯头螺丝 M4×8/10/12/16/20", name_en: "M4 Socket Head Cap Screws M4×8/10/12/16/20", box: "FINDIT-002", cat: "螺丝", cat_en: "Screws" },
+            { name: "M5 杯头螺丝 M5×8/10/12/16/20/25", name_en: "M5 Socket Head Cap Screws M5×8/10/12/16/20/25", box: "FINDIT-002", cat: "螺丝", cat_en: "Screws" },
+            { name: "M5 半圆头螺丝 M5×12/16/20/25/30", name_en: "M5 Button Head Screws M5×12/16/20/25/30", box: "FINDIT-002", cat: "螺丝", cat_en: "Screws" },
+            { name: "M6 杯头螺丝 M6×10/12/16/20/25", name_en: "M6 Socket Head Cap Screws M6×10/12/16/20/25", box: "FINDIT-002", cat: "螺丝", cat_en: "Screws" },
+            { name: "英制螺丝 8#-32 杯头 0.5\"/0.75\"/1\"", name_en: "Imperial Screws 8#-32 SHCS 0.5\"/0.75\"/1\"", box: "FINDIT-002", cat: "螺丝", cat_en: "Screws" },
+            { name: "M3 防松螺母 / 普通螺母", name_en: "M3 Nylon Lock Nuts / Hex Nuts", box: "FINDIT-001", cat: "螺母", cat_en: "Nuts" },
+            { name: "M4 防松螺母 / 普通螺母", name_en: "M4 Nylon Lock Nuts / Hex Nuts", box: "FINDIT-001", cat: "螺母", cat_en: "Nuts" },
+            { name: "M5 防松螺母 / 手拧螺母 / 四方螺母", name_en: "M5 Nylon Lock Nuts / Wing Nuts / Square Nuts", box: "FINDIT-001", cat: "螺母", cat_en: "Nuts" },
+            { name: "M6 防松螺母 / 手拧螺母 / 四方螺母", name_en: "M6 Nylon Lock Nuts / Wing Nuts / Square Nuts", box: "FINDIT-001", cat: "螺母", cat_en: "Nuts" },
+            { name: "M4 / M5 平垫片", name_en: "M4 / M5 Flat Washers", box: "FINDIT-004", cat: "垫片", cat_en: "Washers" },
+            { name: "M6 / M8 / M10 平垫片", name_en: "M6 / M8 / M10 Flat Washers", box: "FINDIT-004", cat: "垫片", cat_en: "Washers" },
+            { name: "φ5.2 套管 长度 5/8/10/12/15/20", name_en: "φ5.2 Spacers Length 5/8/10/12/15/20mm", box: "FINDIT-005", cat: "套管", cat_en: "Spacers" },
+            { name: "M8 套管 / 垫片组合", name_en: "M8 Spacers / Washer Kit", box: "FINDIT-005", cat: "套管", cat_en: "Spacers" },
+            { name: "M4 / M5 铆钉", name_en: "M4 / M5 Rivets", box: "FINDIT-006", cat: "铆钉", cat_en: "Rivets" },
+            { name: "公制法兰轴承 D5 / D6 / D8 / D10", name_en: "Metric Flanged Bearings D5 / D6 / D8 / D10", box: "FINDIT-021", cat: "轴承", cat_en: "Bearings" },
+            { name: "1/2\" Hex 轴承 / ThunderHex 轴承", name_en: "1/2\" Hex Bearings / ThunderHex Bearings", box: "FINDIT-021", cat: "轴承", cat_en: "Bearings" },
+            { name: "3/8\" Hex 轴承 / 圆轴承", name_en: "3/8\" Hex Bearings / Round Bearings", box: "FINDIT-021", cat: "轴承", cat_en: "Bearings" },
+            { name: "VEX PRO 深沟球轴承 / 法兰轴承", name_en: "VEX PRO Deep Groove Bearings / Flanged Bearings", box: "FINDIT-003", cat: "轴承", cat_en: "Bearings" },
+            { name: "Falcon 起步齿轮 8T / 10T / 12T / 14T", name_en: "Falcon Pinion Gears 8T / 10T / 12T / 14T", box: "FINDIT-023", cat: "齿轮", cat_en: "Gears" },
+            { name: "Kraken 起步齿轮 / 起步带轮", name_en: "Kraken Pinion Gears / Pulleys", box: "FINDIT-023", cat: "齿轮", cat_en: "Gears" },
+            { name: "CIM / 775 电机起步齿轮", name_en: "CIM / 775 Motor Pinion Gears", box: "FINDIT-023", cat: "齿轮", cat_en: "Gears" },
+            { name: "公制铜套 / 法兰铜套", name_en: "Metric Bronze Bushings / Flanged Bushings", box: "FINDIT-022", cat: "铜套", cat_en: "Bushings" },
+            { name: "电控件 RoboRIO / VRM / PCM", name_en: "Electronics RoboRIO / VRM / PCM", box: "FINDIT-015", cat: "电控", cat_en: "Electronics" },
+            { name: "传感器 光电门 / 微动开关 / 编码器", name_en: "Sensors Photo Gate / Limit Switch / Encoder", box: "FINDIT-010", cat: "传感器", cat_en: "Sensors" },
+        ];
+
+        let activePart = null;
+
+        // Escape text before injecting via innerHTML (part names can contain ' " < > &).
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+            ));
+        }
+
+        function demoSearch() {
+            const q = document.getElementById('demo-input').value.trim().toLowerCase();
+            const div = document.getElementById('demo-results');
+            const status = document.getElementById('demo-status');
+            const dict = lang === 'zh' ? zh : en;
+            const isEn = lang === 'en';
+            if (!q) {
+                div.innerHTML = '';
+                status.textContent = '';
+                return;
+            }
+            const m = PARTS.filter(p => {
+                const name = isEn ? (p.name_en || p.name) : p.name;
+                const cat = isEn ? (p.cat_en || p.cat) : p.cat;
+                return name.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || cat.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q);
+            });
+            if (!m.length) {
+                div.innerHTML = '';
+                status.textContent = dict.demo_no_match;
+                return;
+            }
+            status.textContent = m.length + (isEn ? ' results' : ' 个结果');
+            div.innerHTML = m.map(p => {
+                const displayName = isEn ? (p.name_en || p.name) : p.name;
+                const displayCat = isEn ? (p.cat_en || p.cat) : p.cat;
+                const idx = PARTS.indexOf(p);
+                return `
+                <button class="demo-item-btn${activePart===p.name?' active':''}" data-idx="${idx}" aria-label="${activePart===p.name?dict.demo_found:dict.demo_locate} ${escapeHtml(displayName)}">
+                    <span class="demo-item-text">
+                        <span class="demo-item-name">${escapeHtml(displayName)}</span>
+                        <span class="demo-item-meta">${escapeHtml(displayCat)} · ${escapeHtml(p.box)}</span>
+                    </span>
+                    <span class="demo-btn-label">${activePart===p.name?dict.demo_found:dict.demo_locate}</span>
+                </button>`;
+            }).join('');
+            div.querySelectorAll('.demo-item-btn[data-idx]').forEach(row => {
+                row.addEventListener('click', () => {
+                    const part = PARTS[+row.getAttribute('data-idx')];
+                    if (part) demoLocate(part.name);
+                });
+            });
+        }
+
+        function demoLocate(name) {
+            activePart = activePart === name ? null : name;
+            if (activePart) {
+                locatedPart = PARTS.find(p => p.name === name);
+                const isEn = lang === 'en';
+                const displayName = isEn ? (locatedPart.name_en || locatedPart.name) : locatedPart.name;
+                document.getElementById('locate-part-name').textContent = displayName;
+                document.getElementById('locate-box-id').textContent = locatedPart.box;
+                goToStep(3);
+            } else {
+                demoSearch();
+            }
+        }
+
+        // ========== Smooth Nav Scroll ==========
+        // Frame the section's actual content (its inner .container) below the fixed nav,
+        // instead of landing on the section's large top/bottom padding.
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                const id = a.getAttribute('href').slice(1);
+                const target = document.getElementById(id);
+                if (!target) return;
+                e.preventDefault();
+                const navH = document.querySelector('nav').offsetHeight;
+                const viewportH = window.innerHeight;
+                const avail = viewportH - navH;
+                const gap = 28;
+                const content = target.querySelector('.container') || target;
+                const rect = content.getBoundingClientRect();
+                const contentTop = window.pageYOffset + rect.top;
+                let scrollTarget;
+                if (rect.height >= avail - gap * 2) {
+                    // Content taller than the available space: pin its top just below the nav
+                    scrollTarget = contentTop - navH - gap;
+                } else {
+                    // Content fits: center it in the visible area below the nav
+                    scrollTarget = contentTop - navH - (avail - rect.height) / 2;
+                }
+                const dest = Math.max(0, scrollTarget);
+                if (window.__smoothTo) window.__smoothTo(dest);
+                else window.scrollTo({ top: dest, behavior: 'smooth' });
+            });
+        });
+
+        // ========== Keyboard accessibility ==========
+        // Non-native clickable elements get role=button + tabindex + Enter/Space activation.
+        // Native buttons (<button>) are skipped — the browser handles them natively.
+        document.querySelectorAll('.step[onclick], .feature[onclick]').forEach(el => {
+            el.setAttribute('role', 'button');
+            el.setAttribute('tabindex', '0');
+        });
+        // Enter / Space activates non-native button role elements (step, feature, flow-step, hero-visual).
+        // Native buttons are excluded to prevent double-firing.
+        document.addEventListener('keydown', e => {
+            const t = e.target;
+            if (!(e.key === 'Enter' || e.key === ' ')) return;
+            if (!(t instanceof HTMLElement)) return;
+            if (t.tagName === 'BUTTON' || t.tagName === 'A' || t.tagName === 'INPUT') return;
+            if (!t.matches('.step, .feature, .flow-step, .hero-visual.loc')) return;
+            e.preventDefault();
+            t.click();
+        });
+
+        // ========== Wave-split headings (split into masked words/chars; revealed by the scroll observer) ==========
+        function splitWave(){
+            document.querySelectorAll('.wave-split').forEach(el => {
+                const text = el.textContent;
+                const tokens = text.match(/\s+|[A-Za-z0-9'’\-]+|[^\sA-Za-z0-9]/g) || [text];
+                el.textContent = '';
+                let i = 0;
+                tokens.forEach(tok => {
+                    if (/^\s+$/.test(tok)) { el.appendChild(document.createTextNode(tok)); return; }
+                    const word = document.createElement('span'); word.className = 'ws-word';
+                    const inner = document.createElement('span'); inner.className = 'ws-inner';
+                    inner.textContent = tok;
+                    inner.style.transitionDelay = (i * 0.05) + 's';
+                    word.appendChild(inner); el.appendChild(word);
+                    i++;
+                });
+            });
+        }
+        // Run the i18n pass once on load so title / lang / wave-split headings are correct on first paint
+        // (not only after a user language toggle). applyLang() internally calls splitWave() + demoSearch().
+        applyLang();
+
+        // ========== Loader: search the bins, light a random one at 100% ==========
+        (function(){
+            const root = document.documentElement;
+            const curtain = document.getElementById('curtain');
+            const pctEl = document.getElementById('curtain-pct');
+            const tagEl = document.getElementById('curtain-tag');
+            const grid = document.getElementById('loader-grid');
+            const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let revealed = false;
+            function reveal(){
+                if (revealed || !root.classList.contains('loading')) return;
+                revealed = true;
+                root.classList.remove('loading');                       // releases the paused hero entrance
+                if (curtain){ curtain.classList.add('done'); setTimeout(() => { if (curtain) curtain.remove(); }, 900); }
+            }
+            if (reduce){ root.classList.remove('loading'); if (curtain) curtain.remove(); return; }
+            // build a grid of bins
+            const N = 15, boxes = [];
+            if (grid){
+                const svg = '<svg viewBox="0 0 48 44"><path class="lb-top" d="M24 6 L42 16 L24 26 L6 16 Z"/><path class="lb-left" d="M6 16 L24 26 L24 40 L6 30 Z"/><path class="lb-right" d="M24 26 L42 16 L42 30 L24 40 Z"/><circle class="lb-led" cx="33" cy="23.5" r="2.6"/></svg>';
+                for (let i = 0; i < N; i++){ const d = document.createElement('div'); d.className = 'lbox'; d.innerHTML = svg; grid.appendChild(d); boxes.push(d); }
+            }
+            const targetIdx = Math.floor(Math.random() * Math.max(1, boxes.length));
+            let loaded = false, start = null, shown = 0, scanIdx = -1, done = false;
+            window.addEventListener('load', () => { loaded = true; });
+            function tick(now){
+                if (start == null) start = now;
+                let t = Math.min(100, Math.floor((now - start) / 1700 * 100));
+                if (!loaded) t = Math.min(t, 92);                       // hold near the end until fully loaded
+                if (t > shown) shown = t;
+                if (pctEl) pctEl.textContent = shown;
+                if (shown < 100){
+                    if (boxes.length){                                 // deliberate reading-order sweep = a real scan
+                        const idx = Math.min(boxes.length - 1, Math.floor(shown / 100 * boxes.length));
+                        if (idx !== scanIdx){
+                            if (scanIdx >= 0 && boxes[scanIdx]) boxes[scanIdx].classList.remove('scan');
+                            scanIdx = idx;
+                            boxes[scanIdx].classList.add('scan');      // CSS transition leaves a fading trail
+                        }
+                    }
+                    requestAnimationFrame(tick);
+                    return;
+                }
+                if (!done){                                            // 100% -> lock onto the random bin
+                    done = true;
+                    boxes.forEach(b => { b.classList.remove('scan'); b.classList.add('dim'); });   // spotlight
+                    if (boxes.length){ boxes[targetIdx].classList.remove('dim'); boxes[targetIdx].classList.add('lit'); }
+                    if (tagEl){ tagEl.removeAttribute('data-i18n'); tagEl.textContent = (typeof lang !== 'undefined' && lang === 'en') ? 'Found · Entering' : '已找到 · 进入'; }
+                    setTimeout(reveal, 1100);                          // dwell so the box's glow + twin-ping (~1s) actually plays out
+                }
+            }
+            requestAnimationFrame(tick);
+            setTimeout(reveal, 4500);                                   // safety: never leave the hero paused
+        })();
+
+        // ========== Inertia smooth-scroll + scroll parallax + unbox scene ==========
+        (function(){
+            const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const coarse = matchMedia('(pointer: coarse)').matches;
+            const glow = document.querySelector('.hero-glow');
+            // unbox scene elements (cached)
+            const ub = document.getElementById('unbox');
+            const ubBox = ub && ub.querySelector('.unbox-box');
+            const ubLed = ub && ub.querySelector('.ub-led');
+            const ubLedGlow = ub && ub.querySelector('.ub-ledglow');
+            const ubRings = ub && ub.querySelector('.ub-rings');
+            const ubLid = ub && ub.querySelector('.ub-lid');
+            const ubBeam = ub && ub.querySelector('.ub-beam');
+            const ubInner = ub && ub.querySelector('.ub-inner');
+            const ubStats = ub && ub.querySelector('.unbox-stats .stats-grid');
+            const ubHint = ub && ub.querySelector('.unbox-hint');
+            const clampN = v => v < 0 ? 0 : v > 1 ? 1 : v;
+            const seg = (p, a, b) => clampN((p - a) / (b - a));
+            function applyParallax(y){
+                if (glow) glow.style.transform = 'translate(-50%, calc(-60% + ' + (y * 0.12).toFixed(1) + 'px))';
+            }
+            function updateUnbox(y){
+                if (!ub || !ubBox) return;
+                const total = ub.offsetHeight - window.innerHeight;
+                if (total <= 0) return;
+                const p = clampN((y - ub.offsetTop) / total);
+                const trig = seg(p, 0.12, 0.34), open = seg(p, 0.34, 0.66), st = seg(p, 0.58, 0.88);
+                const pulse = 1 + Math.sin(trig * Math.PI) * 0.05;
+                ubBox.style.opacity = (1 - st * 0.92).toFixed(3);
+                ubBox.style.transform = 'scale(' + ((1 - st * 0.12) * pulse).toFixed(3) + ')';
+                if (ubLedGlow) ubLedGlow.style.opacity = (0.16 + trig * 0.5 + open * 0.3).toFixed(3);
+                if (ubLed) ubLed.setAttribute('r', (9.5 + trig * 3.5).toFixed(2));
+                if (ubRings) ubRings.style.opacity = Math.max(trig, open * 0.4).toFixed(3);
+                if (ubLid) ubLid.style.transform = 'translateY(' + (-96 * open).toFixed(1) + 'px) rotate(' + (-6 * open).toFixed(2) + 'deg)';
+                if (ubBeam) ubBeam.style.opacity = (open * 0.9).toFixed(3);
+                if (ubInner) ubInner.style.opacity = open.toFixed(3);
+                if (ubStats){ ubStats.style.opacity = st.toFixed(3); ubStats.style.transform = 'translateY(' + ((1 - st) * 70).toFixed(1) + 'px)'; }
+                if (ubHint) ubHint.style.opacity = clampN(1 - p * 6).toFixed(3);
+            }
+            function frame(y){ applyParallax(y); updateUnbox(y); }
+            const smooth = !reduce && !coarse && matchMedia('(min-width: 769px)').matches;
+            if (smooth){
+                let target = window.scrollY, current = window.scrollY, raf = null;
+                const maxY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+                const clamp = y => Math.max(0, Math.min(y, maxY()));
+                function loop(){
+                    current += (target - current) * 0.1;
+                    if (Math.abs(target - current) < 0.4) current = target;
+                    window.scrollTo(0, current);
+                    frame(current);
+                    raf = (current !== target) ? requestAnimationFrame(loop) : null;
+                }
+                function kick(){ if (raf == null) raf = requestAnimationFrame(loop); }
+                window.addEventListener('wheel', e => {
+                    if (e.ctrlKey) return;                                                       // allow pinch-zoom
+                    if (e.target.closest && e.target.closest('#feature-modal, .demo-results')) return; // let inner panels scroll natively
+                    e.preventDefault();
+                    target = clamp(target + e.deltaY);
+                    kick();
+                }, { passive: false });
+                window.addEventListener('scroll', () => { if (raf == null){ target = current = window.scrollY; frame(current); } }, { passive: true });
+                window.addEventListener('resize', () => { target = clamp(target); }, { passive: true });
+                window.__smoothTo = y => { target = clamp(y); kick(); };
+            } else {
+                let ticking = false;
+                window.addEventListener('scroll', () => {
+                    if (!ticking){ requestAnimationFrame(() => { frame(window.scrollY); ticking = false; }); ticking = true; }
+                }, { passive: true });
+            }
+            frame(window.scrollY);
+        })();
+
+        // ========== Hero dot-matrix canvas (drift + cursor spotlight; hero-only, self-pausing) ==========
+        (function(){
+            const canvas = document.querySelector('.hero-grid');
+            const hero = document.getElementById('main');
+            if (!canvas || !hero || !canvas.getContext) return;
+            const ctx = canvas.getContext('2d');
+            const root = document.documentElement;
+            const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+            const fineMQ = matchMedia('(hover:hover) and (pointer:fine)');
+            const GAP = 40, DOT = 1.6, R = 120, R2 = R * R;
+            let w = 0, h = 0, dpr = 1, raf = null, onScreen = true, animate = false, lastDraw = 0;
+            let cx = -9999, cy = -9999, spotlight = false;
+            let dotColor = 'rgba(97,196,227,.07)', spotColor = '#61C4E3';
+
+            function readColors(){
+                const cs = getComputedStyle(root);
+                const d = cs.getPropertyValue('--grid-dot').trim();
+                const a = cs.getPropertyValue('--accent').trim();
+                if (d) dotColor = d;
+                if (a) spotColor = a;
+            }
+            function resize(){
+                dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+                w = hero.clientWidth; h = hero.clientHeight;
+                canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+            function draw(now){
+                const ox = animate ? (now * 0.004) % GAP : 0;
+                const oy = animate ? (now * 0.002) % GAP : 0;
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = dotColor;
+                for (let y = -GAP + oy; y < h + GAP; y += GAP)
+                    for (let x = -GAP + ox; x < w + GAP; x += GAP)
+                        ctx.fillRect(x - DOT / 2, y - DOT / 2, DOT, DOT);
+                if (spotlight && cx > -9998){
+                    const rect = canvas.getBoundingClientRect();
+                    const mxp = cx - rect.left, myp = cy - rect.top;
+                    if (mxp >= -R && mxp <= w + R && myp >= -R && myp <= h + R){
+                        ctx.fillStyle = spotColor;
+                        const startX = Math.ceil((mxp - R - ox) / GAP) * GAP + ox;
+                        const startY = Math.ceil((myp - R - oy) / GAP) * GAP + oy;
+                        for (let y = startY; y <= myp + R; y += GAP)
+                            for (let x = startX; x <= mxp + R; x += GAP){
+                                const dx = x - mxp, dy = y - myp, d2 = dx * dx + dy * dy;
+                                if (d2 > R2) continue;
+                                const k = 1 - d2 / R2, s = DOT + k * 1.6;
+                                ctx.globalAlpha = k * 0.18;
+                                ctx.fillRect(x - s / 2, y - s / 2, s, s);
+                            }
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            }
+            function loop(now){
+                if (!animate || !onScreen || document.hidden){ raf = null; return; }
+                raf = requestAnimationFrame(loop);
+                if (now - lastDraw < 33) return;   // ~30fps
+                lastDraw = now;
+                draw(now);
+            }
+            function kick(){ if (raf == null && animate && onScreen && !document.hidden) raf = requestAnimationFrame(loop); }
+            function staticFrame(){ if (raf != null){ cancelAnimationFrame(raf); raf = null; } draw(0); }
+            function setup(){
+                animate = fineMQ.matches && !reduceMQ.matches;
+                resize(); readColors();
+                if (animate) kick(); else { spotlight = false; staticFrame(); }
+            }
+            let rzTO = null;
+            window.addEventListener('resize', () => { clearTimeout(rzTO); rzTO = setTimeout(() => { resize(); if (animate) kick(); else staticFrame(); }, 150); }, { passive: true });
+            window.addEventListener('load', () => { resize(); if (!animate) staticFrame(); }, { passive: true });
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(); });
+            new IntersectionObserver(es => { onScreen = es[0].isIntersecting; if (onScreen) kick(); else if (raf != null){ cancelAnimationFrame(raf); raf = null; } }, { threshold: 0 }).observe(hero);
+            hero.addEventListener('mousemove', e => { if (animate){ cx = e.clientX; cy = e.clientY; spotlight = true; } }, { passive: true });
+            hero.addEventListener('mouseleave', () => { spotlight = false; });
+            new MutationObserver(() => { readColors(); if (!animate) staticFrame(); }).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+            if (reduceMQ.addEventListener) reduceMQ.addEventListener('change', setup);
+            if (fineMQ.addEventListener) fineMQ.addEventListener('change', setup);
+            setup();
+        })();
+
+        // ========== Live Locator (hero mini dashboard; reuses loader .lbox bins) ==========
+        (function(){
+            const card = document.querySelector('.hero-visual.loc');
+            if (!card) return;
+            const grid = document.getElementById('loc-grid');
+            const elState = document.getElementById('loc-state');
+            const elBox = document.getElementById('loc-box');
+            const elName = document.getElementById('loc-name');
+            const elUsers = document.getElementById('loc-users');
+            const elBeepWrap = document.getElementById('loc-beepwrap');
+            const elBeep = document.getElementById('loc-beep');
+            const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+            const fineMQ = matchMedia('(hover:hover) and (pointer:fine)');
+            const LOC_SAMPLES = [
+                { zh: '杯头 M3×10', en: 'M3×10 Screw', box: 'FINDIT-003' },
+                { zh: 'Falcon 起步齿轮', en: 'Falcon Gear', box: 'FINDIT-023' },
+                { zh: '公制轴承 D5', en: 'D5 Bearing', box: 'FINDIT-021' },
+                { zh: 'LED 灯带', en: 'WS2812B LED', box: 'FINDIT-017' },
+                { zh: 'Wago 快速接头', en: 'Wago Connector', box: 'FINDIT-009' },
+                { zh: 'RoboRIO', en: 'RoboRIO', box: 'FINDIT-015' },
+                { zh: '编码器', en: 'Encoder', box: 'FINDIT-010' },
+                { zh: '公制铜套', en: 'Bronze Bushing', box: 'FINDIT-022' }
+            ];
+            const BIN_SVG = '<svg viewBox="0 0 48 44"><path class="lb-top" d="M24 6 L42 16 L24 26 L6 16 Z"/><path class="lb-left" d="M6 16 L24 26 L24 40 L6 30 Z"/><path class="lb-right" d="M24 26 L42 16 L42 30 L24 40 Z"/><circle class="lb-led" cx="33" cy="23.5" r="2.6"/></svg>';
+            const N = 8, MAX_CYCLES = 3;
+            const bins = [];
+            if (grid){ for (let i = 0; i < N; i++){ const d = document.createElement('div'); d.className = 'lbox'; d.innerHTML = BIN_SVG; grid.appendChild(d); bins.push(d); } }
+
+            let idx = 0, state = 'locating', cycles = 0, timer = null, typeTimer = null, onScreen = true;
+            const isEn = () => (typeof lang !== 'undefined' && lang === 'en');
+            const dict = () => (isEn() ? en : zh);
+            const T = k => (dict()[k] || k);
+            const sampleName = s => (isEn() ? s.en : s.zh);
+            const animate = () => fineMQ.matches && !reduceMQ.matches;
+
+            function dimAll(){ bins.forEach(b => { b.classList.remove('lit'); b.classList.add('dim'); }); }
+            function lightBin(i){ bins.forEach((b, j) => b.classList.toggle('dim', j !== i)); const b = bins[i]; if (b){ b.classList.remove('lit'); void b.offsetWidth; b.classList.add('lit'); } }
+            function setLocked(on){
+                state = on ? 'locked' : 'locating';
+                if (elState) elState.textContent = on ? T('loc_locked') : T('loc_locating');
+                if (elBeepWrap) elBeepWrap.classList.toggle('on', on);
+                if (on && elBeep) elBeep.textContent = '♪ ' + T('loc_beep');
+            }
+            function typeName(full, done){
+                if (typeTimer){ clearTimeout(typeTimer); typeTimer = null; }
+                state = 'typing'; let n = 0;
+                (function step(){
+                    if (elName) elName.textContent = full.slice(0, n);
+                    if (n < full.length){ n++; typeTimer = setTimeout(step, 38); }
+                    else { typeTimer = null; if (done) done(); }
+                })();
+            }
+            function tick(){
+                const s = LOC_SAMPLES[idx];
+                setLocked(false);
+                if (elBox) elBox.textContent = s.box;
+                if (elBeepWrap) elBeepWrap.classList.remove('on');
+                dimAll();
+                typeName(sampleName(s), () => {
+                    lightBin(Math.floor(Math.random() * N));
+                    setLocked(true);
+                    timer = setTimeout(() => {
+                        idx = (idx + 1) % LOC_SAMPLES.length;
+                        if (++cycles >= MAX_CYCLES){ timer = null; return; }   // rest on last LOCKED, no endless loop
+                        tick();
+                    }, 1700);
+                });
+            }
+            function clearTimers(){ if (timer){ clearTimeout(timer); timer = null; } if (typeTimer){ clearTimeout(typeTimer); typeTimer = null; } }
+            function start(){ clearTimers(); cycles = 0; idx = 0; if (onScreen && !document.hidden) tick(); }
+            function staticView(){
+                clearTimers(); idx = 0;
+                const s = LOC_SAMPLES[0];
+                if (elBox) elBox.textContent = s.box;
+                if (elName) elName.textContent = sampleName(s);
+                bins.forEach((b, j) => b.classList.toggle('dim', j !== 5));
+                if (bins[5]) bins[5].classList.add('lit');
+                setLocked(true);
+            }
+            function init(){ if (animate()) start(); else staticView(); }
+
+            window.refreshLocator = function(){
+                const s = LOC_SAMPLES[idx];
+                if (elBox) elBox.textContent = s.box;
+                if (elUsers) elUsers.textContent = T('loc_users');
+                if (elState) elState.textContent = state === 'locked' ? T('loc_locked') : T('loc_locating');
+                if (elBeep && state === 'locked') elBeep.textContent = '♪ ' + T('loc_beep');
+                if (elName && state !== 'typing') elName.textContent = sampleName(s);
+            };
+
+            new IntersectionObserver(es => {
+                onScreen = es[0].isIntersecting;
+                if (!animate()) return;
+                if (onScreen && !document.hidden){ if (timer == null && typeTimer == null) start(); }
+                else clearTimers();
+            }, { threshold: 0.2 }).observe(card);
+            document.addEventListener('visibilitychange', () => { if (!animate()) return; if (document.hidden) clearTimers(); else if (onScreen && timer == null && typeTimer == null) start(); });
+            card.addEventListener('click', () => { const a = document.querySelector('a[href="#demo"]'); if (a) a.click(); else { const d = document.getElementById('demo'); if (d) d.scrollIntoView({ behavior: 'smooth' }); } });
+            if (reduceMQ.addEventListener){ reduceMQ.addEventListener('change', () => { clearTimers(); init(); }); }
+            if (fineMQ.addEventListener){ fineMQ.addEventListener('change', () => { clearTimers(); init(); }); }
+            init();
+        })();
+
+        // ========== Magnetic buttons + faint companion ring (desktop fine-pointer; native cursor kept) ==========
+        (function(){
+            const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+            const fineMQ = matchMedia('(hover:hover) and (pointer:fine)');
+            if (!fineMQ.matches || reduceMQ.matches) return;   // gate: desktop fine-pointer only
+            const ring = document.querySelector('.cursor-ring');
+            const HOT = 'a, button, .demo-item-btn, .entry-card, .step, .feature, .hero-visual.loc';
+            const MAG = '.btn, .nav-cta, .demo-action-btn';
+            let tx = window.innerWidth / 2, ty = window.innerHeight / 2, rx = tx, ry = ty, scale = 1, raf = null;
+            const magnets = [];
+
+            function loop(){
+                rx += (tx - rx) * 0.18; ry += (ty - ry) * 0.18;
+                const settled = Math.abs(tx - rx) < 0.4 && Math.abs(ty - ry) < 0.4;
+                if (settled){ rx = tx; ry = ty; }
+                if (ring) ring.style.transform = 'translate3d(' + rx.toFixed(1) + 'px,' + ry.toFixed(1) + 'px,0) scale(' + scale + ')';
+                raf = settled ? null : requestAnimationFrame(loop);
+            }
+            function kick(){ if (raf == null) raf = requestAnimationFrame(loop); }
+            function onMove(e){ tx = e.clientX; ty = e.clientY; kick(); }
+            function onOver(e){ if (e.target.closest && e.target.closest(HOT)){ if (ring) ring.classList.add('hot'); scale = 1.4; kick(); } }
+            function onOut(e){ if (e.target.closest && e.target.closest(HOT)){ if (ring) ring.classList.remove('hot'); scale = 1; kick(); } }
+            window.addEventListener('mousemove', onMove, { passive: true });
+            document.addEventListener('mouseover', onOver, { passive: true });
+            document.addEventListener('mouseout', onOut, { passive: true });
+
+            document.querySelectorAll(MAG).forEach(el => {
+                let rect = null;
+                const enter = () => { rect = el.getBoundingClientRect(); };
+                const move = e => {
+                    if (!rect) rect = el.getBoundingClientRect();
+                    const mx = Math.max(-6, Math.min(6, (e.clientX - (rect.left + rect.width / 2)) * 0.3));
+                    const my = Math.max(-6, Math.min(6, (e.clientY - (rect.top + rect.height / 2)) * 0.3));
+                    el.style.setProperty('--mx', mx.toFixed(1) + 'px');
+                    el.style.setProperty('--my', my.toFixed(1) + 'px');
+                    el.style.willChange = 'transform';
+                };
+                const leave = () => { rect = null; el.style.setProperty('--mx', '0px'); el.style.setProperty('--my', '0px'); el.style.willChange = ''; };
+                el.addEventListener('mouseenter', enter);
+                el.addEventListener('mousemove', move, { passive: true });
+                el.addEventListener('mouseleave', leave);
+                magnets.push({ el, enter, move, leave });
+            });
+
+            function bow(){   // permanently bow out, leaving native cursor + static buttons
+                if (raf != null){ cancelAnimationFrame(raf); raf = null; }
+                window.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseover', onOver);
+                document.removeEventListener('mouseout', onOut);
+                magnets.forEach(m => { m.el.removeEventListener('mouseenter', m.enter); m.el.removeEventListener('mousemove', m.move); m.el.removeEventListener('mouseleave', m.leave); m.leave(); });
+                if (ring) ring.remove();
+            }
+            window.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') bow(); }, { passive: true });
+            if (reduceMQ.addEventListener) reduceMQ.addEventListener('change', e => { if (e.matches) bow(); });
+
+            kick();
+        })();
+
+        // ========== Mobile menu drawer ==========
+        (function(){
+            const toggle = document.getElementById('nav-toggle');
+            const menu = document.getElementById('mobile-menu');
+            if (!toggle || !menu) return;
+            const ham = toggle.querySelector('.ico-ham');
+            const closeIco = toggle.querySelector('.ico-close');
+            let lastOpener = null;
+            const nav = toggle.closest('nav');
+            const initialBackgroundInert = new WeakMap();
+
+            function getBackgroundNodes() {
+                const nodes = [
+                    ...Array.from(document.body.children).filter(el => el !== menu && el !== nav && el.tagName !== 'SCRIPT'),
+                    ...Array.from(nav ? nav.querySelectorAll('.nav-brand, .nav-links, #lang-btn, #theme-btn') : [])
+                ];
+                nodes.forEach(el => {
+                    if (!initialBackgroundInert.has(el)) initialBackgroundInert.set(el, el.inert);
+                });
+                return nodes;
+            }
+
+            function getMenuItems() {
+                return Array.from(menu.querySelectorAll('a, button, [tabindex="0"]'))
+                    .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null);
+            }
+
+            function setOpen(open){
+                menu.classList.toggle('open', open);
+                menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (ham) ham.style.display = open ? 'none' : 'block';
+                if (closeIco) closeIco.style.display = open ? 'block' : 'none';
+
+                // inert / tabindex management
+                if (typeof menu.inert !== 'undefined') {
+                    menu.inert = !open;
+                }
+                getBackgroundNodes().forEach(el => {
+                    el.inert = open || initialBackgroundInert.get(el);
+                });
+                const items = getMenuItems();
+                items.forEach(el => {
+                    if (open) el.removeAttribute('tabindex');
+                    else el.setAttribute('tabindex', '-1');
+                });
+
+                if (open) {
+                    // Record opener
+                    lastOpener = document.activeElement === toggle ? toggle : document.activeElement;
+                    // Move focus to first item
+                    setTimeout(() => {
+                        const first = getMenuItems()[0];
+                        if (first) first.focus();
+                    }, 50);
+                } else {
+                    // Restore focus to opener
+                    if (lastOpener && typeof lastOpener.focus === 'function') {
+                        const focusTarget = lastOpener;
+                        setTimeout(() => focusTarget.focus(), 50);
+                    }
+                    lastOpener = null;
+                }
+            }
+
+            // Initialize: closed state links not tabbable
+            const initialItems = getMenuItems();
+            initialItems.forEach(el => el.setAttribute('tabindex', '-1'));
+
+            toggle.addEventListener('click', () => setOpen(!menu.classList.contains('open')));
+
+            menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setOpen(false)));
+
+            // Keyboard: Escape closes, Tab cycles within menu + toggle
+            document.addEventListener('keydown', e => {
+                if (!menu.classList.contains('open')) return;
+
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setOpen(false);
+                    return;
+                }
+
+                if (e.key === 'Tab') {
+                    const focusables = [toggle, ...getMenuItems()];
+                    if (focusables.length < 2) return;
+                    e.preventDefault();
+                    const current = focusables.indexOf(document.activeElement);
+                    const next = e.shiftKey
+                        ? (current <= 0 ? focusables.length - 1 : current - 1)
+                        : (current < 0 || current === focusables.length - 1 ? 0 : current + 1);
+                    focusables[next].focus();
+                }
+            });
+
+            const wide = matchMedia('(min-width: 769px)');
+            const wideHandler = (e) => { if (e.matches) setOpen(false); };
+            if (wide.addEventListener) wide.addEventListener('change', wideHandler);
+            else if (wide.addListener) wide.addListener(wideHandler);
+        })();
+
+        // ========== End ==========
+    </script>
+    <!-- Feature Modal -->
+    <div id="feature-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)closeFeature()" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);justify-content:center;align-items:center;padding:24px">
+        <div id="modal-content" style="background:var(--bg-elev);border:1px solid var(--surface-border);border-radius:24px;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;padding:48px 40px;position:relative;transform:translateY(20px);opacity:0;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1),opacity 0.4s;box-shadow:var(--shadow-md)">
+            <button onclick="closeFeature()" aria-label="关闭 / Close" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-dim);font-size:24px;cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='none'">✕</button>
+            <div id="modal-icon" style="width:56px;height:56px;border-radius:14px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;margin-bottom:24px"></div>
+            <h2 id="modal-title" style="font-size:28px;font-weight:600;letter-spacing:-0.03em;margin-bottom:12px;color:var(--text)"></h2>
+            <p id="modal-subtitle" style="font-size:16px;color:var(--text-dim);line-height:1.6;margin-bottom:32px"></p>
+            <div id="modal-body" style="font-size:15px;line-height:1.8;color:var(--text-dim)"></div>
+        </div>
+    </div>
+
+    <div class="cursor-ring" aria-hidden="true"></div>
+    <script src="/projects/finditem/features.js"></script>
+</body>
+</html>
