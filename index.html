@@ -1274,51 +1274,117 @@
 
   .about-robotics-stage{
     position:relative;
-    min-height:230px;
+    min-height:250px;
     margin:clamp(28px,3.3vw,46px) 0 0;
   }
   .about-robotics-result{
     position:relative;
     z-index:2;
-    max-width:260px;
+    width:min(100%,390px);
     margin:0;
-    color:var(--paper);
-    font:650 clamp(17px,1.35vw,21px)/1.28 var(--headline);
-    letter-spacing:-.012em;
   }
-  .about-robotics-result .result-arrow{color:var(--amber)}
+  .about-robotics-result .result-track{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 22px minmax(0,1.08fr);
+    align-items:end;
+    gap:10px;
+  }
+  .about-robotics-result .result-track[data-lang="zh"]{display:none}
+  html.lang-en .about-robotics-result .result-track[data-lang="en"]{display:grid}
+  html.lang-en .about-robotics-result .result-track[data-lang="zh"]{display:none}
+  html.lang-zh .about-robotics-result .result-track[data-lang="en"]{display:none}
+  html.lang-zh .about-robotics-result .result-track[data-lang="zh"]{display:grid}
+  .about-robotics-result .result-stop{
+    display:grid;
+    align-content:end;
+    gap:6px;
+    min-width:0;
+  }
+  .about-robotics-result .result-kicker{
+    color:var(--paper-dim);
+    font:500 9px/1.2 var(--mono);
+    letter-spacing:.11em;
+    text-transform:uppercase;
+  }
+  .about-robotics-result strong{
+    color:var(--paper);
+    font:680 clamp(17px,1.35vw,21px)/1.12 var(--headline);
+    letter-spacing:-.018em;
+  }
+  .about-robotics-result .result-arrow{
+    align-self:center;
+    color:var(--amber);
+    font:500 17px/1 var(--mono);
+    text-align:center;
+  }
   html.lang-zh .about-robotics-result{
     font-family:var(--zh-sans);
     font-weight:650;
     letter-spacing:.006em;
   }
-  .about-robotics-number{
-    position:absolute;
-    z-index:0;
-    right:0;
-    bottom:8px;
-    display:block;
-    color:rgba(156,255,87,.012);
-    font:700 clamp(118px,12.2vw,184px)/.8 var(--display);
-    letter-spacing:-.045em;
-    white-space:nowrap;
-    -webkit-text-stroke:1.15px rgba(233,238,233,.24);
-    transition:
-      color 360ms var(--motion-ease,ease),
-      -webkit-text-stroke-color 360ms var(--motion-ease,ease),
-      transform 360ms var(--motion-ease,ease);
+  html.lang-zh .about-robotics-result strong{
+    font-family:var(--zh-sans);
+    font-weight:700;
+    letter-spacing:.02em;
   }
-  .about-robotics-logo{
+  .about-robotics-lockup{
     position:absolute;
     z-index:1;
-    right:clamp(145px,17vw,220px);
-    left:auto;
-    bottom:12px;
+    right:0;
+    bottom:0;
+    display:grid;
+    grid-template-columns:140px 1px minmax(0,1fr);
+    align-items:center;
+    width:min(100%,390px);
+    min-height:116px;
+    padding:13px 0;
+    border-top:1px solid rgba(233,238,233,.2);
+    border-bottom:1px solid rgba(233,238,233,.2);
+    transition:
+      border-color 360ms var(--motion-ease,ease),
+      transform 360ms var(--motion-ease,ease);
+  }
+  .about-robotics-mark{
+    display:grid;
+    min-width:0;
+    place-items:center;
+    padding:0 16px 0 2px;
+  }
+  .about-robotics-divider{
+    width:1px;
+    height:72px;
+    background:linear-gradient(180deg,transparent,rgba(156,255,87,.72) 20%,rgba(156,255,87,.72) 80%,transparent);
+  }
+  .about-robotics-id{
+    display:grid;
+    min-width:0;
+    align-content:center;
+    padding-left:20px;
+  }
+  .about-robotics-eyebrow,
+  .about-robotics-location{
+    color:var(--paper-dim);
+    font:500 8px/1.15 var(--mono);
+    letter-spacing:.13em;
+    text-transform:uppercase;
+  }
+  .about-robotics-location{color:#61c4e3}
+  .about-robotics-number{
     display:block;
-    width:clamp(112px,10vw,148px);
+    margin:2px 0 5px;
+    color:var(--paper);
+    font:720 clamp(64px,6.4vw,82px)/.76 var(--display);
+    letter-spacing:-.035em;
+    white-space:nowrap;
+    transition:color 360ms var(--motion-ease,ease),text-shadow 360ms var(--motion-ease,ease);
+  }
+  .about-robotics-logo{
+    display:block;
+    width:100%;
+    max-width:138px;
     height:auto;
     object-fit:contain;
-    transform-origin:left bottom;
+    transform-origin:center;
     transition:transform 360ms var(--motion-ease,ease);
   }
   .about-repo-preview{
@@ -1396,12 +1462,15 @@
     }
     .about-area:hover .about-table-visual .ball{transform:translate3d(18px,-6px,0)}
     .about-area:hover .about-table-visual .racket{transform:rotate(-4deg)}
-    .about-robotics:hover .about-robotics-number{
-      color:rgba(156,255,87,.026);
-      -webkit-text-stroke-color:rgba(233,238,233,.56);
+    .about-robotics:hover .about-robotics-lockup{
+      border-color:rgba(156,255,87,.42);
       transform:translate3d(0,-3px,0);
     }
-    .about-robotics:hover .about-robotics-logo{transform:scale(1.02)}
+    .about-robotics:hover .about-robotics-number{
+      color:var(--amber);
+      text-shadow:0 0 18px rgba(156,255,87,.12);
+    }
+    .about-robotics:hover .about-robotics-logo{transform:scale(1.025)}
     .about-area:hover .about-mini-video img{
       opacity:.92;
       transform:scale(1.025);
@@ -2376,8 +2445,11 @@
     .about-area{min-height:auto}
     .about-area:nth-child(even){border-left:0}
     .about-area:nth-child(n+2){border-top:1px solid var(--line)}
-    .about-robotics-number{font-size:clamp(132px,22vw,170px)}
-    .about-robotics-logo{right:30vw;left:auto}
+    .about-robotics-stage{min-height:250px}
+    .about-robotics-result{width:min(100%,420px)}
+    .about-robotics-lockup{width:min(100%,420px);grid-template-columns:150px 1px minmax(0,1fr)}
+    .about-robotics-logo{max-width:148px}
+    .about-robotics-number{font-size:84px}
     .facts{grid-template-columns:minmax(0,1fr)}
     .signal-body{grid-template-columns:1fr}
     .signal-primary{border-right:0;border-bottom:1px solid var(--line)}
@@ -2424,10 +2496,25 @@
     .about-area{padding:30px 4px}
     .about-arrow{top:30px;right:4px}
     .about-area h3{font-size:30px}
-    .about-robotics-stage{min-height:180px;margin-top:24px}
-    .about-robotics-result{max-width:190px;font-size:17px}
-    .about-robotics-number{right:0;bottom:6px;font-size:clamp(108px,31vw,132px)}
-    .about-robotics-logo{right:auto;left:0;bottom:12px;width:104px}
+    .about-robotics-stage{min-height:224px;margin-top:24px}
+    .about-robotics-result{width:100%}
+    .about-robotics-result .result-track{
+      grid-template-columns:minmax(0,1fr) 18px minmax(0,1.08fr);
+      gap:7px;
+    }
+    .about-robotics-result .result-kicker{font-size:8px}
+    .about-robotics-result strong{font-size:16px}
+    .about-robotics-lockup{
+      grid-template-columns:116px 1px minmax(0,1fr);
+      width:100%;
+      min-height:100px;
+      padding:11px 0;
+    }
+    .about-robotics-mark{padding:0 12px 0 0}
+    .about-robotics-divider{height:62px}
+    .about-robotics-id{padding-left:16px}
+    .about-robotics-number{font-size:68px}
+    .about-robotics-logo{max-width:110px}
     .about-repo-row{grid-template-columns:minmax(70px,.32fr) minmax(0,1fr);gap:12px}
     .show-feature{min-height:0;padding:0}
     .show-copy{padding:24px}
@@ -2853,6 +2940,7 @@
     .about-arrow,
     .about-table-visual .ball,
     .about-table-visual .racket,
+    .about-robotics-lockup,
     .about-robotics-number,
     .about-robotics-logo,
     .about-mini-video img{transition:none!important;transform:none!important}
@@ -2970,9 +3058,29 @@
         <h3><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></h3>
         <p class="about-copy"><span data-lang="en">With FRC 6941 IronPulse, I build and iterate competition robots, then help turn that work into calm execution under match pressure.</span><span data-lang="zh">在 FRC 6941 IronPulse，我参与竞赛机器人的研发与迭代，并把工程推进转化为赛场压力下的稳定执行。</span></p>
         <div class="about-robotics-stage">
-          <p class="about-robotics-result"><span data-lang="en">Shanghai Regional Champions <span class="result-arrow">→</span> Houston Worlds</span><span data-lang="zh">上海区域赛冠军 <span class="result-arrow">→</span> 休斯顿世界赛</span></p>
-          <strong class="about-robotics-number" aria-hidden="true">6941</strong>
-          <img class="about-robotics-logo" src="/assets/ironpulse-logo.svg" width="809" height="445" loading="lazy" decoding="async" alt="" aria-hidden="true">
+          <p class="about-robotics-result">
+            <span class="result-track" data-lang="en">
+              <span class="result-stop"><span class="result-kicker">Shanghai Regional</span><strong>Champions</strong></span>
+              <span class="result-arrow" aria-hidden="true">→</span>
+              <span class="result-stop"><span class="result-kicker">Houston</span><strong>World Championship</strong></span>
+            </span>
+            <span class="result-track" data-lang="zh">
+              <span class="result-stop"><span class="result-kicker">上海区域赛</span><strong>冠军</strong></span>
+              <span class="result-arrow" aria-hidden="true">→</span>
+              <span class="result-stop"><span class="result-kicker">休斯顿</span><strong>世锦赛</strong></span>
+            </span>
+          </p>
+          <div class="about-robotics-lockup" aria-hidden="true">
+            <span class="about-robotics-mark">
+              <img class="about-robotics-logo" src="/assets/ironpulse-logo.svg" width="809" height="445" loading="lazy" decoding="async" alt="">
+            </span>
+            <span class="about-robotics-divider"></span>
+            <span class="about-robotics-id">
+              <span class="about-robotics-eyebrow">FRC TEAM</span>
+              <strong class="about-robotics-number">6941</strong>
+              <span class="about-robotics-location">IRONPULSE · SHANGHAI</span>
+            </span>
+          </div>
         </div>
       </a>
 
@@ -3051,7 +3159,7 @@
       <a class="fact fact-link fact-ironpulse rise" href="https://www.ironpulse.net/" rel="noopener" aria-label="IronPulse Robotics 6941 official website" data-motion-surface data-destination="IRONPULSE">
         <span class="fact-icon ironpulse-icon" aria-hidden="true"><img src="/assets/ironpulse-logo.svg" alt="" loading="lazy" decoding="async"></span>
         <p class="k"><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></p>
-        <p class="v">FRC 6941 IronPulse<br><small><span data-lang="en">Shanghai Regional Champions → Houston Worlds</span><span data-lang="zh">上海区域赛冠军 → 休斯顿世界赛</span></small><br><span class="fact-official">ironpulse.net ↗</span></p>
+        <p class="v">FRC 6941 IronPulse<br><small><span data-lang="en">Shanghai Regional Champions → Houston World Championship</span><span data-lang="zh">上海区域赛冠军 → 休斯顿世锦赛</span></small><br><span class="fact-official">ironpulse.net ↗</span></p>
       </a>
       <div class="fact rise"><p class="k"><span data-lang="en">Building</span><span data-lang="zh">在做</span></p><p class="v"><span data-lang="en">FindItem hardware</span><span data-lang="zh">FindItem 硬件</span><br><small><span data-lang="en">ESP32-C3 prototype · 30-bin architecture planning</span><span data-lang="zh">ESP32-C3 原型 · 30 箱架构规划</span></small></p></div>
     </div>
