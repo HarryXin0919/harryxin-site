@@ -1970,30 +1970,37 @@
     top:50%;
     left:50%;
     display:grid;
-    width:68px;
-    height:68px;
+    width:76px;
+    height:76px;
     place-items:center;
-    border:1px solid rgba(233,238,233,.62);
+    border:1px solid rgba(233,238,233,.7);
     border-radius:50%;
     color:var(--paper);
-    background:rgba(8,11,10,.7);
-    box-shadow:0 12px 42px rgba(0,0,0,.38);
+    background:rgba(8,11,10,.78);
+    box-shadow:0 12px 36px rgba(0,0,0,.38);
     transform:translate(-50%,-50%);
-    transition:color .22s ease,border-color .22s ease,background-color .22s ease,transform .22s ease;
-    -webkit-backdrop-filter:blur(8px);
-            backdrop-filter:blur(8px);
+    transition:color .22s ease,border-color .22s ease,background-color .22s ease,box-shadow .22s ease,transform .22s ease;
+    -webkit-backdrop-filter:blur(10px);
+            backdrop-filter:blur(10px);
   }
   .show-play svg{
-    width:25px;
-    height:25px;
+    width:34px;
+    height:34px;
     margin-left:3px;
     fill:currentColor;
+    transition:transform .22s ease;
   }
   .show-feature:hover .show-play{
-    border-color:var(--amber);
-    color:var(--ink);
-    background:var(--amber);
-    transform:translate(-50%,-50%) scale(1.06);
+    color:var(--amber);
+    border-color:rgba(156,255,87,.78);
+    background:rgba(8,11,10,.88);
+    box-shadow:
+      0 0 0 5px rgba(156,255,87,.1),
+      0 14px 40px rgba(0,0,0,.44);
+    transform:translate(-50%,-50%) scale(1.035);
+  }
+  .show-feature:hover .show-play svg{
+    transform:translateX(1px) scale(1.04);
   }
   .show-duration{
     position:absolute;
@@ -2425,8 +2432,8 @@
     .show-feature{min-height:0;padding:0}
     .show-copy{padding:24px}
     .show-cover::after{left:12px;bottom:12px;width:24px;height:24px}
-    .show-play{width:56px;height:56px}
-    .show-play svg{width:21px;height:21px}
+    .show-play{width:64px;height:64px}
+    .show-play svg{width:30px;height:30px}
     .show-duration{right:12px;bottom:12px}
     .show-feature h3{font-size:32px;line-height:1.12}
     .show-feature p{font-size:16px}
@@ -3005,7 +3012,7 @@
       <a class="show-feature rise" href="https://www.youtube.com/watch?v=aE1tZ9RmhG0" rel="noopener" data-motion-surface data-destination="YOUTUBE VIDEO">
         <div class="show-cover">
           <img src="https://i.ytimg.com/vi/aE1tZ9RmhG0/maxresdefault.jpg" width="1280" height="720" loading="lazy" decoding="async" alt="">
-          <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 6.7v10.6L17 12 8.5 6.7z"/></svg></span>
+          <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 2v20l18-10L3 2z"/></svg></span>
           <span class="show-duration" aria-hidden="true">01:08</span>
         </div>
         <div class="show-copy">
@@ -3019,7 +3026,7 @@
       <a class="show-feature rise" href="https://www.bilibili.com/video/BV18XN3z5EGH/" rel="noopener" data-motion-surface data-destination="BILIBILI VIDEO">
         <div class="show-cover">
           <img class="localized-video-cover" src="/assets/cross-club-variety-cover-en-16x9.jpg" data-cover-en="/assets/cross-club-variety-cover-en-16x9.jpg" data-cover-zh="/assets/cross-club-variety-cover.jpg" width="1600" height="900" loading="lazy" decoding="async" alt="">
-          <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 6.7v10.6L17 12 8.5 6.7z"/></svg></span>
+          <span class="show-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 2v20l18-10L3 2z"/></svg></span>
           <span class="show-duration" aria-hidden="true">24:31</span>
         </div>
         <div class="show-copy">
