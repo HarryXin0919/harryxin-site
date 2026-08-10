@@ -295,22 +295,22 @@ test("About is a four-part clickable index with evidence-led destinations", asyn
   );
   assert.match(
     aboutMatch[0],
-    /class="about-robotics-number" aria-hidden="true">6941<\/strong>/,
-    "Robotics must retain 6941 as its decorative visual anchor",
+    /class="about-robotics-lockup" aria-hidden="true"[\s\S]*?class="about-robotics-number">6941<\/strong>/,
+    "Robotics must group 6941 inside one decorative team lockup",
   );
   assert.match(
     aboutMatch[0],
-    /class="about-robotics-logo"[^>]*alt=""[^>]*aria-hidden="true"/,
-    "the IronPulse seal must remain decorative to assistive technology",
+    /class="about-robotics-logo"[^>]*alt=""/,
+    "the IronPulse seal must remain inside the decorative team lockup",
   );
   assert.match(
     aboutMatch[0],
-    /Shanghai Regional Champions[\s\S]*?Houston Worlds/,
+    /Shanghai Regional[\s\S]*?Champions[\s\S]*?Houston[\s\S]*?World Championship/,
     "Robotics needs the consolidated English competition result",
   );
   assert.match(
     aboutMatch[0],
-    /上海区域赛冠军[\s\S]*?休斯顿世界赛/,
+    /上海区域赛[\s\S]*?冠军[\s\S]*?休斯顿[\s\S]*?世锦赛/,
     "Robotics needs the consolidated Chinese competition result",
   );
   assert.doesNotMatch(
@@ -325,13 +325,18 @@ test("About is a four-part clickable index with evidence-led destinations", asyn
   );
   assert.match(
     homepage,
-    /\.about-robotics-stage\{[^}]*min-height:230px/,
+    /\.about-robotics-stage\{[^}]*min-height:250px/,
     "the desktop Robotics poster stage must retain its monumental height",
   );
   assert.match(
     homepage,
-    /\.about-robotics-number\{[^}]*clamp\(118px,12\.2vw,184px\)/,
-    "6941 must remain the dominant responsive visual",
+    /\.about-robotics-lockup\{[^}]*grid-template-columns:140px 1px minmax\(0,1fr\)/,
+    "the IronPulse mark and 6941 must use one stable technical plate",
+  );
+  assert.match(
+    homepage,
+    /\.about-robotics-number\{[^}]*clamp\(64px,6\.4vw,82px\)/,
+    "6941 must remain prominent without becoming a background watermark",
   );
   assert.match(
     homepage,
