@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">Harry Xin X-Bridge day icon</title>
+  <desc id="desc">A daylight HX monogram with an ink-black N-shaped structure and a vivid green diagonal.</desc>
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="#e8ece6" stroke="#c3cbc4"/>
+  <path fill="#0a0f0c" d="M8 6h11l26 40V6h11v52H45L19 18v40H8Z"/>
+  <path fill="#2f7818" d="M19 46v12l26-40V6Z"/>
+  <path fill="#0a0f0c" shape-rendering="crispEdges" d="M8 6h11v52H8ZM45 6h11v52H45Z"/>
+</svg>
