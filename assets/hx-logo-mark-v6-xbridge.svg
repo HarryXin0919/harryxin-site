@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">Harry Xin X-Bridge mark</title>
+  <desc id="desc">An HX monogram whose white N-shaped structure is crossed by a phosphor-green diagonal.</desc>
+  <path fill="#e9eee9" d="M8 6h11l26 40V6h11v52H45L19 18v40H8Z"/>
+  <path fill="#9cff57" d="M19 46v12l26-40V6Z"/>
+  <path fill="#e9eee9" shape-rendering="crispEdges" d="M8 6h11v52H8ZM45 6h11v52H45Z"/>
+</svg>
