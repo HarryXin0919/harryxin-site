@@ -479,8 +479,8 @@ test("route motion lasts 420ms and reduced motion navigates without delay", asyn
   assert.ok(reducedMotionUsesZeroDelay, "prefers-reduced-motion must navigate with zero delay");
   assert.match(
     homepage,
-    /\(\s*reduce\s*\|\|\s*mobileRoute\s*\)\s*\?\s*0\s*:\s*ROUTE_DURATION/,
-    "mobile and coarse pointers must navigate without a route delay",
+    /activeRouteDelay\s*=\s*\(\s*activeReducedRoute\s*\|\|\s*activeMobileRoute\s*\)\s*\?\s*0\s*:\s*ROUTE_DURATION/,
+    "current reduced-motion, App, mobile, and coarse-pointer states must navigate without a route delay",
   );
 });
 

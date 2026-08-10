@@ -26,6 +26,8 @@ async function createRouteHarness({ mobile = false } = {}) {
   const timers = new Map();
   const assigned = [];
   let nextTimerId = 1;
+  let mobileState = mobile;
+  let reducedState = false;
 
   const pageRoot = { classList: createClassList() };
   const transitionAttributes = new Map([["aria-hidden", "true"]]);
@@ -54,7 +56,9 @@ async function createRouteHarness({ mobile = false } = {}) {
     querySelectorAll: () => [],
   };
   const matchMedia = (query) => ({
-    matches: mobile && /max-width:\s*600px|pointer:\s*coarse/.test(query),
+    matches: /prefers-reduced-motion:\s*reduce/.test(query)
+      ? reducedState
+      : mobileState && /max-width:\s*600px|pointer:\s*coarse/.test(query),
   });
   const window = {
     innerWidth: 390,
@@ -117,6 +121,8 @@ async function createRouteHarness({ mobile = false } = {}) {
     documentListeners,
     pageRoot,
     runTimerAtDelay,
+    setMobile: (value) => { mobileState = value; },
+    setReduced: (value) => { reducedState = value; },
     timers,
     transitionAttributes,
     windowListeners,
@@ -155,6 +161,27 @@ test("mobile and coarse pointers navigate immediately without a route curtain", 
   assert.equal(harness.anchor.classList.contains("is-routing"), false);
   assert.equal(harness.transitionAttributes.get("aria-hidden"), "true");
   assert.equal(harness.timers.size, 0);
+});
+
+test("route delay follows the current viewport, App mode, and motion preference", async () => {
+  const expanded = await createRouteHarness({ mobile: true });
+  expanded.setMobile(false);
+  expanded.click();
+  assert.equal(expanded.assigned.length, 0, "expanded desktop should regain the route curtain");
+  assert.equal(expanded.pageRoot.classList.contains("is-leaving"), true);
+  expanded.runTimerAtDelay(420);
+
+  const reduced = await createRouteHarness();
+  reduced.setReduced(true);
+  reduced.click();
+  assert.deepEqual(reduced.assigned, ["https://www.youtube.com/@HarryXin"]);
+  assert.equal(reduced.timers.size, 0);
+
+  const appMode = await createRouteHarness();
+  appMode.pageRoot.classList.add("app-mode");
+  appMode.click();
+  assert.deepEqual(appMode.assigned, ["https://www.youtube.com/@HarryXin"]);
+  assert.equal(appMode.timers.size, 0);
 });
 
 test("focus before the desktop commit does not cancel navigation", async () => {
