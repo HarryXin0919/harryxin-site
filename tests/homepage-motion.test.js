@@ -477,6 +477,11 @@ test("route motion lasts 420ms and reduced motion navigates without delay", asyn
     /(?:reduce|reducedMotion|prefersReducedMotion)[^;\n]{0,180}\?\s*0\s*:\s*(?:420|[A-Za-z_$][\w$]*)/i.test(homepage)
     || /if\s*\(\s*(?:reduce|reducedMotion|prefersReducedMotion)\s*\)\s*\{[\s\S]{0,260}?(?:location\.(?:assign|replace)|location\.href\s*=|navigate\w*\s*\()/i.test(homepage);
   assert.ok(reducedMotionUsesZeroDelay, "prefers-reduced-motion must navigate with zero delay");
+  assert.match(
+    homepage,
+    /\(\s*reduce\s*\|\|\s*mobileRoute\s*\)\s*\?\s*0\s*:\s*ROUTE_DURATION/,
+    "mobile and coarse pointers must navigate without a route delay",
+  );
 });
 
 test("reveal and interaction transforms are composed instead of competing", async () => {

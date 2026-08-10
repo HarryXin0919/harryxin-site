@@ -70,6 +70,21 @@ test("homepage FindItem card links to the internal case study", async () => {
   );
 });
 
+test("FindItem skips its redundant loader on mobile and coarse pointers", async () => {
+  const page = await readFile(pageUrl, "utf8");
+  const loaderStart = page.indexOf("// ========== Loader: search the bins");
+  const loaderEnd = page.indexOf("// ========== Inertia smooth-scroll", loaderStart);
+  assert.ok(loaderStart >= 0 && loaderEnd > loaderStart, "FindItem loader block is missing");
+  const loader = page.slice(loaderStart, loaderEnd);
+
+  assert.match(loader, /matchMedia\(['"]\(max-width:\s*600px\),\s*\(pointer:\s*coarse\)['"]\)\.matches/);
+  assert.match(
+    loader,
+    /if\s*\(\s*reduce\s*\|\|\s*compact\s*\)\s*\{[^}]*classList\.remove\(['"]loading['"]\)[^}]*curtain\.remove\(\)[^}]*return/s,
+    "mobile FindItem must reveal content without a second full-screen loader",
+  );
+});
+
 test("FindItem metadata and navigation belong to harryxin.com", async () => {
   const page = await readFile(pageUrl, "utf8");
   const links = openingTags(page, "link");
