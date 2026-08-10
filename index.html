@@ -4435,14 +4435,21 @@
   /* Destination-aware routing. Ordinary activation uses the current tab so
      the handoff stays visible; modified/middle clicks keep browser defaults. */
   var ROUTE_DURATION = 420;
-  var routeDelay = reduce ? 0 : ROUTE_DURATION;
+  var ROUTE_RECOVERY_TIMEOUT = 2200;
+  var mobileRoute = window.matchMedia && matchMedia('(max-width: 600px), (pointer: coarse)').matches;
+  var routeDelay = (reduce || mobileRoute) ? 0 : ROUTE_DURATION;
   var routeTransition = document.getElementById('route-transition');
   var routeDestination = document.getElementById('route-destination');
   var routeTimer = null;
+  var routeWatchdog = null;
+  var routeCommitted = false;
   var routingAnchor = null;
   var resetRoute = function(){
     if (routeTimer) window.clearTimeout(routeTimer);
+    if (routeWatchdog) window.clearTimeout(routeWatchdog);
     routeTimer = null;
+    routeWatchdog = null;
+    routeCommitted = false;
     root.classList.remove('is-leaving');
     if (routingAnchor) routingAnchor.classList.remove('is-routing');
     routingAnchor = null;
@@ -4462,7 +4469,7 @@
 
     event.preventDefault();
     if (routeDelay === 0) {
-      window.location.assign(destinationUrl.href);
+      try { window.location.assign(destinationUrl.href); } catch(error) { resetRoute(); }
       return;
     }
     if (root.classList.contains('is-leaving')) return;
@@ -4480,8 +4487,19 @@
     }
     root.classList.add('is-leaving');
     routeTimer = window.setTimeout(function(){
-      window.location.assign(destinationUrl.href);
+      routeTimer = null;
+      routeCommitted = true;
+      try { window.location.assign(destinationUrl.href); } catch(error) { resetRoute(); }
     }, routeDelay);
+    /* Mobile app handoffs and cancelled navigations do not always emit
+       pageshow. Fail open so the curtain can never trap the current page. */
+    routeWatchdog = window.setTimeout(resetRoute, ROUTE_RECOVERY_TIMEOUT);
+  });
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden && routeCommitted && root.classList.contains('is-leaving')) resetRoute();
+  });
+  window.addEventListener('focus', function(){
+    if (routeCommitted && root.classList.contains('is-leaving')) resetRoute();
   });
   window.addEventListener('pageshow', function(event){
     resetRoute();

@@ -1962,6 +1962,7 @@
             const tagEl = document.getElementById('curtain-tag');
             const grid = document.getElementById('loader-grid');
             const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const compact = matchMedia('(max-width: 600px), (pointer: coarse)').matches;
             let revealed = false;
             function reveal(){
                 if (revealed || !root.classList.contains('loading')) return;
@@ -1969,7 +1970,9 @@
                 root.classList.remove('loading');                       // releases the paused hero entrance
                 if (curtain){ curtain.classList.add('done'); setTimeout(() => { if (curtain) curtain.remove(); }, 900); }
             }
-            if (reduce){ root.classList.remove('loading'); if (curtain) curtain.remove(); return; }
+            // The homepage already provides the mobile handoff. Avoid a second
+            // full-screen loader so the case study opens with app-like immediacy.
+            if (reduce || compact){ root.classList.remove('loading'); if (curtain) curtain.remove(); return; }
             // build a grid of bins
             const N = 15, boxes = [];
             if (grid){
