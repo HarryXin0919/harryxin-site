@@ -4123,6 +4123,7 @@
     var appExtras = document.querySelectorAll('[data-app-screen-extra]');
     var activeAppPage = '';
     var appScroll = Object.create(null);
+    var appReadingOffset = Object.create(null);
     var appFrame = null;
     var initialAppInteracted = false;
     var lastAppMediaMatch = appMedia ? appMedia.matches : false;
@@ -4160,6 +4161,19 @@
     };
     var currentScroll = function(){
       return window.pageYOffset || document.documentElement.scrollTop || 0;
+    };
+    var captureAppReadingOffset = function(){
+      if (!appMedia.matches || !activeAppPage || window.location.hash === '#main') return;
+      var screen = document.querySelector('[data-app-screen="' + activeAppPage + '"]');
+      if (!screen || typeof screen.getBoundingClientRect !== 'function') return;
+      var scroll = currentScroll();
+      var chrome = document.querySelector('.topbar');
+      var anchor = chrome && typeof chrome.getBoundingClientRect === 'function'
+        ? Math.max(0, chrome.getBoundingClientRect().bottom)
+        : 0;
+      var screenTop = scroll + screen.getBoundingClientRect().top;
+      appScroll[activeAppPage] = scroll;
+      appReadingOffset[activeAppPage] = Math.max(0, scroll + anchor - screenTop);
     };
     var setAppPart = function(part, visible){
       part.hidden = !visible;
@@ -4209,6 +4223,7 @@
       if (!isAppPage(id)) id = 'home';
 
       var previous = activeAppPage;
+      if (previous && previous !== id && !options.skipSave) captureAppReadingOffset();
       if (previous && previous !== id && !options.skipSave) appScroll[previous] = currentScroll();
       if (options.reset) appScroll[id] = 0;
 
@@ -4241,7 +4256,21 @@
         cancelAnimationFrame(appFrame);
         appFrame = null;
       }
-      if (activeAppPage) appScroll[activeAppPage] = currentScroll();
+      var mobileScroll = activeAppPage && Object.prototype.hasOwnProperty.call(appScroll,activeAppPage)
+        ? appScroll[activeAppPage]
+        : currentScroll();
+      var mobileScreen = activeAppPage ? document.querySelector('[data-app-screen="' + activeAppPage + '"]') : null;
+      var mobileChrome = document.querySelector('.topbar');
+      var mobileAnchor = mobileChrome && typeof mobileChrome.getBoundingClientRect === 'function'
+        ? Math.max(0, mobileChrome.getBoundingClientRect().bottom)
+        : 0;
+      var mobileScreenTop = mobileScreen && typeof mobileScreen.getBoundingClientRect === 'function'
+        ? mobileScroll + mobileScreen.getBoundingClientRect().top
+        : mobileScroll;
+      var pageOffset = activeAppPage && Object.prototype.hasOwnProperty.call(appReadingOffset,activeAppPage)
+        ? appReadingOffset[activeAppPage]
+        : Math.max(0, mobileScroll + mobileAnchor - mobileScreenTop);
+      if (activeAppPage) appScroll[activeAppPage] = mobileScroll;
       var desktopPage = activeAppPage;
       activeAppPage = '';
       root.classList.remove('app-mode');
@@ -4252,11 +4281,26 @@
       if (desktopPage) {
         setCurrentSection(desktopPage);
         var screen = document.querySelector('[data-app-screen="' + desktopPage + '"]');
-        if (screen && typeof screen.scrollIntoView === 'function') {
-          var previousScrollBehavior = root.style.scrollBehavior;
-          root.style.scrollBehavior = 'auto';
+        if (screen && typeof screen.getBoundingClientRect === 'function') {
+          var desktopChrome = document.querySelector('.topbar');
+          var desktopAnchor = desktopChrome && typeof desktopChrome.getBoundingClientRect === 'function'
+            ? Math.max(0, desktopChrome.getBoundingClientRect().bottom)
+            : 0;
+          var desktopScreenTop = currentScroll() + screen.getBoundingClientRect().top;
+          var desktopTarget = Math.max(0, desktopScreenTop + pageOffset - desktopAnchor);
+          var applyDesktopScroll = function(){
+            var previousScrollBehavior = root.style.scrollBehavior;
+            root.style.scrollBehavior = 'auto';
+            window.scrollTo(0, desktopTarget);
+            root.style.scrollBehavior = previousScrollBehavior;
+          };
+          applyDesktopScroll();
+          appFrame = requestAnimationFrame(function(){
+            appFrame = null;
+            applyDesktopScroll();
+          });
+        } else if (screen && typeof screen.scrollIntoView === 'function') {
           screen.scrollIntoView({block:'start', behavior:'auto'});
-          root.style.scrollBehavior = previousScrollBehavior;
         }
       }
       try {
@@ -4285,7 +4329,7 @@
       if (!id && event && event.type === 'popstate' && window.location.hash === '#main') id = 'home';
       if (!id) return;
       if (id === activeAppPage) {
-        if (event && event.state && event.state.anchor === 'main') scrollAppPage(id, 0, false);
+        if (event && event.state && event.state.anchor === 'main') scrollAppPage(id, 0, true);
         else if (event && event.type === 'popstate') {
           var savedTop = Object.prototype.hasOwnProperty.call(appScroll,id) ? appScroll[id] : 0;
           scrollAppPage(id, savedTop, true);
@@ -4311,6 +4355,7 @@
     document.addEventListener('touchstart', markInitialAppInteraction, {passive:true, once:true});
     document.addEventListener('wheel', markInitialAppInteraction, {passive:true, once:true});
     document.addEventListener('keydown', markInitialAppInteraction, {once:true});
+    window.addEventListener('scroll', captureAppReadingOffset, {passive:true});
 
     document.addEventListener('click', function(event){
       if (!appMedia.matches || event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;

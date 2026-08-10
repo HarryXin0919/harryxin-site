@@ -83,6 +83,9 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
   const root = createElement({ tagName: "html" });
   root.classList = createClassList();
   root.scrollTop = 0;
+  root.style = { scrollBehavior: "" };
+  const topbar = createElement({ tagName: "div", attributes: { class: "topbar" } });
+  topbar.getBoundingClientRect = () => ({ top: 8, bottom: 70, height: 62 });
 
   const screens = new Map(pageIds.map((id) => [
     id,
@@ -135,6 +138,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
       return [];
     },
     querySelector(selector) {
+      if (selector === ".topbar") return topbar;
       const match = selector.match(/^\[data-app-screen="([^"]+)"\]$/);
       return match ? screens.get(match[1]) || null : null;
     },
@@ -223,6 +227,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
   const setScroll = (value) => {
     window.pageYOffset = value;
     root.scrollTop = value;
+    dispatchWindow("scroll");
   };
   const setMobile = (value) => {
     appMedia.matches = value;
@@ -246,6 +251,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     setScroll,
     siteLinks,
     tabs,
+    topbar,
     window,
   };
 }
@@ -434,6 +440,14 @@ test("Skip-to-content history remembers the App page it belongs to", async () =>
   harness.dispatchWindow("hashchange", { type: "hashchange" });
   harness.flushFrames();
   assert.deepEqual(harness.scrollCalls.at(-1), [0, 400], "Back should restore the position before Skip");
+
+  const focusBeforeForward = harness.screens.get("about").heading.focusCount;
+  harness.location.hash = "#main";
+  harness.dispatchWindow("popstate", { type: "popstate", state: mainEntry.state });
+  harness.dispatchWindow("hashchange", { type: "hashchange" });
+  harness.flushFrames();
+  assert.deepEqual(harness.scrollCalls.at(-1), [0, 0]);
+  assert.equal(harness.screens.get("about").heading.focusCount, focusBeforeForward + 1);
 });
 
 test("each screen keeps its own scroll and a repeated tab returns to top", async () => {
@@ -489,6 +503,22 @@ test("leaving App mode cancels a pending mobile scroll frame", async () => {
   assert.equal(harness.scrollCalls.length, 0);
   assert.equal(harness.root.classList.contains("app-mode"), false);
   for (const id of pageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+});
+
+test("orientation changes preserve the reading offset inside the active page", async () => {
+  const harness = await createAppHarness({ hash: "#building" });
+  harness.flushFrames();
+  const building = harness.screens.get("building");
+  building.getBoundingClientRect = () => harness.root.classList.contains("app-mode")
+    ? { top: -330, bottom: 1670, height: 2000 }
+    : { top: 2000, bottom: 5000, height: 3000 };
+  harness.topbar.getBoundingClientRect = () => harness.root.classList.contains("app-mode")
+    ? { top: 8, bottom: 70, height: 62 }
+    : { top: 0, bottom: 80, height: 80 };
+  harness.setScroll(400);
+
+  harness.setMobile(false);
+  assert.deepEqual(harness.scrollCalls.at(-1), [0, 2720]);
 });
 
 test("re-entering App mode follows the desktop section instead of a stale hash", async () => {
