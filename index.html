@@ -10,20 +10,19 @@
 <meta property="og:description" content="IB student · FRC 6941 IronPulse · table tennis · open-source projects · content creation." />
 <meta property="og:url" content="https://harryxin.com/" />
 <meta property="og:type" content="website" />
-<meta id="theme-color" name="theme-color" content="#080b0a" />
+<meta id="theme-color" name="theme-color" content="#080b0a" data-theme-dark="#080b0a" data-theme-light="#f3f5ef" />
 <meta name="application-name" content="Harry Xin" />
 <meta name="apple-mobile-web-app-title" content="Harry Xin" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <link rel="icon" type="image/x-icon" href="/favicon.ico?v=7" />
-<link id="site-favicon" rel="icon" type="image/svg+xml" sizes="any" href="./assets/hx-logo-icon-v6-xbridge.svg?v=7" />
+<link id="site-favicon" rel="icon" type="image/svg+xml" sizes="any" href="/assets/hx-logo-icon-v6-xbridge.svg?v=7" data-theme-dark="/assets/hx-logo-icon-v6-xbridge.svg?v=7" data-theme-light="/assets/hx-logo-icon-v6-xbridge-day.svg?v=7" />
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=7" />
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=7" />
 <link rel="manifest" href="/site.webmanifest?v=7" />
 <script>
-  /* Restore the site theme before CSS is parsed so a saved light theme never
-     flashes through the night palette. The homepage owns a namespaced key;
-     project pages keep their independent theme choices. */
+  /* Restore the shared site theme before CSS is parsed so navigation between
+     the homepage and project pages never flashes the opposite palette. */
   (function(){
     var key = 'harryxin-theme';
     var saved = null;
@@ -39,9 +38,10 @@
     var color = document.getElementById('theme-color');
     var icon = document.getElementById('site-favicon');
     if (color) color.setAttribute('content', theme === 'light' ? '#f3f5ef' : '#080b0a');
-    if (icon) icon.setAttribute('href', theme === 'light' ? './assets/hx-logo-icon-v6-xbridge-day.svg?v=7' : './assets/hx-logo-icon-v6-xbridge.svg?v=7');
+    if (icon) icon.setAttribute('href', theme === 'light' ? '/assets/hx-logo-icon-v6-xbridge-day.svg?v=7' : '/assets/hx-logo-icon-v6-xbridge.svg?v=7');
   })();
 </script>
+<script src="/assets/site-theme.js" defer></script>
 <script>
   /* On phones, paint only the requested App page from the first frame. The
      controller below takes over after the DOM is ready; this timeout is a
@@ -1031,7 +1031,7 @@
   }
   .langsw button{
     min-width:34px;
-    min-height:38px;
+    min-height:44px;
     padding:0 6px;
     color:var(--paper-dim);
     font:inherit;
@@ -3248,7 +3248,7 @@
     display:inline-grid;
     grid-template-columns:17px auto;
     min-width:76px;
-    min-height:38px;
+    min-height:44px;
     padding:0 10px;
     align-items:center;
     justify-content:center;
@@ -3640,8 +3640,8 @@
     <span class="right">
       <span class="loc">SHANGHAI · 31°N &nbsp;·&nbsp; <span class="clk" id="clk">--:--</span> CST</span>
       <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Night theme. Switch to daylight / 夜间模式，切换到白昼" title="Switch to daylight theme">
-        <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.2 15.2A7.7 7.7 0 0 1 8.8 5.8 7.7 7.7 0 1 0 18.2 15.2Z"/></svg>
-        <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2.3M12 19.7V22M2 12h2.3M19.7 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg>
+        <svg class="theme-toggle__icon theme-toggle__icon--moon" data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.2 15.2A7.7 7.7 0 0 1 8.8 5.8 7.7 7.7 0 1 0 18.2 15.2Z"/></svg>
+        <svg class="theme-toggle__icon theme-toggle__icon--sun" data-theme-icon="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2.3M12 19.7V22M2 12h2.3M19.7 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg>
         <span class="theme-toggle__label" data-theme-label aria-hidden="true">NIGHT</span>
       </button>
       <span class="langsw" role="group" aria-label="Language / 语言">
@@ -4065,51 +4065,6 @@
     /* only keep a timer alive when the clock is actually visible (hidden on mobile) */
     if (fmt && clk.offsetParent !== null) setInterval(tick, 15000);
   }
-
-  /* ---------- daylight / night theme ---------- */
-  (function(){
-    var KEY = 'harryxin-theme';
-    var toggle = document.querySelector('[data-theme-toggle]');
-    if (!toggle) return;
-    var label = toggle.querySelector('[data-theme-label]');
-    var brand = document.querySelector('.brand-mark');
-    var favicon = document.getElementById('site-favicon');
-    var themeColor = document.getElementById('theme-color');
-    var systemQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme:light)') : null;
-    var saved = null;
-    try { saved = localStorage.getItem(KEY); } catch(e){}
-    if (saved !== 'light' && saved !== 'dark') saved = null;
-    var followsSystem = !saved;
-
-    var applyTheme = function(theme, persist){
-      theme = theme === 'light' ? 'light' : 'dark';
-      root.setAttribute('data-theme', theme);
-      root.style.colorScheme = theme;
-      toggle.setAttribute('aria-pressed', String(theme === 'light'));
-      toggle.setAttribute('aria-label', theme === 'light'
-        ? 'Daylight theme. Switch to night / 白昼模式，切换到夜间'
-        : 'Night theme. Switch to daylight / 夜间模式，切换到白昼');
-      toggle.setAttribute('title', theme === 'light' ? 'Switch to night theme' : 'Switch to daylight theme');
-      if (label) label.textContent = theme === 'light' ? 'DAY' : 'NIGHT';
-      if (brand) brand.setAttribute('src', theme === 'light' ? brand.getAttribute('data-logo-day') : brand.getAttribute('data-logo-night'));
-      if (favicon) favicon.setAttribute('href', theme === 'light' ? './assets/hx-logo-icon-v6-xbridge-day.svg?v=7' : './assets/hx-logo-icon-v6-xbridge.svg?v=7');
-      if (themeColor) themeColor.setAttribute('content', theme === 'light' ? '#f3f5ef' : '#080b0a');
-      if (persist) {
-        followsSystem = false;
-        try { localStorage.setItem(KEY, theme); } catch(e){}
-      }
-    };
-
-    applyTheme(root.getAttribute('data-theme') || window.__hxInitialTheme || 'dark', false);
-    toggle.addEventListener('click', function(){
-      applyTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light', true);
-    });
-    if (systemQuery) {
-      var syncSystemTheme = function(event){ if (followsSystem) applyTheme(event.matches ? 'light' : 'dark', false); };
-      if (systemQuery.addEventListener) systemQuery.addEventListener('change', syncSystemTheme);
-      else if (systemQuery.addListener) systemQuery.addListener(syncSystemTheme);
-    }
-  })();
 
   /* ---------- language switch (EN / 中) — runs regardless of motion pref ----------
      Pairs of <span data-lang="en|zh"> hold both copies; html.lang-en / .lang-zh

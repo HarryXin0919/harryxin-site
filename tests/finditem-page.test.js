@@ -197,17 +197,21 @@ test("FindItem remains a self-contained static simulation", async () => {
   assert.match(page, /aria-disabled/);
 });
 
-test("FindItem shares language preference and isolates its theme preference", async () => {
-  const page = await readFile(pageUrl, "utf8");
-  const readKeys = storageKeys(page, "getItem");
-  const writeKeys = storageKeys(page, "setItem");
+test("FindItem shares both language and site theme preferences", async () => {
+  const [page, sharedTheme] = await Promise.all([
+    readFile(pageUrl, "utf8"),
+    readFile(new URL("assets/site-theme.js", root), "utf8"),
+  ]);
+  const readKeys = storageKeys(`${page}\n${sharedTheme}`, "getItem");
+  const writeKeys = storageKeys(`${page}\n${sharedTheme}`, "setItem");
 
   assert.ok(readKeys.has("lang"), "expected localStorage to read lang");
   assert.ok(writeKeys.has("lang"), "expected localStorage to write lang");
-  assert.ok(readKeys.has("finditem-theme"), "expected localStorage to read finditem-theme");
-  assert.ok(writeKeys.has("finditem-theme"), "expected localStorage to write finditem-theme");
+  assert.ok(readKeys.has("harryxin-theme"), "expected localStorage to read the shared site theme");
+  assert.ok(writeKeys.has("harryxin-theme"), "expected localStorage to persist the shared site theme");
+  assert.doesNotMatch(`${page}\n${sharedTheme}`, /finditem-theme/, "FindItem must not keep an isolated theme preference");
   assert.ok(
     !readKeys.has("theme") && !writeKeys.has("theme"),
-    "the legacy generic theme key would conflict with other harryxin.com pages",
+    "the legacy generic theme key must not replace the namespaced shared preference",
   );
 });

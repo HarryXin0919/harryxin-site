@@ -4,6 +4,7 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 const homepageUrl = new URL("index.html", root);
+const sharedThemeUrl = new URL("assets/site-theme.js", root);
 const nightLogoUrl = new URL("assets/hx-logo-icon-v6-xbridge.svg", root);
 const dayLogoUrl = new URL("assets/hx-logo-icon-v6-xbridge-day.svg", root);
 
@@ -23,29 +24,40 @@ test("homepage ships a real accessible day and night control", async () => {
   assert.match(homepage, /min-height:44px/, "mobile theme control must retain a 44px target");
 });
 
-test("theme is restored before CSS and uses a homepage-scoped preference", async () => {
-  const homepage = await readFile(homepageUrl, "utf8");
+test("theme is restored before CSS and uses the shared site preference", async () => {
+  const [homepage, sharedTheme] = await Promise.all([
+    readFile(homepageUrl, "utf8"),
+    readFile(sharedThemeUrl, "utf8"),
+  ]);
   const styleIndex = homepage.indexOf("<style>");
-  const prepaintIndex = homepage.indexOf("var key = 'harryxin-theme'");
+  const prepaintIndex = homepage.indexOf("harryxin-theme");
 
   assert.ok(prepaintIndex > -1 && prepaintIndex < styleIndex, "saved theme must be restored before CSS is parsed");
   assert.match(homepage, /localStorage\.getItem\(key\)/);
-  assert.match(homepage, /localStorage\.setItem\(KEY, theme\)/);
-  assert.doesNotMatch(homepage, /localStorage\.(?:getItem|setItem)\(\s*['"]theme['"]/, "generic theme storage would collide with other pages");
+  assert.match(homepage, /src=["']\/assets\/site-theme\.js["'][^>]*\bdefer\b/);
+  assert.match(sharedTheme, /localStorage\.setItem\([^,]+,\s*theme\)/);
+  assert.doesNotMatch(`${homepage}\n${sharedTheme}`, /localStorage\.(?:getItem|setItem)\(\s*['"]theme['"]/, "generic theme storage would collide with other pages");
+  assert.doesNotMatch(`${homepage}\n${sharedTheme}`, /finditem-theme/, "all routes must share harryxin-theme");
   assert.match(homepage, /saved !== 'light' && saved !== 'dark'/, "stored values must be validated");
   assert.match(homepage, /prefers-color-scheme:light/, "first visit should follow the system color scheme");
 });
 
 test("manual theme keeps page chrome and brand assets in sync", async () => {
-  const homepage = await readFile(homepageUrl, "utf8");
+  const [homepage, sharedTheme] = await Promise.all([
+    readFile(homepageUrl, "utf8"),
+    readFile(sharedThemeUrl, "utf8"),
+  ]);
 
-  assert.match(homepage, /id="theme-color"/);
-  assert.match(homepage, /id="site-favicon"/);
+  assert.match(homepage, /id="theme-color"[^>]*data-theme-dark=["'][^"']+["'][^>]*data-theme-light=["'][^"']+["']/);
+  assert.match(homepage, /id="site-favicon"[^>]*data-theme-dark=["'][^"']+["'][^>]*data-theme-light=["'][^"']+["']/);
   assert.match(homepage, /data-logo-night="\.\/assets\/hx-logo-mark-v6-xbridge\.svg"/);
   assert.match(homepage, /data-logo-day="\.\/assets\/hx-logo-mark-v6-xbridge-day\.svg"/);
-  assert.match(homepage, /brand\.setAttribute\('src', theme === 'light'/);
-  assert.match(homepage, /favicon\.setAttribute\('href', theme === 'light'/);
-  assert.match(homepage, /themeColor\.setAttribute\('content', theme === 'light'/);
+  assert.match(sharedTheme, /data-logo-night/);
+  assert.match(sharedTheme, /data-logo-day/);
+  assert.match(sharedTheme, /data-theme-dark/);
+  assert.match(sharedTheme, /data-theme-light/);
+  assert.match(sharedTheme, /setAttribute\(["']href["']/);
+  assert.match(sharedTheme, /setAttribute\(["']content["']/);
 });
 
 test("daylight palette and both optical logo masters are present", async () => {

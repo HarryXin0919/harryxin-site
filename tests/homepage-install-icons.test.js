@@ -15,7 +15,7 @@ function openingTags(html, name) {
 }
 
 function relIncludes(tag, value) {
-  return (attribute(tag, "rel") || "").toLowerCase().split(/\\s+/).includes(value);
+  return (attribute(tag, "rel") || "").toLowerCase().split(/\s+/).includes(value);
 }
 
 function pngDimensions(buffer) {
@@ -33,7 +33,9 @@ test("homepage advertises the approved HX icon across browser, Windows, and Appl
 
   assert.ok(icons.some((tag) => attribute(tag, "href") === "/favicon.ico?v=7"));
   assert.ok(icons.some((tag) => attribute(tag, "href") === "/assets/favicon-32x32.png?v=7"));
-  assert.ok(icons.some((tag) => attribute(tag, "href") === "./assets/hx-logo-icon-v6-xbridge.svg?v=7"));
+  assert.ok(
+    icons.some((tag) => /(?:^|\/)assets\/hx-logo-icon-v6-xbridge\.svg\?v=7$/.test(attribute(tag, "href") || "")),
+  );
   assert.equal(attribute(touchIcon, "href"), "/assets/apple-touch-icon.png?v=7");
   assert.equal(attribute(touchIcon, "sizes"), "180x180");
   assert.equal(attribute(manifest, "href"), "/site.webmanifest?v=7");
@@ -107,7 +109,7 @@ test("raster and ICO fallbacks contain every declared install size", async () =>
   assert.deepEqual(sizes, [16, 32, 48, 256]);
 });
 
-test("all site entry pages use HX instead of the retired single-letter H favicon", async () => {
+test("all site entry pages expose the complete HX browser and install icon set", async () => {
   const pages = [
     "index.html",
     "projects/finditem/index.html",
@@ -116,9 +118,39 @@ test("all site entry pages use HX instead of the retired single-letter H favicon
   ];
   for (const page of pages) {
     const html = await readFile(new URL(page, root), "utf8");
+    const links = openingTags(html, "link");
+    const icons = links.filter((tag) => relIncludes(tag, "icon"));
+    const touchIcon = links.find((tag) => relIncludes(tag, "apple-touch-icon"));
+    const manifest = links.find((tag) => relIncludes(tag, "manifest"));
+
     assert.doesNotMatch(html, /href=["']\/assets\/favicon\.svg/);
-    assert.match(html, /hx-logo-icon-v6-xbridge\.svg\?v=7/);
-    assert.match(html, /rel="manifest" href="\/site\.webmanifest\?v=7"/);
+    assert.ok(
+      icons.some((tag) => attribute(tag, "href") === "/favicon.ico?v=7"),
+      `${page} is missing the ICO fallback`,
+    );
+    assert.ok(
+      icons.some((tag) => attribute(tag, "href") === "/assets/favicon-32x32.png?v=7"),
+      `${page} is missing the 32px PNG fallback`,
+    );
+    assert.ok(
+      icons.some((tag) => /(?:^|\/)assets\/hx-logo-icon-v6-xbridge\.svg\?v=7$/.test(attribute(tag, "href") || "")),
+      `${page} is missing the HX SVG favicon`,
+    );
+    assert.ok(
+      html.indexOf("/assets/favicon-32x32.png?v=7") > html.indexOf("/assets/hx-logo-icon-v6-xbridge.svg?v=7"),
+      `${page} must leave the raster favicon after SVG so iOS Chrome can prefer the compatible candidate`,
+    );
+    assert.equal(
+      attribute(touchIcon || "", "href"),
+      "/assets/apple-touch-icon.png?v=7",
+      `${page} is missing the Apple touch icon`,
+    );
+    assert.equal(attribute(touchIcon || "", "sizes"), "180x180");
+    assert.equal(
+      attribute(manifest || "", "href"),
+      "/site.webmanifest?v=7",
+      `${page} is missing the web app manifest`,
+    );
   }
 
   const legacy = await readFile(new URL("assets/favicon.svg", root), "utf8");
