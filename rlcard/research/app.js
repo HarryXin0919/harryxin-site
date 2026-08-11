@@ -1,800 +1,436 @@
-const byId = (id) => document.getElementById(id);
+(() => {
+  "use strict";
 
-const shanghaiClock = new Intl.DateTimeFormat("en-GB", {
-  timeZone: "Asia/Shanghai",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false,
-});
+  const REPORT_URL = "/rlcard/research/exploratory-report-v1.json";
+  const RUN_SNAPSHOT_URL = "/rlcard/research/latest-run-v1.json";
+  const STATUS_URL = "/api/rlcard/status";
+  const SVG_NS = "http://www.w3.org/2000/svg";
 
-const baselinePolicies = [
-  { label: "RANDOM", detail: "CONTROL", value: 1.4716049383, kind: "random" },
-  { label: "NFSP · 42", detail: "300K FINAL", value: 1.165778019, kind: "nfsp" },
-  { label: "NFSP · 123", detail: "300K FINAL", value: 1.1660827372, kind: "nfsp" },
-  { label: "NFSP · 2026", detail: "300K FINAL", value: 1.1887644074, kind: "nfsp" },
-  { label: "CFR", detail: "20K FINAL", value: 0.2950468803, kind: "cfr" },
-];
+  let reportSummary = null;
+  let latestStatus = null;
+  let renderedTelemetrySeries = false;
 
-const armLabels = {
-  terminal: "TERMINAL",
-  scaled: "SCALED",
-  "pbrs-cfr-a010": "PBRS · LOW",
-  "pbrs-cfr-a025": "PBRS · MID",
-};
+  const byId = (id) => document.getElementById(id);
+  const finite = (value) =>
+    value !== null && value !== "" && Number.isFinite(Number(value));
+  const number = (value) => Number(value);
+  const mean = (values) => values.reduce((sum, value) => sum + value, 0) / values.length;
+  const formatInteger = (value) =>
+    finite(value) ? Math.round(number(value)).toLocaleString("en-US") : "—";
 
-function svgNode(name, attributes = {}) {
-  const node = document.createElementNS("http://www.w3.org/2000/svg", name);
-  Object.entries(attributes).forEach(([key, value]) => {
-    node.setAttribute(key, String(value));
-  });
-  return node;
-}
-
-function renderExploitabilityChart() {
-  const grid = byId("chartGrid");
-  const bars = byId("chartBars");
-  const labels = byId("chartLabels");
-  grid.replaceChildren();
-  bars.replaceChildren();
-  labels.replaceChildren();
-
-  const width = 820;
-  const left = 156;
-  const right = 62;
-  const top = 34;
-  const rowHeight = 52;
-  const barHeight = 11;
-  const plotWidth = width - left - right;
-  const maxValue = 1.6;
-  const x = (value) => left + (value / maxValue) * plotWidth;
-
-  for (let tick = 0; tick <= 4; tick += 1) {
-    const value = (tick / 4) * maxValue;
-    const position = x(value);
-    grid.append(
-      svgNode("line", {
-        x1: position,
-        x2: position,
-        y1: 17,
-        y2: 297,
-        class: "chart-grid-line",
-      }),
-    );
-    const tickLabel = svgNode("text", {
-      x: position,
-      y: 318,
-      "text-anchor": tick === 0 ? "start" : tick === 4 ? "end" : "middle",
-      class: "chart-axis-label",
-    });
-    tickLabel.textContent = value.toFixed(1);
-    labels.append(tickLabel);
+  function assertFinite(value, label) {
+    if (!finite(value)) throw new TypeError(`${label} must be finite`);
+    return number(value);
   }
 
-  baselinePolicies.forEach((policy, index) => {
-    const y = top + index * rowHeight;
-    const policyLabel = svgNode("text", {
-      x: 0,
-      y: y + 4,
-      class: "chart-policy-label",
-    });
-    policyLabel.textContent = policy.label;
-    labels.append(policyLabel);
-
-    const policyDetail = svgNode("text", {
-      x: 0,
-      y: y + 18,
-      class: "chart-axis-label",
-    });
-    policyDetail.textContent = policy.detail;
-    labels.append(policyDetail);
-
-    bars.append(
-      svgNode("rect", {
-        x: left,
-        y: y - barHeight / 2,
-        width: plotWidth,
-        height: barHeight,
-        class: "chart-bar-track",
-      }),
-    );
-
-    bars.append(
-      svgNode("rect", {
-        x: left,
-        y: y - barHeight / 2,
-        width: Math.max(2, x(policy.value) - left),
-        height: barHeight,
-        class: `chart-bar ${policy.kind}`,
-        style: `animation-delay:${120 + index * 90}ms`,
-      }),
-    );
-
-    const valueLabel = svgNode("text", {
-      x: Math.min(x(policy.value) + 10, width - 2),
-      y: y + 4,
-      class: "chart-value-label",
-      "text-anchor": x(policy.value) > width - 95 ? "end" : "start",
-    });
-    valueLabel.textContent = policy.value.toFixed(3);
-    labels.append(valueLabel);
-  });
-}
-
-function updateClock() {
-  const now = new Date();
-  const value = shanghaiClock.format(now);
-  byId("clock").textContent = value;
-  byId("footerTime").textContent = `SHANGHAI ${value.slice(0, 5)}`;
-}
-
-function formatInteger(value) {
-  return Number.isFinite(value) ? Math.round(value).toLocaleString("en-US") : "—";
-}
-
-function formatMetric(value, digits = 3, signed = false) {
-  if (!Number.isFinite(value)) return "—";
-  const prefix = signed && value > 0 ? "+" : "";
-  return `${prefix}${value.toFixed(digits)}`;
-}
-
-function formatEta(seconds) {
-  if (!Number.isFinite(seconds)) return "ETA —";
-  if (seconds < 60) return `ETA ${Math.ceil(seconds)}S`;
-  if (seconds < 3600) return `ETA ${Math.ceil(seconds / 60)}M`;
-  return `ETA ${(seconds / 3600).toFixed(1)}H`;
-}
-
-function setLiveChartEmpty(title, detail) {
-  byId("liveChartEmptyTitle").textContent = title;
-  byId("liveChartEmptyDetail").textContent = detail;
-}
-
-function renderLiveChart(
-  series,
-  { completed = false, run = null, exploratory = false } = {},
-) {
-  const shell = byId("liveMetricChart").parentElement;
-  const grid = byId("liveChartGrid");
-  const line = byId("liveChartLine");
-  const pointsLayer = byId("liveChartPoints");
-  const labels = byId("liveChartLabels");
-  grid.replaceChildren();
-  pointsLayer.replaceChildren();
-  labels.replaceChildren();
-  line.removeAttribute("d");
-
-  const useExploitability = series.some((point) =>
-    Number.isFinite(point.exploitability),
-  );
-  const metricKey = useExploitability ? "exploitability" : "payoff";
-  const metricLabel = useExploitability ? "exploitability" : "payoff";
-  const armName = run
-    ? armLabels[run.arm] || String(run.arm || "").toUpperCase()
-    : "Pilot";
-  const runContext = run ? `${armName} · SEED ${run.seed}` : "Pilot";
-  byId("liveChartTitle").textContent = completed
-    ? `最近完成运行的真实 ${metricLabel} 曲线`
-    : `当前训练的实时 ${metricLabel} 曲线`;
-  byId("liveChartDescription").textContent = exploratory
-    ? `EXPLORATORY · SINGLE ARM/SEED — ${runContext} 的真实本机 CSV 指标；不是跨 seed 汇总，也不是验证性结果。`
-    : completed
-      ? `${runContext} 的真实本机 CSV 指标；这里只展示这一运行，不是跨 seed 汇总。`
-      : `${runContext} 的实时本机 CSV 指标。`;
-  const points = series
-    .filter(
-      (point) =>
-        Number.isFinite(point.progress) && Number.isFinite(point[metricKey]),
-    )
-    .slice(-100);
-
-  if (points.length === 0) {
-    shell.classList.remove("has-data");
-    return;
-  }
-
-  shell.classList.add("has-data");
-
-  const width = 980;
-  const height = 220;
-  const left = 54;
-  const right = 24;
-  const top = 22;
-  const bottom = 32;
-  const plotWidth = width - left - right;
-  const plotHeight = height - top - bottom;
-  const xValues = points.map((point) => point.progress);
-  const yValues = points.map((point) => point[metricKey]);
-  let xMin = Math.min(...xValues);
-  let xMax = Math.max(...xValues);
-  let yMin = Math.min(...yValues);
-  let yMax = Math.max(...yValues);
-  if (xMin === xMax) {
-    xMin = Math.max(0, xMin - 1);
-    xMax += 1;
-  }
-  if (yMin === yMax) {
-    const padding = Math.max(Math.abs(yMin) * 0.08, 0.05);
-    yMin -= padding;
-    yMax += padding;
-  } else {
-    const padding = (yMax - yMin) * 0.14;
-    yMin -= padding;
-    yMax += padding;
-  }
-
-  const x = (value) => left + ((value - xMin) / (xMax - xMin)) * plotWidth;
-  const y = (value) => top + (1 - (value - yMin) / (yMax - yMin)) * plotHeight;
-
-  for (let tick = 0; tick <= 4; tick += 1) {
-    const yValue = yMin + ((yMax - yMin) * tick) / 4;
-    const yPosition = y(yValue);
-    grid.append(
-      svgNode("line", {
-        x1: left,
-        x2: width - right,
-        y1: yPosition,
-        y2: yPosition,
-        class: "live-chart-grid-line",
-      }),
-    );
-    const yLabel = svgNode("text", {
-      x: left - 9,
-      y: yPosition + 3,
-      "text-anchor": "end",
-      class: "live-chart-axis-label",
-    });
-    yLabel.textContent = yValue.toFixed(2);
-    labels.append(yLabel);
-  }
-
-  const path = points
-    .map(
-      (point, index) =>
-        `${index === 0 ? "M" : "L"} ${x(point.progress).toFixed(2)} ${y(
-          point[metricKey],
-        ).toFixed(2)}`,
-    )
-    .join(" ");
-  line.setAttribute("d", path);
-
-  points.forEach((point, index) => {
-    if (index % Math.max(1, Math.ceil(points.length / 18)) !== 0 && index < points.length - 1) {
-      return;
+  function validateMetric(metric, label, expectedSeeds) {
+    if (!metric || metric.differenceDirection !== "scaled_minus_terminal") {
+      throw new TypeError(`${label} has the wrong comparison direction`);
     }
-    pointsLayer.append(
-      svgNode("circle", {
-        cx: x(point.progress),
-        cy: y(point[metricKey]),
-        r: index === points.length - 1 ? 4 : 2.5,
-        class: "live-chart-point",
-      }),
-    );
-  });
+    if (!Array.isArray(metric.perSeed) || metric.perSeed.length !== expectedSeeds.length) {
+      throw new TypeError(`${label} must contain one row per seed`);
+    }
 
-  const firstLabel = svgNode("text", {
-    x: left,
-    y: height - 10,
-    class: "live-chart-axis-label",
-  });
-  firstLabel.textContent = formatInteger(points[0].progress);
-  const lastLabel = svgNode("text", {
-    x: width - right,
-    y: height - 10,
-    "text-anchor": "end",
-    class: "live-chart-axis-label",
-  });
-  lastLabel.textContent = formatInteger(points.at(-1).progress);
-  labels.append(firstLabel, lastLabel);
-}
+    const seen = new Set();
+    metric.perSeed.forEach((row, index) => {
+      const seed = assertFinite(row && row.seed, `${label}.perSeed[${index}].seed`);
+      if (!Number.isInteger(seed) || seen.has(seed) || !expectedSeeds.includes(seed)) {
+        throw new TypeError(`${label} contains an invalid or duplicate seed`);
+      }
+      seen.add(seed);
+      const terminal = assertFinite(row.terminal, `${label}.perSeed[${index}].terminal`);
+      const scaled = assertFinite(row.scaled, `${label}.perSeed[${index}].scaled`);
+      const difference = assertFinite(row.difference, `${label}.perSeed[${index}].difference`);
+      if (Math.abs(scaled - terminal - difference) > 1e-8) {
+        throw new TypeError(`${label} contains an inconsistent paired difference`);
+      }
+    });
 
-function resetResearchSignal(data) {
-  const connection = data?.connectionState || "OFFLINE";
-  const apiReachable = connection !== "OFFLINE";
-  const liveChip = byId("liveDataState");
-
-  byId("heroPhaseCode").textContent = "R2—--";
-  byId("phaseNumber").textContent = "--";
-  byId("phaseDial").style.setProperty("--phase-progress", "0deg");
-  byId("currentPhaseLabel").textContent = "尚未启动 / AWAITING DATA";
-  byId("cohortRunLabel").textContent = "EXPLORATORY RUNS";
-  byId("pilotRunCount").textContent = "0 / 20 PLANNED";
-  byId("researchTelemetryState").textContent = apiReachable
-    ? "IDLE · NO RESEARCH PAYLOAD"
-    : "OFFLINE · UNAVAILABLE";
-  byId("phaseCaptionRight").textContent = apiReachable
-    ? "TRAINING IDLE"
-    : "STATUS UNAVAILABLE";
-  const pipelineChip = byId("pipelineChip");
-  const pipelineState = apiReachable ? "idle" : "offline";
-  pipelineChip.className = `chip ${pipelineState}`;
-  pipelineChip.dataset.state = pipelineState;
-  pipelineChip.textContent = apiReachable
-    ? "IDLE · NO LIVE PHASE"
-    : "OFFLINE · STATUS UNAVAILABLE";
-
-  liveChip.className = `chip ${apiReachable ? "idle" : "offline"}`;
-  liveChip.textContent = apiReachable
-    ? "IDLE · 尚未启动"
-    : "OFFLINE · 无法确认";
-
-  document.querySelectorAll("[data-phase]").forEach((row) => {
-    row.classList.remove("complete", "active", "blocked");
-    const statusNode = row.querySelector("em");
-    if (statusNode) statusNode.textContent = "AWAITING DATA";
-  });
-  document.querySelectorAll("[data-arm-id]").forEach((card) => {
-    card.dataset.status = "pending";
-    const statusNode = card.querySelector("[data-arm-status]");
-    if (statusNode) statusNode.textContent = "WAITING · 0/3";
-  });
-
-  byId("liveArm").textContent = apiReachable ? "尚未启动" : "STATUS UNAVAILABLE";
-  byId("liveRunHeading").textContent = "实时研究数据 / Live Run";
-  byId("liveSeed").textContent = "—";
-  byId("liveProgress").textContent = "0 / 20 RUNS";
-  byId("liveExploitability").textContent = "—";
-  byId("livePayoff").textContent = "—";
-  byId("liveThroughputLabel").textContent = "THROUGHPUT / ETA";
-  byId("liveThroughput").textContent = "—";
-  byId("liveProgressFill").style.width = "0%";
-  byId("liveProgressTrack").setAttribute("aria-valuenow", "0");
-  setLiveChartEmpty(
-    "EXPLORATORY SERIES AWAITING START",
-    "探索运行启动后这里只显示当前 arm / seed 的真实 CSV 指标。",
-  );
-  renderLiveChart([]);
-
-  if (apiReachable && data?.capturedAt) {
-    const captured = new Date(data.capturedAt);
-    const capturedLabel = Number.isNaN(captured.getTime())
-      ? "—"
-      : shanghaiClock.format(captured);
-    byId("lastSignal").textContent =
-      `LAST API SIGNAL ${capturedLabel} CST · NO RESEARCH PAYLOAD`;
-  } else {
-    byId("lastSignal").textContent = "LAST SIGNAL —";
-  }
-  byId("disclosureLiveState").textContent = apiReachable
-    ? "API 在线，但尚未收到第二阶段 research 数据；训练状态为 IDLE / 尚未启动。"
-    : "当前无法连接公开 API，因此无法确认第二阶段训练状态。";
-}
-
-function applyResearchSignal(data) {
-  const research = data?.research;
-  const connection = data?.connectionState || "OFFLINE";
-  const liveChip = byId("liveDataState");
-
-  liveChip.className = "chip";
-  if (!research) {
-    resetResearchSignal(data);
-    return;
+    return metric.perSeed;
   }
 
-  const phase = research.phase;
-  const run = research.currentRun;
-  const completedRuns = Number(research.completedRuns);
-  const totalRuns = Number(research.totalRuns);
-  const isExploratory =
-    research.cohort === "exploratory" ||
-    research.protocolMode === "post_outcome_exploratory";
-  const cohortComplete =
-    totalRuns > 0 &&
-    completedRuns >= totalRuns &&
-    research.state !== "queued" &&
-    !(research.state === "running" && phase < 7);
-  const pilotComplete = !isExploratory && cohortComplete;
-  const exploratoryComplete =
-    isExploratory && cohortComplete && research.state === "complete";
-  const reporting =
-    isExploratory && phase === 7 && research.state === "running";
-  const blocked = research.state === "blocked";
-  const reportBlocked =
-    isExploratory && phase === 7 && cohortComplete && blocked;
-  const queued =
-    !blocked && (research.state === "queued" || run?.status === "pending");
-  const paused = run?.status === "paused";
-  const completedSnapshot = run?.status === "complete";
-  const noCandidate =
-    research.selection?.status === "no_candidate_promoted" || phase === 5;
-  const awaitingSelection = pilotComplete && phase === 5 && !research.selection;
-  byId("heroPhaseCode").textContent = `R2—${String(phase).padStart(2, "0")}`;
-  byId("phaseNumber").textContent = String(phase).padStart(2, "0");
-  byId("phaseDial").style.setProperty(
-    "--phase-progress",
-    `${((phase / 7) * 360).toFixed(2)}deg`,
-  );
-  byId("currentPhaseLabel").textContent = research.phaseLabel;
-  byId("cohortRunLabel").textContent = isExploratory
-    ? "EXPLORATORY RUNS"
-    : "PILOT RUNS";
-  byId("pilotRunCount").textContent =
-    `${research.completedRuns} / ${research.totalRuns} COMPLETE`;
-  if (isExploratory) {
-    byId("studyModeLabel").textContent =
-      "POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY";
-  }
-
-  const researchState = research.state.toUpperCase();
-  const effectiveState =
-    connection === "LIVE"
-      ? blocked
-        ? "blocked"
-        : paused
-        ? "paused"
-        : queued
-          ? "queued"
-          : exploratoryComplete && !reporting
-        ? "complete"
-        : pilotComplete
-        ? "complete"
-        : research.state
-      : connection.toLowerCase();
-  liveChip.classList.add(effectiveState);
-  if (connection === "LIVE" && blocked) {
-    liveChip.textContent = isExploratory
-      ? reportBlocked
-        ? "BLOCKED · REPORT FAILED"
-        : "BLOCKED · PREFLIGHT FAILED"
-      : "BLOCKED · DATA INVALID";
-  } else if (connection === "LIVE" && reporting) {
-    liveChip.textContent = "REPORTING · EXPLORATORY";
-  } else if (connection === "LIVE" && isExploratory && exploratoryComplete) {
-    liveChip.textContent = "EXPLORATORY COMPLETE · REPORT SAVED";
-  } else if (connection === "LIVE" && isExploratory && queued) {
-    liveChip.textContent = "QUEUED · AWAITING GPU";
-  } else if (connection === "LIVE" && isExploratory && paused) {
-    liveChip.textContent = "PAUSED · CHECKPOINT SAVED";
-  } else if (connection === "LIVE" && isExploratory && research.state === "running") {
-    liveChip.textContent = "EXPLORATORY RUN · LIVE";
-  } else if (connection === "LIVE" && pilotComplete) {
-    liveChip.textContent = awaitingSelection
-      ? "PILOT COMPLETE · AWAITING SELECTION"
-      : noCandidate
-        ? "NO CANDIDATE PROMOTED · COMPLETE"
-        : "PILOT COMPLETE · TELEMETRY LIVE";
-  } else if (connection === "LIVE" && research.state === "running") {
-    liveChip.textContent = "TRAINING LIVE";
-  } else if (connection === "LIVE" && research.state === "idle") {
-    liveChip.textContent = "TELEMETRY LIVE · TRAINING IDLE";
-  } else {
-    liveChip.textContent = `${connection} · ${researchState}`;
-  }
-  byId("researchTelemetryState").textContent =
-    connection === "LIVE" && blocked
-      ? "LIVE · BLOCKED"
-      : connection === "LIVE" && isExploratory
-      ? `LIVE · ${reporting ? "REPORTING" : researchState} · EXPLORATORY`
-      : connection === "LIVE" && pilotComplete
-        ? "LIVE · PILOT COMPLETE"
-      : `${connection} · ${researchState}`;
-  byId("phaseCaptionRight").textContent = reporting
-    ? "EXPLORATORY REPORT · BUILDING"
-    : blocked
-      ? isExploratory
-        ? reportBlocked
-          ? "REPORT BLOCKED · NOT SAVED"
-          : "EXTENSION BLOCKED · NO GPU START"
-        : "TELEMETRY BLOCKED · DATA INVALID"
-    : isExploratory && queued
-      ? "EXTENSION QUEUED · PREFLIGHT"
-      : isExploratory && paused
-        ? "EXTENSION PAUSED · RESUMABLE"
-        : isExploratory && exploratoryComplete
-          ? "20 / 20 · REPORT SAVED"
-          : awaitingSelection
-            ? "PILOT COMPLETE · SELECT NEXT"
-            : research.state === "running"
-              ? isExploratory
-                ? "EXPLORATORY · NOT CONFIRMATORY"
-                : "EXPERIMENT ACTIVE"
-      : `${researchState} · VERIFIED`;
-  const pipelineChip = byId("pipelineChip");
-  const pipelineState =
-    connection === "LIVE"
-      ? blocked
-        ? "blocked"
-        : paused
-        ? "paused"
-        : research.state
-      : connection.toLowerCase();
-  pipelineChip.className = `chip ${pipelineState}`;
-  pipelineChip.dataset.state = pipelineState;
-  pipelineChip.textContent =
-    `${String(phase).padStart(2, "0")} / 07 ${researchState}`;
-
-  document.querySelectorAll("[data-phase]").forEach((row) => {
-    row.classList.remove("complete", "active", "blocked");
-    const statusNode = row.querySelector("em");
-    if (statusNode) statusNode.textContent = "PENDING";
-  });
-  research.milestones.forEach((milestone) => {
-    const phaseNumber = Number.parseInt(milestone.id, 10);
-    const row = document.querySelector(`[data-phase="${phaseNumber}"]`);
-    if (!row) return;
-    row.classList.remove("complete", "active", "blocked");
-    if (milestone.status !== "pending") row.classList.add(milestone.status);
-    const statusNode = row.querySelector("em");
-    if (statusNode) statusNode.textContent = milestone.status.toUpperCase();
-  });
-
-  document.querySelectorAll("[data-arm-id]").forEach((card) => {
-    card.dataset.status = "pending";
-    const statusNode = card.querySelector("[data-arm-status]");
-    if (!statusNode) return;
+  function summarizeReport(report) {
+    if (!report || report.schemaVersion !== 1) {
+      throw new TypeError("Unsupported report schema");
+    }
     if (
-      isExploratory &&
-      !["terminal", "scaled"].includes(card.dataset.armId)
+      report.studyId !== "leduc-reward-exploratory-scaled-v1" ||
+      report.analysisType !== "post_outcome_exploratory" ||
+      report.confirmatory !== false
     ) {
-      card.dataset.status = "complete";
-      statusNode.textContent = "PILOT COMPLETE · NOT EXTENDED";
-    } else {
-      statusNode.textContent = isExploratory
-        ? "WAITING · 0/10"
-        : "WAITING · 0/3";
+      throw new TypeError("This page only accepts the frozen exploratory report");
     }
-  });
-  research.arms.forEach((arm) => {
-    const card = document.querySelector(`[data-arm-id="${arm.id}"]`);
-    if (!card) return;
-    card.dataset.status = arm.status;
-    const statusNode = card.querySelector("[data-arm-status]");
-    if (statusNode) {
-      const progress =
-        arm.status === "running" ? ` · ${Math.round(arm.fraction * 100)}%` : "";
-      statusNode.textContent =
-        `${arm.status.toUpperCase()} · ${arm.completedRuns}/${arm.totalRuns}${progress}`;
+    if (
+      !Array.isArray(report.seeds) ||
+      report.seeds.length !== 10 ||
+      new Set(report.seeds).size !== report.seeds.length ||
+      report.seeds.some((seed) => !Number.isInteger(seed))
+    ) {
+      throw new TypeError("The report must contain ten unique integer seeds");
     }
-  });
+    if (report.completedRuns !== 20 || report.totalEpisodes !== 6000000) {
+      throw new TypeError("The frozen report must contain all twenty runs");
+    }
 
-  byId("liveRunHeading").textContent = isExploratory
-    ? "探索延长数据 / Exploratory Run"
-    : "实时研究数据 / Live Run";
-  byId("liveThroughputLabel").textContent = "THROUGHPUT / ETA";
-  setLiveChartEmpty(
-    isExploratory ? "EXPLORATORY RUN QUEUED" : "NO TRAINING SERIES YET",
-    isExploratory
-      ? "当前仅展示单个 arm / seed 的真实 CSV；训练落下首个指标点后曲线才会出现。"
-      : "遥测链路会保持在线；Pilot 启动后这里只显示真实 CSV 指标。",
-  );
-  if (run) {
-    if (blocked) {
-      byId("liveRunHeading").textContent = reportBlocked
-        ? "报告受阻 / Report Blocked"
-        : isExploratory
-          ? "启动受阻 / Preflight Blocked"
-          : "数据受阻 / Data Blocked";
-      byId("liveThroughputLabel").textContent = reportBlocked
-        ? "REPORT STATUS"
-        : isExploratory
-          ? "PREFLIGHT STATUS"
-          : "DATA STATUS";
-      setLiveChartEmpty(
-        reportBlocked
-          ? "BLOCKED · REPORT NOT SAVED"
-          : isExploratory
-            ? "BLOCKED · NO GPU START"
-            : "BLOCKED · DATA INVALID",
-        reportBlocked
-          ? "20 / 20 个探索运行已经完成，但探索性报告生成失败；页面不会把它标记为已保存。"
-          : isExploratory
-            ? "安全预检未通过；GPU 未启动。修复条件并重新预检后才会进入运行态。"
-            : "研究遥测未通过数据合同校验；页面不会把无效状态标记为已完成。",
-      );
-    } else if (completedSnapshot) {
-      byId("liveRunHeading").textContent = "最近完成运行 / Latest Completed Run";
-      byId("liveThroughputLabel").textContent = "RUN STATUS";
-      setLiveChartEmpty(
-        "COMPLETED SNAPSHOT PENDING",
-        isExploratory
-          ? "探索运行已完成；正在等待这一个 arm / seed 的真实 CSV 快照同步。"
-          : "Pilot 已完成；正在等待最近一次真实 CSV 快照同步。",
-      );
-    } else if (queued) {
-      byId("liveRunHeading").textContent = "下一计划运行 / Next Queued Run";
-      byId("liveThroughputLabel").textContent = "QUEUE STATUS";
-      setLiveChartEmpty(
-        "QUEUED · NO CSV YET",
-        "预检通过并启动 GPU 后，这里会显示该 arm / seed 的真实 300K 曲线。",
-      );
-    } else if (paused) {
-      byId("liveRunHeading").textContent = "暂停运行 / Paused Run";
-      byId("liveThroughputLabel").textContent = "RESUME STATUS";
-    }
-    byId("liveArm").textContent = armLabels[run.arm] || run.arm.toUpperCase();
-    byId("liveSeed").textContent = String(run.seed);
-    byId("liveProgress").textContent =
-      `${formatInteger(run.progress)} / ${formatInteger(run.target)}`;
-    byId("liveExploitability").textContent = formatMetric(
-      run.latestExploitability,
-      3,
+    const finalRows = validateMetric(
+      report.metrics && report.metrics.finalExploitability,
+      "finalExploitability",
+      report.seeds,
     );
-    byId("livePayoff").textContent = formatMetric(run.latestPayoff, 3, true);
-    byId("liveThroughput").textContent = blocked
-      ? reportBlocked
-        ? "BLOCKED · REPORT NOT SAVED"
-        : isExploratory
-          ? "BLOCKED · NO GPU START"
-          : "BLOCKED · DATA INVALID"
-      : completedSnapshot
-        ? "COMPLETE · SAVED"
-        : queued
-        ? "QUEUED · AWAITING GPU"
-        : paused
-          ? "PAUSED · CHECKPOINT SAVED"
-          : `${formatMetric(run.speed, 1)} /S · ${formatEta(run.etaSeconds)}`;
-    const percent = Math.max(0, Math.min(100, run.fraction * 100));
-    byId("liveProgressFill").style.width = `${percent}%`;
-    byId("liveProgressTrack").setAttribute("aria-valuenow", percent.toFixed(1));
-  } else if (cohortComplete) {
-    byId("liveRunHeading").textContent = reportBlocked
-      ? "报告受阻 / Report Blocked"
-      : blocked
-        ? "数据受阻 / Data Blocked"
-      : isExploratory
-        ? "探索延长已完成 / Exploratory Complete"
-        : "Pilot 已完成 / Pilot Complete";
-    byId("liveArm").textContent = reportBlocked
-      ? "20 / 20 · REPORT BLOCKED"
-      : blocked
-        ? "BLOCKED · DATA INVALID"
-      : isExploratory
-      ? reporting
-        ? "REPORTING · EXPLORATORY"
-        : "EXPLORATORY COMPLETE"
-      : awaitingSelection
-        ? "AWAITING SELECTION"
-        : "PILOT COMPLETE";
-    byId("liveSeed").textContent = "—";
-    byId("liveProgress").textContent =
-      `${research.completedRuns} / ${research.totalRuns} RUNS`;
-    byId("liveExploitability").textContent = "—";
-    byId("livePayoff").textContent = "—";
-    byId("liveThroughputLabel").textContent = "RUN STATUS";
-    byId("liveThroughput").textContent = reportBlocked
-      ? "BLOCKED · REPORT NOT SAVED"
-      : blocked
-        ? "BLOCKED · DATA INVALID"
-      : reporting
-        ? "REPORTING · EXPLORATORY"
-        : "COMPLETED SNAPSHOT PENDING";
-    byId("liveProgressFill").style.width = "100%";
-    byId("liveProgressTrack").setAttribute("aria-valuenow", "100");
-    setLiveChartEmpty(
-      isExploratory ? "20 / 20 EXPLORATORY RUNS COMPLETE" : "PILOT COMPLETE",
-      isExploratory
-        ? "探索性延长已完成；最近一个 arm / seed 的真实 CSV 快照正在同步。"
-        : "12 / 12 个 Pilot 已完成；最近运行的真实 CSV 快照正在同步。",
+    const aucRows = validateMetric(
+      report.metrics && report.metrics.exploitabilityAuc,
+      "exploitabilityAuc",
+      report.seeds,
     );
-  } else {
-    byId("liveArm").textContent =
-      isExploratory && research.state === "queued"
-        ? "NEXT RUN SNAPSHOT PENDING"
-        : research.state === "running"
-          ? "STARTING RUN"
-          : "NO ACTIVE RUN";
-    byId("liveSeed").textContent = "—";
-    byId("liveProgress").textContent =
-      `${research.completedRuns} / ${research.totalRuns} RUNS`;
-    byId("liveExploitability").textContent = "—";
-    byId("livePayoff").textContent = "—";
-    byId("liveThroughput").textContent = "—";
-    byId("liveProgressFill").style.width = "0%";
-    byId("liveProgressTrack").setAttribute("aria-valuenow", "0");
-  }
-
-  renderLiveChart(research.series, {
-    completed: completedSnapshot || cohortComplete,
-    run,
-    exploratory: isExploratory,
-  });
-  const captured = new Date(data.capturedAt);
-  const capturedLabel = Number.isNaN(captured.getTime())
-    ? "—"
-    : shanghaiClock.format(captured);
-  const age = Number.isFinite(data.ageSeconds)
-    ? `${Math.round(data.ageSeconds)}S AGO`
-    : "AGE —";
-  byId("lastSignal").textContent = `LAST SIGNAL ${capturedLabel} CST · ${age}`;
-  byId("disclosureLiveState").textContent =
-    connection === "LIVE" && isExploratory
-      ? blocked
-        ? reportBlocked
-          ? "20 / 20 个探索运行已经完成，但探索性报告生成失败且尚未保存；页面不会把该状态伪装成完成。"
-          : "探索扩展预检未通过，GPU 没有启动；页面不会把 blocked 状态伪装成 queued 或 running。"
-        : reporting
-        ? "20 / 20 个探索运行已完成，正在生成明确标注为 exploratory 的报告。"
-        : exploratoryComplete
-          ? "探索性延长与报告已完成；结果不会被表述为验证性证据。"
-          : queued
-            ? "结果后探索已排队；通过 CUDA、电源、磁盘与互斥预检后才会启动 GPU。"
-            : paused
-              ? "探索运行已暂停，恢复点已保存；页面保留当前单 run 的真实 CSV。"
-              : "结果后探索正在运行；页面只呈现当前 arm / seed 的真实 CSV，不做跨 seed 汇总。"
-      : connection === "LIVE" && pilotComplete
-      ? blocked
-        ? "研究遥测未通过数据合同校验；页面不会把无效的 Pilot 状态标记为完成。"
-        : "Pilot 12 / 12 已完成；遥测在线，正在等待按预注册规则锁定候选。"
-      : connection === "LIVE"
-        ? research.state === "running"
-          ? "训练与遥测均处于实时状态。"
-          : "遥测在线，但当前没有活动训练进程。"
-        : `数据链路当前为 ${connection}。`;
-}
-
-function applyComputeSignal(data) {
-  const dot = byId("systemDot");
-  const label = byId("systemLabel");
-  const computeState = byId("computeState");
-  const computeDetail = byId("computeDetail");
-  const state = data.connectionState;
-
-  if (state === "LIVE") {
-    dot.className = "live";
-    label.textContent = "RESEARCH LINK LIVE";
-    computeState.textContent = "RTX 4060 · TELEMETRY";
-  } else if (state === "COMPLETE") {
-    dot.className = "locked";
-    label.textContent = "BASELINE COMPLETE";
-    computeState.textContent = "BASELINE COMPLETE";
-  } else if (state === "DELAYED") {
-    dot.className = "locked";
-    label.textContent = "SIGNAL DELAYED";
-    computeState.textContent = "TELEMETRY DELAYED";
-  } else {
-    dot.className = "offline";
-    label.textContent = "COMPUTE NODE OFFLINE";
-    computeState.textContent = "COMPUTE NODE OFFLINE";
-  }
-
-  if (data.gpu && state !== "OFFLINE") {
-    const prefix = state === "COMPLETE" ? "FINAL SNAPSHOT · " : "";
-    computeDetail.textContent =
-      `${prefix}${Math.round(data.gpu.temperatureC)}°C · ` +
-      `${Math.round(data.gpu.utilizationPct)}% GPU · ` +
-      `${(data.gpu.memoryUsedMb / 1024).toFixed(1)} GB`;
-  } else if (state === "OFFLINE" && Number.isFinite(data.ageSeconds)) {
-    computeDetail.textContent = `LAST SIGNAL ${Math.round(data.ageSeconds / 60)} MIN AGO · STALE`;
-  } else {
-    computeDetail.textContent = "NO ACTIVE GPU TELEMETRY";
-  }
-}
-
-async function refreshComputeSignal() {
-  try {
-    const response = await fetch("/api/rlcard/status", { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`status ${response.status}`);
+    const aucWindow = report.metrics.exploitabilityAuc.window;
+    if (!Array.isArray(aucWindow) || aucWindow[0] !== 25000 || aucWindow[1] !== 300000) {
+      throw new TypeError("The training-path window is not the frozen 25K–300K window");
     }
-    const data = await response.json();
-    applyComputeSignal(data);
-    applyResearchSignal(data);
-  } catch {
-    applyComputeSignal({ connectionState: "OFFLINE", gpu: null });
-    applyResearchSignal({ connectionState: "OFFLINE", research: null });
+
+    const terminalMean = mean(finalRows.map((row) => number(row.terminal)));
+    const scaledMean = mean(finalRows.map((row) => number(row.scaled)));
+    const terminalMeanAuc = mean(aucRows.map((row) => number(row.terminal)));
+    const scaledMeanAuc = mean(aucRows.map((row) => number(row.scaled)));
+
+    return {
+      completedRuns: report.completedRuns,
+      totalEpisodes: report.totalEpisodes,
+      finalRows,
+      terminalMean,
+      scaledMean,
+      finalWorsePercent: ((scaledMean - terminalMean) / terminalMean) * 100,
+      terminalBetterPairs: finalRows.filter((row) => row.terminal < row.scaled).length,
+      terminalMeanAuc,
+      scaledMeanAuc,
+      aucWorsePercent: ((scaledMeanAuc - terminalMeanAuc) / terminalMeanAuc) * 100,
+      terminalBetterAucPairs: aucRows.filter((row) => row.terminal < row.scaled).length,
+    };
   }
-}
 
-renderExploitabilityChart();
-updateClock();
-setInterval(updateClock, 1_000);
-
-let researchRefreshTimer = null;
-
-function scheduleResearchRefresh() {
-  if (researchRefreshTimer !== null) {
-    clearInterval(researchRefreshTimer);
-    researchRefreshTimer = null;
+  function text(id, value) {
+    const element = byId(id);
+    if (element) element.textContent = value;
   }
-  if (!document.hidden) {
-    researchRefreshTimer = setInterval(refreshComputeSignal, 3_000);
+
+  function renderSeedRows(rows) {
+    const body = byId("seedRows");
+    if (!body || typeof document.createElement !== "function") return;
+
+    const entries = rows.map((row) => {
+      const tr = document.createElement("tr");
+      const seed = document.createElement("th");
+      seed.setAttribute("scope", "row");
+      seed.textContent = String(row.seed);
+
+      const terminal = document.createElement("td");
+      terminal.textContent = number(row.terminal).toFixed(3);
+      const scaled = document.createElement("td");
+      scaled.textContent = number(row.scaled).toFixed(3);
+      const winner = document.createElement("td");
+      winner.textContent = row.terminal <= row.scaled ? "原始奖励" : "奖励 ÷ 7";
+      tr.append(seed, terminal, scaled, winner);
+      return tr;
+    });
+    body.replaceChildren(...entries);
   }
-}
 
-document.addEventListener("visibilitychange", () => {
-  scheduleResearchRefresh();
-  if (!document.hidden) refreshComputeSignal();
-});
+  function renderReport(report) {
+    const summary = summarizeReport(report);
+    reportSummary = summary;
 
-if (!document.hidden) refreshComputeSignal();
-scheduleResearchRefresh();
+    text("terminalMean", summary.terminalMean.toFixed(3));
+    text("scaledMean", summary.scaledMean.toFixed(3));
+    text("finalWorsePercent", `${summary.finalWorsePercent.toFixed(1)}%`);
+    text("aucWorsePercent", `+${summary.aucWorsePercent.toFixed(1)}%`);
+
+    const chartMax = Math.max(summary.terminalMean, summary.scaledMean);
+    const terminalBar = byId("terminalBar");
+    const scaledBar = byId("scaledBar");
+    if (terminalBar) {
+      terminalBar.style.setProperty("--bar-size", `${(summary.terminalMean / chartMax) * 100}%`);
+    }
+    if (scaledBar) {
+      scaledBar.style.setProperty("--bar-size", `${(summary.scaledMean / chartMax) * 100}%`);
+    }
+    renderSeedRows(summary.finalRows);
+
+    if (latestStatus) renderStatus(latestStatus);
+    return summary;
+  }
+
+  function statusCopy(data) {
+    const research = data && data.research;
+    const hasFrozenReport = reportSummary && reportSummary.completedRuns === 20;
+
+    if (hasFrozenReport) {
+      const publicRuns = research && finite(research.completedRuns)
+        ? `${formatInteger(research.completedRuns)} / ${formatInteger(research.totalRuns)}`
+        : "20 / 20";
+      const apiBehind = research && number(research.completedRuns) < 20;
+      return {
+        state: "complete",
+        label: "研究完成 · 报告已保存",
+        detail: apiBehind
+          ? "实时状态快照较旧 · 最终报告为 20 / 20 组"
+          : `${publicRuns} 组训练 · 共 6,000,000 局`,
+      };
+    }
+
+    if (!research) {
+      return {
+        state: "offline",
+        label: "实时状态暂不可用",
+        detail: "已保存的研究报告仍可正常阅读",
+      };
+    }
+
+    const state = String(research.state || "idle").toLowerCase();
+    const run = research.currentRun;
+    const runState = String((run && run.status) || "").toLowerCase();
+    const complete =
+      finite(research.totalRuns) &&
+      number(research.totalRuns) > 0 &&
+      number(research.completedRuns) >= number(research.totalRuns) &&
+      state === "complete";
+    const displayState = complete
+      ? "complete"
+      : state === "blocked"
+        ? "blocked"
+        : runState === "paused"
+          ? "paused"
+          : state === "queued" || runState === "pending"
+            ? "queued"
+            : state === "running"
+              ? "running"
+              : "offline";
+    const labels = {
+      complete: "研究完成 · 报告已保存",
+      running: "研究仍在运行",
+      queued: "研究等待开始",
+      paused: "研究已暂停 · 恢复点已保存",
+      blocked: "研究流程受阻",
+      offline: "实时状态暂不可用",
+    };
+
+    const runCount = finite(research.completedRuns) && finite(research.totalRuns)
+      ? `${formatInteger(research.completedRuns)} / ${formatInteger(research.totalRuns)} 组完成`
+      : "等待公开状态";
+    const progress = run && finite(run.progress) && finite(run.target)
+      ? ` · 当前 ${formatInteger(run.progress)} / ${formatInteger(run.target)}`
+      : "";
+    return { state: displayState, label: labels[displayState], detail: `${runCount}${progress}` };
+  }
+
+  function armLabel(arm) {
+    return arm === "terminal" ? "原始奖励" : arm === "scaled" ? "奖励缩小为 1/7" : String(arm || "—");
+  }
+
+  function makeSvg(name, attributes = {}) {
+    const element = document.createElementNS(SVG_NS, name);
+    Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
+    return element;
+  }
+
+  function showEmptyChart() {
+    const chart = byId("runChart");
+    const empty = byId("runChartEmpty");
+    if (chart) chart.hidden = true;
+    if (empty) empty.hidden = false;
+  }
+
+  function renderRunSeries(rawPoints, run = {}) {
+    const points = (Array.isArray(rawPoints) ? rawPoints : [])
+      .filter((point) => finite(point && point.progress) && finite(point && point.exploitability))
+      .map((point) => ({
+        progress: number(point.progress),
+        exploitability: number(point.exploitability),
+      }))
+      .sort((a, b) => a.progress - b.progress);
+    const chart = byId("runChart");
+    const grid = byId("runChartGrid");
+    const line = byId("runChartLine");
+    const pointLayer = byId("runChartPoints");
+    const labels = byId("runChartLabels");
+    const empty = byId("runChartEmpty");
+    if (!chart || !grid || !line || !pointLayer || !labels || points.length < 2) {
+      showEmptyChart();
+      return false;
+    }
+
+    const width = 900;
+    const height = 280;
+    const margin = { top: 20, right: 22, bottom: 34, left: 62 };
+    const plotWidth = width - margin.left - margin.right;
+    const plotHeight = height - margin.top - margin.bottom;
+    const xMin = points[0].progress;
+    const xMax = points[points.length - 1].progress;
+    const values = points.map((point) => point.exploitability);
+    const rawMin = Math.min(...values);
+    const rawMax = Math.max(...values);
+    const padding = Math.max((rawMax - rawMin) * 0.14, 0.015);
+    const yMin = rawMin - padding;
+    const yMax = rawMax + padding;
+    const x = (value) => margin.left + ((value - xMin) / Math.max(1, xMax - xMin)) * plotWidth;
+    const y = (value) => margin.top + (1 - (value - yMin) / Math.max(0.000001, yMax - yMin)) * plotHeight;
+
+    const gridNodes = [];
+    const labelNodes = [];
+    for (let index = 0; index < 5; index += 1) {
+      const ratio = index / 4;
+      const yPosition = margin.top + ratio * plotHeight;
+      const value = yMax - ratio * (yMax - yMin);
+      gridNodes.push(makeSvg("line", { x1: margin.left, x2: width - margin.right, y1: yPosition, y2: yPosition }));
+      const label = makeSvg("text", { x: margin.left - 10, y: yPosition + 4, "text-anchor": "end" });
+      label.textContent = value.toFixed(2);
+      labelNodes.push(label);
+    }
+    [points[0], points[points.length - 1]].forEach((point, index) => {
+      const label = makeSvg("text", {
+        x: x(point.progress),
+        y: height - 8,
+        "text-anchor": index === 0 ? "start" : "end",
+      });
+      label.textContent = `${formatInteger(point.progress)} 局`;
+      labelNodes.push(label);
+    });
+
+    const path = points
+      .map((point, index) => `${index === 0 ? "M" : "L"}${x(point.progress).toFixed(2)},${y(point.exploitability).toFixed(2)}`)
+      .join(" ");
+    const circles = points.map((point) =>
+      makeSvg("circle", {
+        cx: x(point.progress).toFixed(2),
+        cy: y(point.exploitability).toFixed(2),
+        r: 4,
+      }),
+    );
+
+    grid.replaceChildren(...gridNodes);
+    labels.replaceChildren(...labelNodes);
+    pointLayer.replaceChildren(...circles);
+    line.setAttribute("d", path);
+    chart.hidden = false;
+    if (empty) empty.hidden = true;
+
+    const title = byId("runChartTitle");
+    const description = byId("runChartDescription");
+    if (title) title.textContent = `${armLabel(run.arm)}、随机起点 ${run.seed} 的单次真实曲线`;
+    if (description) {
+      description.textContent = `从 ${formatInteger(xMin)} 到 ${formatInteger(xMax)} 局的策略可利用度；这是单次运行，不是十组平均。`;
+    }
+    return true;
+  }
+
+  function renderRun(run, series) {
+    if (!run) return false;
+    text("runArm", armLabel(run.arm));
+    text("runSeed", finite(run.seed) ? String(number(run.seed)) : "—");
+    text("runProgress", `${formatInteger(run.progress)} / ${formatInteger(run.target)}`);
+    text(
+      "runExploitability",
+      finite(run.latestExploitability) ? number(run.latestExploitability).toFixed(3) : "—",
+    );
+    text("runUpdated", `最后保存的运行：${armLabel(run.arm)} · 随机起点 ${run.seed}。曲线来自这一次运行的真实 CSV，不是跨起点平均。`);
+    return renderRunSeries(series, run);
+  }
+
+  function renderStatus(data) {
+    latestStatus = data;
+    const copy = statusCopy(data);
+    const status = byId("studyStatus");
+    if (status) status.dataset.state = copy.state;
+    text("studyStatusLabel", copy.label);
+    text("studyStatusDetail", copy.detail);
+
+    const research = data && data.research;
+    const run = research && research.currentRun;
+    const isSavedRun = run && String(run.status || "").toLowerCase() === "complete";
+    if (isSavedRun && renderRun(run, research.series)) {
+      renderedTelemetrySeries = true;
+    }
+    return copy;
+  }
+
+  function validateRunSnapshot(snapshot) {
+    if (
+      !snapshot ||
+      snapshot.schemaVersion !== 1 ||
+      snapshot.arm !== "terminal" ||
+      snapshot.seed !== 23003 ||
+      snapshot.target !== 300000 ||
+      !Array.isArray(snapshot.series)
+    ) {
+      throw new TypeError("Invalid frozen run snapshot");
+    }
+    snapshot.series.forEach((point, index) => {
+      assertFinite(point.progress, `series[${index}].progress`);
+      assertFinite(point.exploitability, `series[${index}].exploitability`);
+    });
+    return snapshot;
+  }
+
+  function renderRunSnapshot(snapshot) {
+    const valid = validateRunSnapshot(snapshot);
+    if (renderedTelemetrySeries) return false;
+    const finalPoint = valid.series[valid.series.length - 1];
+    const run = {
+      arm: valid.arm,
+      seed: valid.seed,
+      progress: valid.target,
+      target: valid.target,
+      latestExploitability: finalPoint.exploitability,
+      status: "complete",
+    };
+    renderRun(run, valid.series);
+    return true;
+  }
+
+  async function fetchJson(url, options) {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error(`${url} returned ${response.status}`);
+    return response.json();
+  }
+
+  async function boot() {
+    const reportPromise = fetchJson(REPORT_URL, {
+      headers: { Accept: "application/json" },
+      cache: "force-cache",
+    })
+      .then(renderReport)
+      .catch(() => null);
+
+    const statusPromise = fetchJson(STATUS_URL, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    })
+      .then(renderStatus)
+      .catch(() => renderStatus(null));
+
+    const runPromise = fetchJson(RUN_SNAPSHOT_URL, {
+      headers: { Accept: "application/json" },
+      cache: "force-cache",
+    })
+      .then(renderRunSnapshot)
+      .catch(() => {
+        if (!renderedTelemetrySeries) showEmptyChart();
+        return null;
+      });
+
+    await Promise.all([reportPromise, statusPromise, runPromise]);
+  }
+
+  globalThis.RLCardPublicReport = Object.freeze({
+    summarizeReport,
+    renderReport,
+    statusCopy,
+    renderStatus,
+    renderRunSeries,
+    validateRunSnapshot,
+  });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, { once: true });
+  } else {
+    boot();
+  }
+})();

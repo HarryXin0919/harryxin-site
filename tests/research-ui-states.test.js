@@ -3,161 +3,22 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 
-const appSource = await readFile(
-  new URL("../rlcard/research/app.js", import.meta.url),
-  "utf8",
+const root = new URL("../", import.meta.url);
+const appSource = await readFile(new URL("rlcard/research/app.js", root), "utf8");
+const frozenReport = JSON.parse(
+  await readFile(new URL("rlcard/research/exploratory-report-v1.json", root), "utf8"),
+);
+const frozenRun = JSON.parse(
+  await readFile(new URL("rlcard/research/latest-run-v1.json", root), "utf8"),
 );
 
-class FakeClassList {
-  constructor(owner) {
-    this.owner = owner;
-  }
-
-  values() {
-    return new Set(this.owner.className.split(/\s+/).filter(Boolean));
-  }
-
-  add(...names) {
-    const values = this.values();
-    names.forEach((name) => values.add(name));
-    this.owner.className = [...values].join(" ");
-  }
-
-  remove(...names) {
-    const values = this.values();
-    names.forEach((name) => values.delete(name));
-    this.owner.className = [...values].join(" ");
-  }
-
-  contains(name) {
-    return this.values().has(name);
-  }
-}
-
-class FakeElement {
-  constructor(id = "") {
-    this.id = id;
-    this.className = "";
-    this.children = [];
-    this.dataset = {};
-    this.attributes = {};
-    this.textContent = "";
-    this.parentElement = null;
-    this.classList = new FakeClassList(this);
-    this.style = {
-      setProperty: (name, value) => {
-        this.style[name] = value;
-      },
-    };
-  }
-
-  append(...children) {
-    this.children.push(...children);
-  }
-
-  replaceChildren(...children) {
-    this.children = [...children];
-  }
-
-  setAttribute(name, value) {
-    this.attributes[name] = String(value);
-  }
-
-  removeAttribute(name) {
-    delete this.attributes[name];
-  }
-
-  querySelector(selector) {
-    if (selector === "em" || selector === "[data-arm-status]") {
-      return this.statusNode || null;
-    }
-    return null;
-  }
-}
-
-const elementIds = [
-  "chartGrid",
-  "chartBars",
-  "chartLabels",
-  "clock",
-  "footerTime",
-  "liveDataState",
-  "heroPhaseCode",
-  "phaseNumber",
-  "phaseDial",
-  "currentPhaseLabel",
-  "cohortRunLabel",
-  "pilotRunCount",
-  "studyModeLabel",
-  "researchTelemetryState",
-  "phaseCaptionRight",
-  "pipelineChip",
-  "liveRunHeading",
-  "liveThroughputLabel",
-  "liveChartEmptyTitle",
-  "liveChartEmptyDetail",
-  "liveArm",
-  "liveSeed",
-  "liveProgress",
-  "liveExploitability",
-  "livePayoff",
-  "liveThroughput",
-  "liveProgressFill",
-  "liveProgressTrack",
-  "liveMetricChart",
-  "liveChartGrid",
-  "liveChartLine",
-  "liveChartPoints",
-  "liveChartLabels",
-  "liveChartTitle",
-  "liveChartDescription",
-  "lastSignal",
-  "disclosureLiveState",
-];
-
-function createHarness() {
-  const elements = Object.fromEntries(
-    elementIds.map((id) => [id, new FakeElement(id)]),
-  );
-  const chartShell = new FakeElement("liveChartShell");
-  elements.liveMetricChart.parentElement = chartShell;
-
-  const phaseRows = Array.from({ length: 7 }, (_, index) => {
-    const row = new FakeElement();
-    row.dataset.phase = String(index + 1);
-    row.statusNode = new FakeElement();
-    return row;
-  });
-  const armCards = ["terminal", "scaled", "pbrs-cfr-a010", "pbrs-cfr-a025"].map(
-    (id) => {
-      const card = new FakeElement();
-      card.dataset.armId = id;
-      card.statusNode = new FakeElement();
-      return card;
-    },
-  );
-
+function createApi() {
   const document = {
-    hidden: true,
-    getElementById: (id) => elements[id] || null,
-    createElementNS: (_namespace, name) => new FakeElement(name),
+    readyState: "loading",
     addEventListener: () => undefined,
-    querySelectorAll: (selector) => {
-      if (selector === "[data-phase]") return phaseRows;
-      if (selector === "[data-arm-id]") return armCards;
-      return [];
-    },
-    querySelector: (selector) => {
-      const phaseMatch = selector.match(/^\[data-phase="(\d+)"\]$/);
-      if (phaseMatch) {
-        return phaseRows.find((row) => row.dataset.phase === phaseMatch[1]) || null;
-      }
-      const armMatch = selector.match(/^\[data-arm-id="(.+)"\]$/);
-      if (armMatch) {
-        return armCards.find((card) => card.dataset.armId === armMatch[1]) || null;
-      }
-      return null;
-    },
+    getElementById: () => null,
+    createElement: () => null,
+    createElementNS: () => null,
   };
   const context = vm.createContext({
     document,
@@ -166,287 +27,146 @@ function createHarness() {
     Math,
     Number,
     String,
+    Set,
+    TypeError,
     console,
-    setInterval: () => 1,
-    clearInterval: () => undefined,
     fetch: async () => {
-      throw new Error("fetch should not run in the DOM harness");
+      throw new Error("boot must not run in the pure-function harness");
     },
   });
   vm.runInContext(appSource, context);
-  return { apply: context.applyResearchSignal, elements, chartShell };
+  return context.RLCardPublicReport;
 }
 
-function exploratoryPayload({
-  state,
-  runStatus,
+function researchPayload({
+  state = "running",
+  runStatus = "running",
+  completedRuns = 4,
   phase = 6,
-  completedRuns = 0,
-  progress = 0,
-  etaSeconds = null,
-}) {
+  progress = 150000,
+} = {}) {
   return {
     connectionState: "LIVE",
-    capturedAt: "2026-08-03T10:00:00.000Z",
-    ageSeconds: 2,
     research: {
-      studyId: "leduc-reward-exploratory-scaled-v1",
-      cohort: "exploratory",
-      protocolMode: "post_outcome_exploratory",
-      sourceStudyId: "leduc-reward-study-v1",
-      selection: {
-        status: "no_candidate_promoted",
-        selectedArm: null,
-        exploratoryArm: "scaled",
-      },
       phase,
-      phaseLabel:
-        phase === 7
-          ? "REPORT EXPLORATORY OUTCOMES"
-          : "300K EXPLORATORY EXTENSION",
       state,
       completedRuns,
       totalRuns: 20,
       currentRun: {
-        cohort: "exploratory",
         arm: "scaled",
         seed: 31415,
         progress,
         target: 300000,
-        fraction: progress / 300000,
-        speed: runStatus === "running" ? 41.5 : 0,
-        etaSeconds,
-        latestExploitability: progress ? 1.12 : null,
-        latestPayoff: progress ? 0.21 : null,
         status: runStatus,
       },
-      arms: [
-        {
-          id: "terminal",
-          label: "TERMINAL",
-          status: completedRuns ? "complete" : "pending",
-          completedRuns: Math.floor(completedRuns / 2),
-          totalRuns: 10,
-          progress: Math.floor(completedRuns / 2) * 300000,
-          target: 3000000,
-          fraction: Math.floor(completedRuns / 2) / 10,
-          latestExploitability: null,
-          latestPayoff: null,
-        },
-        {
-          id: "scaled",
-          label: "SCALED",
-          status: runStatus,
-          completedRuns: Math.ceil(completedRuns / 2),
-          totalRuns: 10,
-          progress: Math.ceil(completedRuns / 2) * 300000 + progress,
-          target: 3000000,
-          fraction: Math.min(1, (Math.ceil(completedRuns / 2) + progress / 300000) / 10),
-          latestExploitability: progress ? 1.12 : null,
-          latestPayoff: progress ? 0.21 : null,
-        },
-      ],
-      series: progress
-        ? [
-            {
-              arm: "scaled",
-              seed: 31415,
-              progress,
-              exploitability: 1.12,
-              payoff: 0.21,
-            },
-          ]
-        : [],
-      milestones: [
-        { id: "05", label: "NO CANDIDATE PROMOTED", status: "complete" },
-        {
-          id: "06",
-          label: "300K EXPLORATORY EXTENSION",
-          status: phase === 6 ? "active" : "complete",
-        },
-        {
-          id: "07",
-          label: "REPORT EXPLORATORY OUTCOMES",
-          status: phase === 7 ? "active" : "pending",
-        },
-      ],
+      series: [],
     },
   };
 }
 
-test("detail UI renders queued and running exploratory runs truthfully", () => {
-  const queued = createHarness();
-  queued.apply(
-    exploratoryPayload({ state: "queued", runStatus: "pending" }),
-  );
-  assert.equal(queued.elements.liveDataState.textContent, "QUEUED · AWAITING GPU");
-  assert.equal(queued.elements.liveRunHeading.textContent, "下一计划运行 / Next Queued Run");
-  assert.equal(queued.elements.liveArm.textContent, "SCALED");
-  assert.equal(queued.elements.liveSeed.textContent, "31415");
-  assert.equal(queued.elements.liveProgress.textContent, "0 / 300,000");
-  assert.equal(queued.elements.pilotRunCount.textContent, "0 / 20 COMPLETE");
-  assert.equal(queued.elements.liveThroughput.textContent, "QUEUED · AWAITING GPU");
-  assert.ok(queued.elements.liveDataState.classList.contains("queued"));
+test("frozen report derives the public headline from all ten paired seeds", () => {
+  const summary = createApi().summarizeReport(frozenReport);
 
-  const running = createHarness();
-  running.apply(
-    exploratoryPayload({
-      state: "running",
-      runStatus: "running",
-      progress: 150000,
-      etaSeconds: 3600,
-    }),
-  );
-  assert.equal(running.elements.liveDataState.textContent, "EXPLORATORY RUN · LIVE");
-  assert.match(running.elements.liveThroughput.textContent, /41\.5 \/S · ETA 1\.0H/);
-  assert.ok(running.chartShell.classList.contains("has-data"));
-  assert.match(
-    running.elements.liveChartDescription.textContent,
-    /EXPLORATORY · SINGLE ARM\/SEED/,
-  );
+  assert.equal(summary.completedRuns, 20);
+  assert.equal(summary.totalEpisodes, 6000000);
+  assert.equal(summary.terminalMean, 1.1795826725434617);
+  assert.equal(summary.scaledMean, 1.297517370546144);
+  assert.ok(Math.abs(summary.finalWorsePercent - 9.998001899128186) < 1e-12);
+  assert.equal(summary.terminalBetterPairs, 10);
+  assert.equal(summary.terminalMeanAuc, 328774.2512535824);
+  assert.equal(summary.scaledMeanAuc, 358724.0860050282);
+  assert.ok(Math.abs(summary.aucWorsePercent - 9.109543900487997) < 1e-12);
+  assert.equal(summary.terminalBetterAucPairs, 9);
 });
 
-test("detail UI distinguishes paused, reporting, and completed states", () => {
-  const paused = createHarness();
-  paused.apply(
-    exploratoryPayload({
-      state: "idle",
-      runStatus: "paused",
-      completedRuns: 4,
-      progress: 75000,
-    }),
-  );
-  assert.equal(paused.elements.liveDataState.textContent, "PAUSED · CHECKPOINT SAVED");
-  assert.equal(paused.elements.liveThroughput.textContent, "PAUSED · CHECKPOINT SAVED");
-  assert.ok(paused.elements.liveDataState.classList.contains("paused"));
+test("report contract rejects confirmatory, non-finite, mismatched, and incomplete data", () => {
+  const api = createApi();
 
-  const reporting = createHarness();
-  reporting.apply(
-    exploratoryPayload({
-      state: "running",
-      runStatus: "complete",
-      phase: 7,
-      completedRuns: 20,
-      progress: 300000,
-    }),
-  );
-  assert.equal(reporting.elements.liveDataState.textContent, "REPORTING · EXPLORATORY");
-  assert.equal(reporting.elements.phaseCaptionRight.textContent, "EXPLORATORY REPORT · BUILDING");
-  assert.match(reporting.elements.disclosureLiveState.textContent, /20 \/ 20/);
+  const confirmatory = structuredClone(frozenReport);
+  confirmatory.confirmatory = true;
+  assert.throws(() => api.summarizeReport(confirmatory), /frozen exploratory report/);
 
-  const complete = createHarness();
-  complete.apply(
-    exploratoryPayload({
+  const nonFinite = structuredClone(frozenReport);
+  nonFinite.metrics.finalExploitability.perSeed[0].scaled = null;
+  assert.throws(() => api.summarizeReport(nonFinite), /must be finite/);
+
+  const mismatched = structuredClone(frozenReport);
+  mismatched.metrics.finalExploitability.perSeed[0].difference = 0;
+  assert.throws(() => api.summarizeReport(mismatched), /inconsistent paired difference/);
+
+  const incomplete = structuredClone(frozenReport);
+  incomplete.metrics.exploitabilityAuc.perSeed.pop();
+  assert.throws(() => api.summarizeReport(incomplete), /one row per seed/);
+
+  const duplicateSeed = structuredClone(frozenReport);
+  duplicateSeed.seeds[1] = duplicateSeed.seeds[0];
+  assert.throws(() => api.summarizeReport(duplicateSeed), /ten unique integer seeds/);
+});
+
+test("saved final report stays authoritative when telemetry is missing or stale", () => {
+  const api = createApi();
+  api.renderReport(frozenReport);
+
+  assert.deepEqual(
+    { ...api.statusCopy(null) },
+    {
       state: "complete",
-      runStatus: "complete",
-      phase: 7,
-      completedRuns: 20,
-      progress: 300000,
-    }),
-  );
-  assert.equal(
-    complete.elements.liveDataState.textContent,
-    "EXPLORATORY COMPLETE · REPORT SAVED",
-  );
-  assert.equal(complete.elements.liveRunHeading.textContent, "最近完成运行 / Latest Completed Run");
-  assert.equal(complete.elements.liveThroughput.textContent, "COMPLETE · SAVED");
-  assert.ok(complete.elements.liveDataState.classList.contains("complete"));
-});
-
-test("detail UI surfaces a blocked preflight without claiming the GPU is queued", () => {
-  const blocked = createHarness();
-  blocked.apply(
-    exploratoryPayload({
-      state: "blocked",
-      runStatus: "pending",
-      completedRuns: 0,
-      progress: 0,
-    }),
+      label: "研究完成 · 报告已保存",
+      detail: "20 / 20 组训练 · 共 6,000,000 局",
+    },
   );
 
-  assert.equal(
-    blocked.elements.liveDataState.textContent,
-    "BLOCKED · PREFLIGHT FAILED",
-  );
-  assert.equal(
-    blocked.elements.liveRunHeading.textContent,
-    "启动受阻 / Preflight Blocked",
-  );
-  assert.equal(
-    blocked.elements.liveThroughput.textContent,
-    "BLOCKED · NO GPU START",
-  );
-  assert.match(
-    blocked.elements.disclosureLiveState.textContent,
-    /预检未通过/,
-  );
-  assert.ok(blocked.elements.liveDataState.classList.contains("blocked"));
-  assert.equal(blocked.elements.liveDataState.classList.contains("queued"), false);
-});
-
-test("detail UI never calls a failed Phase 7 report saved", () => {
-  const blocked = createHarness();
-  blocked.apply(
-    exploratoryPayload({
-      state: "blocked",
-      runStatus: "complete",
-      phase: 7,
-      completedRuns: 20,
-      progress: 300000,
-    }),
-  );
-
-  assert.equal(
-    blocked.elements.liveDataState.textContent,
-    "BLOCKED · REPORT FAILED",
-  );
-  assert.equal(
-    blocked.elements.liveRunHeading.textContent,
-    "报告受阻 / Report Blocked",
-  );
-  assert.equal(
-    blocked.elements.liveThroughput.textContent,
-    "BLOCKED · REPORT NOT SAVED",
-  );
-  assert.doesNotMatch(blocked.elements.liveDataState.textContent, /SAVED/);
-  assert.doesNotMatch(
-    blocked.elements.liveThroughput.textContent,
-    /REPORT SAVED|COMPLETE · SAVED/,
+  const stale = researchPayload({ completedRuns: 19, progress: 166245 });
+  stale.connectionState = "OFFLINE";
+  assert.deepEqual(
+    { ...api.statusCopy(stale) },
+    {
+      state: "complete",
+      label: "研究完成 · 报告已保存",
+      detail: "实时状态快照较旧 · 最终报告为 20 / 20 组",
+    },
   );
 });
 
-test("detail UI gives a blocked legacy payload priority over Pilot completion", () => {
-  const payload = exploratoryPayload({
-    state: "blocked",
-    runStatus: "complete",
-    phase: 5,
-    completedRuns: 12,
-    progress: 50000,
-  });
-  delete payload.research.cohort;
-  delete payload.research.protocolMode;
-  delete payload.research.sourceStudyId;
-  payload.research.studyId = "leduc-reward-study-v1";
-  payload.research.totalRuns = 12;
-  payload.research.selection = null;
-  payload.research.currentRun.cohort = "pilot";
-  payload.research.currentRun.target = 50000;
-  payload.research.currentRun.fraction = 1;
+test("without a final report the compact status remains truthful", () => {
+  const api = createApi();
 
-  const blocked = createHarness();
-  blocked.apply(payload);
+  assert.equal(api.statusCopy(researchPayload()).state, "running");
+  assert.equal(
+    api.statusCopy(researchPayload({ state: "queued", runStatus: "pending", progress: 0 })).label,
+    "研究等待开始",
+  );
+  assert.equal(
+    api.statusCopy(researchPayload({ state: "idle", runStatus: "paused" })).label,
+    "研究已暂停 · 恢复点已保存",
+  );
+  assert.equal(
+    api.statusCopy(researchPayload({ state: "blocked", runStatus: "pending" })).label,
+    "研究流程受阻",
+  );
+  assert.equal(
+    api.statusCopy(
+      researchPayload({
+        state: "complete",
+        runStatus: "complete",
+        phase: 7,
+        completedRuns: 20,
+        progress: 300000,
+      }),
+    ).label,
+    "研究完成 · 报告已保存",
+  );
+});
 
-  assert.equal(
-    blocked.elements.liveDataState.textContent,
-    "BLOCKED · DATA INVALID",
-  );
-  assert.equal(
-    blocked.elements.liveRunHeading.textContent,
-    "数据受阻 / Data Blocked",
-  );
-  assert.equal(
-    blocked.elements.liveThroughput.textContent,
-    "BLOCKED · DATA INVALID",
-  );
-  assert.doesNotMatch(blocked.elements.liveDataState.textContent, /COMPLETE/);
+test("frozen CSV snapshot validation rejects altered identity or bad points", () => {
+  const api = createApi();
+  assert.equal(api.validateRunSnapshot(frozenRun).series.length, 12);
+
+  const wrongRun = structuredClone(frozenRun);
+  wrongRun.seed = 42;
+  assert.throws(() => api.validateRunSnapshot(wrongRun), /Invalid frozen run snapshot/);
+
+  const badPoint = structuredClone(frozenRun);
+  badPoint.series[0].exploitability = "not-a-number";
+  assert.throws(() => api.validateRunSnapshot(badPoint), /must be finite/);
 });

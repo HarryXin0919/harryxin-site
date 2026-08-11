@@ -386,23 +386,30 @@ test("exploratory cohort rejects incomplete or differently scoped contracts", ()
   );
 });
 
-test("narrow layouts keep the completed-run status chip visible", () => {
+test("narrow layouts keep the completed study status readable", () => {
   assert.match(
     researchStyles,
-    /@media \(max-width: 620px\)[\s\S]*?\.live-run-heading \.chip\s*\{[\s\S]*?display:\s*inline-flex;/,
+    /\.study-status\s*\{[\s\S]*?display:\s*flex;[\s\S]*?border-radius:\s*14px;/,
+  );
+  assert.match(
+    researchStyles,
+    /@media \(max-width: 680px\)[\s\S]*?\.hero\s*\{[\s\S]*?padding:\s*72px 0 60px;/,
   );
 });
 
-test("narrow layouts wrap long exploratory labels without clipping the chart", () => {
+test("narrow layouts wrap long labels and contain detailed data", () => {
   assert.match(
     researchStyles,
-    /\.live-run-grid strong\s*\{[\s\S]*?overflow-wrap:\s*anywhere;[\s\S]*?white-space:\s*normal;/,
+    /\.run-meta strong\s*\{[\s\S]*?overflow-wrap:\s*anywhere;/,
   );
   assert.match(
     researchStyles,
-    /\.live-chart-shell\s*\{[\s\S]*?overflow:\s*hidden;/,
+    /\.table-wrap\s*\{[\s\S]*?overflow-x:\s*auto;/,
   );
-  assert.match(researchStyles, /\.chip\.queued/);
+  assert.match(
+    researchStyles,
+    /@media \(max-width: 680px\)[\s\S]*?\.headline-numbers,[\s\S]*?grid-template-columns:\s*1fr;/,
+  );
 });
 
 test("research sanitizer rejects impossible progress and non-finite metrics", () => {

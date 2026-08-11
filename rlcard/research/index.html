@@ -5,444 +5,297 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Harry Xin 的 RLCard Leduc Hold'em 奖励函数与策略稳健性研究测试界面。"
+      content="一份面向普通读者的 RLCard 研究报告：把奖励缩小 7 倍，并没有让 Leduc Hold'em 策略学得更好。"
     />
-    <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#070a08" />
-    <meta property="og:title" content="RLCard Reward Observatory · Harry Xin" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#08100b" />
+    <meta property="og:title" content="缩小奖励，没有让扑克 AI 学得更好 · Harry Xin" />
     <meta
       property="og:description"
-      content="Exploitability、NashConv、奖励实验组与研究协议的公开测试界面。"
+      content="20 组训练、600 万局：缩放奖励在 10/10 个随机起点的最终表现都更差。"
     />
     <meta property="og:url" content="https://harryxin.com/rlcard/research/" />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="article" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="stylesheet" href="/rlcard/research/styles.css" />
-    <title>Reward Observatory · RLCard Leduc Lab</title>
+    <title>缩小奖励，没有让扑克 AI 学得更好 · RLCard 研究报告</title>
   </head>
   <body>
-    <a class="skip-link" href="#content">跳至研究内容</a>
-    <div class="atmosphere" aria-hidden="true"></div>
-    <div class="scanlines" aria-hidden="true"></div>
+    <a class="skip-link" href="#content">跳到研究结论</a>
 
-    <header class="topbar">
-      <a class="brand" href="/rlcard/" aria-label="返回 RLCard Leduc Lab">
-        <span class="brand-mark">R/2</span>
-        <span class="brand-copy">
-          <strong>REWARD OBSERVATORY</strong>
-          <small>LEDUC LAB · SECOND RESEARCH PHASE</small>
-        </span>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="返回 Harry Xin 首页">
+        <span class="brand-mark">HX</span>
+        <span>HARRY XIN · RESEARCH NOTE</span>
       </a>
-
-      <nav class="topnav" aria-label="页面导航">
-        <a href="/">HARRY XIN</a>
-        <a href="/rlcard/">LIVE LAB</a>
-        <a href="#protocol">PROTOCOL</a>
+      <nav aria-label="页面导航">
+        <a href="#summary">结论</a>
+        <a href="#comparison">对比</a>
+        <a href="#evidence">方法与数据</a>
       </nav>
-
-      <div class="system-state" aria-live="polite">
-        <i id="systemDot" class="locked"></i>
-        <span id="systemLabel">PROTOCOL LOCKED</span>
-        <time id="clock">--:--:--</time>
-      </div>
     </header>
 
     <main id="content">
-      <section class="hero panel reveal">
+      <section class="hero" aria-labelledby="page-title">
         <div class="hero-copy">
-          <p class="eyebrow">
-            <span id="heroPhaseCode">R2—--</span> EXPLORATORY RESEARCH / 探索研究
+          <p class="kicker">RLCard · LEDUC HOLD'EM · PUBLIC REPORT</p>
+          <p class="boundary">看过前期结果后追加的探索 · 不是预先设定的验证</p>
+          <h1 id="page-title">
+            把奖励缩小 7 倍，<br />
+            <em>没有让扑克 AI 学得更好。</em>
+          </h1>
+          <p class="lede">
+            我让两组策略用相同的 10 个随机起点各训练 30 万局。结果很一致：使用原始奖励的策略更不容易被对手针对。
           </p>
-          <h1><span>REWARD</span><span>STUDY<span class="hero-index">02</span></span></h1>
-          <p class="hero-question">
-            奖励塑形能否更快逼近均衡，<br />
-            <em>而不是只让曲线看起来更漂亮？</em>
+        </div>
+
+        <div id="studyStatus" class="study-status" data-state="loading" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <div>
+            <strong id="studyStatusLabel">研究完成 · 报告已保存</strong>
+            <span id="studyStatusDetail">20 / 20 组训练 · 共 6,000,000 局</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="summary" class="section summary" aria-labelledby="summary-title">
+        <header class="section-heading">
+          <p class="section-label">EXECUTIVE SUMMARY</p>
+          <h2 id="summary-title">先说结论</h2>
+        </header>
+
+        <ol class="summary-list">
+          <li>
+            <span>01</span>
+            <p><strong>问题：</strong>把每次奖励缩小为原来的 1/7，会不会让训练更稳定、更有效？</p>
+          </li>
+          <li>
+            <span>02</span>
+            <p><strong>答案：</strong>没有。训练结束时，缩放奖励在 10 个随机起点上全部更容易被针对。</p>
+          </li>
+          <li>
+            <span>03</span>
+            <p><strong>决定：</strong>不采用缩放奖励，继续把原始奖励作为基线；这次探索也不会被包装成确认性证据。</p>
+          </li>
+        </ol>
+
+        <div class="headline-numbers" aria-label="研究关键数字">
+          <div>
+            <strong>10 / 10</strong>
+            <span>随机起点的最终结果都更差</span>
+          </div>
+          <div>
+            <strong>+10.0%</strong>
+            <span>缩放奖励平均更容易被针对</span>
+          </div>
+          <div>
+            <strong>6,000,000</strong>
+            <span>总训练局数</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="comparison" class="section comparison" aria-labelledby="comparison-title">
+        <header class="section-heading split-heading">
+          <div>
+            <p class="section-label">THE MAIN RESULT</p>
+            <h2 id="comparison-title">最后一刻，原始奖励更稳。</h2>
+          </div>
+          <p class="plain-definition">
+            <strong>“容易被针对”是什么意思？</strong><br />
+            它衡量一个对手还能利用多少策略漏洞。数字越低，策略越稳。
           </p>
+        </header>
 
-          <div class="hero-metrics">
-            <div>
-              <small>CURRENT PHASE / 当前阶段</small>
-              <strong id="currentPhaseLabel">尚未启动 / AWAITING DATA</strong>
+        <figure class="comparison-figure" aria-labelledby="comparison-caption">
+          <div class="bar-scale" aria-hidden="true"><span>0</span><span>越低越好 ↓</span></div>
+          <div class="bar-row winner">
+            <div class="bar-label">
+              <strong>原始奖励</strong>
+              <span>TERMINAL · 对照组</span>
             </div>
-            <div>
-              <small>PRIMARY ENDPOINT / 主终点</small>
-              <strong>EXPLOITABILITY</strong>
+            <div class="bar-track">
+              <i id="terminalBar" style="--bar-size: 90.9%"></i>
             </div>
-            <div>
-              <small>TELEMETRY / 数据遥测</small>
-              <strong id="researchTelemetryState">CONNECTING</strong>
-            </div>
+            <strong id="terminalMean">1.180</strong>
           </div>
-        </div>
-
-        <div class="phase-dial-wrap">
-          <div id="phaseDial" class="phase-dial" style="--phase-progress: 0deg">
-            <div class="phase-dial-core">
-              <small>PHASE</small>
-              <strong id="phaseNumber">--</strong>
-              <span>/ 07</span>
+          <div class="bar-row scaled">
+            <div class="bar-label">
+              <strong>奖励缩小为 1/7</strong>
+              <span>SCALED · 测试组</span>
             </div>
+            <div class="bar-track">
+              <i id="scaledBar" style="--bar-size: 100%"></i>
+            </div>
+            <strong id="scaledMean">1.298</strong>
           </div>
-          <div class="phase-caption">
-            <span id="phaseCaptionLeft">BASELINE FROZEN</span>
-            <span id="phaseCaptionRight">TRAINING IDLE</span>
-          </div>
-        </div>
+          <figcaption id="comparison-caption">
+            在 30 万局终点，缩放奖励的平均值高 <strong id="finalWorsePercent">10.0%</strong>。这里“高”代表更差。
+          </figcaption>
+        </figure>
       </section>
 
-      <section class="study-mode-banner reveal" aria-label="研究解释边界">
-        <div>
-          <span>PROTOCOL AMENDMENT / 结果后修订</span>
-          <strong id="studyModeLabel">POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY</strong>
-        </div>
-        <p>
-          <b>NO CANDIDATE PROMOTED.</b>
-          Pilot 未支持任何奖励方案晋级；scaled 仅因非 control 方案中 AUC 最低、变换最简单而进入延长探索，
-          不代表 Pilot 支持其有效。
-        </p>
-      </section>
+      <section class="section supporting" aria-labelledby="supporting-title">
+        <header class="section-heading">
+          <p class="section-label">THE WHOLE TRAINING JOURNEY</p>
+          <h2 id="supporting-title">不只是终点，整个学习过程也没有改善。</h2>
+        </header>
 
-      <section class="signal-rail reveal" aria-label="研究状态">
-        <div>
-          <span class="signal-code">A</span>
-          <small>BASELINE</small>
-          <strong>906fcb4 · FROZEN</strong>
-        </div>
-        <div>
-          <span class="signal-code">B</span>
-          <small>GAME TREE</small>
-          <strong>23,280 NODES</strong>
-        </div>
-        <div>
-          <span class="signal-code">C</span>
-          <small id="cohortRunLabel">EXPLORATORY RUNS</small>
-          <strong id="pilotRunCount">0 / 20 PLANNED</strong>
-        </div>
-        <div class="compute-signal">
-          <span class="signal-code">D</span>
-          <small>COMPUTE NODE</small>
-          <strong id="computeState">CHECKING SIGNAL</strong>
-          <span id="computeDetail">PUBLIC TELEMETRY</span>
-        </div>
-      </section>
-
-      <section class="panel live-run-panel reveal" aria-labelledby="liveRunHeading">
-        <div class="panel-heading live-run-heading">
-          <div>
-            <p class="eyebrow"><span>R2—LIVE</span> VERIFIED TELEMETRY</p>
-            <h2 id="liveRunHeading">实时研究数据 / Live Run</h2>
-          </div>
-          <span id="liveDataState" class="chip">CONNECTING</span>
-        </div>
-
-        <div class="live-run-grid">
-          <div>
-            <small>TREATMENT ARM</small>
-            <strong id="liveArm">NO ACTIVE RUN</strong>
-          </div>
-          <div>
-            <small>SEED</small>
-            <strong id="liveSeed">—</strong>
-          </div>
-          <div>
-            <small>PROGRESS</small>
-            <strong id="liveProgress">0 / 20 RUNS</strong>
-          </div>
-          <div>
-            <small>EXPLOITABILITY</small>
-            <strong id="liveExploitability">—</strong>
-          </div>
-          <div>
-            <small>PAYOFF VS RANDOM</small>
-            <strong id="livePayoff">—</strong>
-          </div>
-          <div>
-            <small id="liveThroughputLabel">THROUGHPUT / ETA</small>
-            <strong id="liveThroughput">—</strong>
-          </div>
-        </div>
-
-        <div
-          id="liveProgressTrack"
-          class="live-progress-track"
-          role="progressbar"
-          aria-label="当前研究训练进度"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-valuenow="0"
-        >
-          <i id="liveProgressFill"></i>
-        </div>
-
-        <div class="live-chart-shell">
-          <svg
-            id="liveMetricChart"
-            viewBox="0 0 980 220"
-            role="img"
-            aria-labelledby="liveChartTitle liveChartDescription"
-          >
-            <title id="liveChartTitle">当前训练的实时指标曲线</title>
-            <desc id="liveChartDescription">
-              读取本机训练 CSV 后上传的 exploitability 或 payoff 序列；没有真实数据时保持空白。
-            </desc>
-            <g id="liveChartGrid"></g>
-            <path id="liveChartLine"></path>
-            <g id="liveChartPoints"></g>
-            <g id="liveChartLabels"></g>
-          </svg>
-          <div id="liveChartEmpty" class="live-chart-empty">
-            <strong id="liveChartEmptyTitle">EXPLORATORY SERIES AWAITING START</strong>
-            <span id="liveChartEmptyDetail"
-              >探索运行启动后这里只显示当前 arm / seed 的真实 CSV 指标。</span
-            >
-          </div>
-        </div>
-
-        <footer class="live-run-footer">
-          <span id="lastSignal">LAST SIGNAL —</span>
-          <span>LOCAL CSV → SANITIZED PUBLISHER → VERCEL API</span>
-        </footer>
-      </section>
-
-      <section class="evidence-grid">
-        <article class="panel chart-panel reveal">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow"><span>R2—01</span> BASELINE AUDIT</p>
-              <h2>策略可利用度 / Exploitability</h2>
-            </div>
-            <span class="chip verified">EXACT TREE</span>
-          </div>
-
-          <div class="chart-summary">
+        <div class="supporting-grid">
+          <article>
+            <span class="card-number" id="aucWorsePercent">+9.1%</span>
+            <h3>全程综合表现更差</h3>
             <p>
-              <strong>越低越好。</strong> 对 RandomAgent 的正收益不能代替这一指标；
-              当前 NFSP 虽能击败随机策略，但仍保留明显的最佳响应空间。
+              把 2.5 万到 30 万局之间的表现全部算进去，缩放奖励平均仍然更容易被针对；10 组里有 9 组如此。
             </p>
-            <div>
-              <small>BEST VERIFIED</small>
-              <strong>0.295</strong>
-              <span>CFR · 20K ITER</span>
-            </div>
-          </div>
-
-          <div class="chart-wrap">
-            <svg
-              id="exploitabilityChart"
-              viewBox="0 0 820 330"
-              role="img"
-              aria-labelledby="chartTitle chartDescription"
-            >
-              <title id="chartTitle">不同策略的精确 exploitability</title>
-              <desc id="chartDescription">
-                RandomAgent、三个 NFSP 最终模型和 CFR 最终模型的可利用度比较，数值越低越好。
-              </desc>
-              <g id="chartGrid"></g>
-              <g id="chartBars"></g>
-              <g id="chartLabels"></g>
-            </svg>
-          </div>
-
-          <div class="chart-legend" aria-label="图例">
-            <span><i class="random"></i> RANDOM CONTROL</span>
-            <span><i class="nfsp"></i> NFSP · 300K</span>
-            <span><i class="cfr"></i> CFR REFERENCE</span>
-          </div>
-        </article>
-
-        <aside class="panel endpoint-panel reveal" id="protocol">
-          <div class="panel-heading endpoint-heading">
-            <p class="eyebrow"><span>R2—02</span> FROZEN ENDPOINT</p>
-            <span class="chip locked-chip">POST-OUTCOME AMENDMENT</span>
-            <h2>
-              <span class="endpoint-title-line">先保留失败，</span>
-              <span class="endpoint-title-line">再延长问题。</span>
-            </h2>
-          </div>
-
-          <div class="formula" aria-label="Potential based reward shaping 公式">
-            <small>TRAINING REWARD</small>
+          </article>
+          <article class="exception-card">
+            <span class="card-number">1 个例外</span>
+            <h3>反例没有被隐藏</h3>
             <p>
-              R′ = r/7 + α
-              <span>[ γΦ(I′) − Φ(I) ]</span>
+              随机起点 57721 的全程综合表现由缩放奖励胜出，但它在最终 30 万局时仍然更差。这提醒我们不要把结果说成“任何时候都更差”。
             </p>
-          </div>
-
-          <dl class="endpoint-list">
-            <div>
-              <dt>PRIMARY</dt>
-              <dd>300K exploratory exploitability</dd>
-            </div>
-            <div>
-              <dt>REPLICATION</dt>
-              <dd>10 reused paired seeds</dd>
-            </div>
-            <div>
-              <dt>SELECTION</dt>
-              <dd>No candidate promoted</dd>
-            </div>
-            <div>
-              <dt>INTERPRETATION</dt>
-              <dd>Exploratory, not confirmatory</dd>
-            </div>
-          </dl>
-
-          <p class="endpoint-note">
-            正式 Pilot 结论已冻结为 no_candidate_promoted。本次延长不会回写原结果，也不会被包装成验证性证据。
-          </p>
-        </aside>
-      </section>
-
-      <section class="panel arms-panel reveal">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow"><span>R2—03</span> EXPERIMENT ARMS</p>
-            <h2>Pilot 结论保持可见</h2>
-          </div>
-          <span class="chip">NO CANDIDATE PROMOTED</span>
-        </div>
-
-        <div class="arm-grid">
-          <article class="arm-card control" data-arm-id="terminal">
-            <header><span>A0</span><em>CONTROL</em></header>
-            <h3>TERMINAL</h3>
-            <p>RLCard 原始终局 payoff，不做任何变换。</p>
-            <dl>
-              <div><dt>SCALE</dt><dd>1.000</dd></div>
-              <div><dt>ALPHA</dt><dd>0.00</dd></div>
-            </dl>
-            <footer><i></i><span data-arm-status>PILOT CONTROL · COMPLETE</span></footer>
-          </article>
-
-          <article class="arm-card scaled" data-arm-id="scaled">
-            <header><span>A1</span><em>NUMERIC CONTROL</em></header>
-            <h3>SCALED</h3>
-            <p>终局 payoff 除以 7，仅改变数值尺度。</p>
-            <dl>
-              <div><dt>SCALE</dt><dd>0.143</dd></div>
-              <div><dt>ALPHA</dt><dd>0.00</dd></div>
-            </dl>
-            <footer><i></i><span data-arm-status>EXPLORATORY FOLLOW-UP</span></footer>
-          </article>
-
-          <article class="arm-card pbrs" data-arm-id="pbrs-cfr-a010">
-            <header><span>A2</span><em>TEACHER INFORMED</em></header>
-            <h3>PBRS · LOW</h3>
-            <p>冻结 CFR information-state potential，弱塑形。</p>
-            <dl>
-              <div><dt>SCALE</dt><dd>0.143</dd></div>
-              <div><dt>ALPHA</dt><dd>0.10</dd></div>
-            </dl>
-            <footer><i></i><span data-arm-status>PILOT FAILED · CLOSED</span></footer>
-          </article>
-
-          <article class="arm-card pbrs high" data-arm-id="pbrs-cfr-a025">
-            <header><span>A3</span><em>TEACHER INFORMED</em></header>
-            <h3>PBRS · MID</h3>
-            <p>相同 CFR potential，更强探索引导。</p>
-            <dl>
-              <div><dt>SCALE</dt><dd>0.143</dd></div>
-              <div><dt>ALPHA</dt><dd>0.25</dd></div>
-            </dl>
-            <footer><i></i><span data-arm-status>PILOT FAILED · CLOSED</span></footer>
           </article>
         </div>
       </section>
 
-      <section class="lower-grid">
-        <article class="panel pipeline-panel reveal">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow"><span>R2—04</span> RESEARCH SEQUENCE</p>
-              <h2>从指标到论文证据链</h2>
-            </div>
-            <span id="pipelineChip" class="chip idle" data-state="idle">IDLE · NO LIVE PHASE</span>
-          </div>
+      <section class="section decision" aria-labelledby="decision-title">
+        <header class="section-heading">
+          <p class="section-label">WHAT THIS MEANS</p>
+          <h2 id="decision-title">接下来怎么做？</h2>
+        </header>
 
-          <ol class="pipeline">
-            <li data-phase="1">
-              <span>01</span>
-              <div><strong>FREEZE BASELINE</strong><small>模型、数据、代码版本只读封存</small></div>
-              <em>AWAITING DATA</em>
-            </li>
-            <li data-phase="2">
-              <span>02</span>
-              <div><strong>VALIDATE BEST RESPONSE</strong><small>完整博弈树与 information-set 一致性</small></div>
-              <em>AWAITING DATA</em>
-            </li>
-            <li data-phase="3">
-              <span>03</span>
-              <div><strong>BUILD REWARD LAYER</strong><small>缩放、PBRS、隐藏信息隔离测试</small></div>
-              <em>AWAITING DATA</em>
-            </li>
-            <li data-phase="4">
-              <span>04</span>
-              <div><strong>RUN 50K PILOT</strong><small>4 arms × 3 exploratory seeds</small></div>
-              <em>AWAITING DATA</em>
-            </li>
-            <li data-phase="5">
-              <span>05</span>
-              <div><strong>NO CANDIDATE PROMOTED</strong><small>Pilot AUC 与 50K 终点均未通过</small></div>
-              <em>AWAITING DATA</em>
-            </li>
-            <li data-phase="6">
-              <span>06</span>
-              <div><strong>300K EXPLORATORY EXTENSION</strong><small>terminal vs scaled · 10 paired seeds</small></div>
-              <em>AWAITING DATA</em>
-            </li>
-            <li data-phase="7">
-              <span>07</span>
-              <div><strong>REPORT ALL OUTCOMES</strong><small>包括失败、偏差与协议修订</small></div>
-              <em>AWAITING DATA</em>
-            </li>
-          </ol>
-        </article>
-
-        <aside class="panel seed-panel reveal">
-          <p class="eyebrow"><span>R2—05</span> REPLICATION MAP</p>
-          <h2>种子不是装饰。</h2>
-          <p class="seed-intro">
-            原预留的十个 seeds 已由结果后探索消耗，未来不得再声称它们是未见过的验证性样本。
-          </p>
-
-          <div class="seed-group">
-            <header><span>PILOT</span><strong>EXPLORATORY</strong></header>
-            <div class="seed-grid">
-              <span>42</span><span>123</span><span>2026</span>
-            </div>
-          </div>
-
-          <div class="seed-group exploratory">
-            <header><span>EXTENSION</span><strong>POST-OUTCOME · PAIRED</strong></header>
-            <div class="seed-grid">
-              <span>31415</span><span>27182</span><span>16180</span><span>57721</span>
-              <span>65537</span><span>99991</span><span>104729</span><span>13007</span>
-              <span>17011</span><span>23003</span>
-            </div>
-          </div>
-
-          <div class="integrity-stamp">
-            <span>RESEARCH INTEGRITY</span>
-            <strong>NEGATIVE RESULTS<br />REMAIN VISIBLE</strong>
-          </div>
-        </aside>
+        <div class="decision-grid">
+          <article>
+            <span>保留</span>
+            <h3>继续使用原始奖励</h3>
+            <p>它仍是当前更可靠、也更容易解释的基线。</p>
+          </article>
+          <article>
+            <span>不晋级</span>
+            <h3>不采用缩放奖励</h3>
+            <p>它没有在这次延长训练中显示出实际优势。</p>
+          </article>
+          <article>
+            <span>若再验证</span>
+            <h3>先写问题，再看数据</h3>
+            <p>未来若做确认性实验，需要新的预设方案和没有使用过的随机起点。</p>
+          </article>
+        </div>
       </section>
 
-      <section class="disclosure reveal">
-        <span>TEST SUBPAGE / 测试子页面</span>
-        <p>
-          本页每 3 秒读取一次云端脱敏状态；本机 publisher 每 10 秒上传一次。
-          <span id="disclosureLiveState">正在检查真实数据链路。</span>
-          页面不会把计划数据伪装成实时结果，也不会控制本地训练设备。
-        </p>
-        <a href="/rlcard/">查看第一阶段实时页面 →</a>
+      <section id="evidence" class="section evidence" aria-labelledby="evidence-title">
+        <header class="section-heading">
+          <p class="section-label">METHODS &amp; EVIDENCE</p>
+          <h2 id="evidence-title">想核对？完整方法和数据都在这里。</h2>
+        </header>
+
+        <details class="evidence-details">
+          <summary>
+            <span>方法、10 组完整数字与研究限制</span>
+            <small>适合想进一步核对的读者</small>
+          </summary>
+          <div class="details-body">
+            <div class="method-grid">
+              <article>
+                <h3>测试是怎么做的</h3>
+                <ul>
+                  <li>两种设置：原始奖励，以及把奖励缩小为 1/7。</li>
+                  <li>10 个相同的独立随机起点，每个起点两种设置各跑一次。</li>
+                  <li>每次训练 300,000 局，共 20 次运行、6,000,000 局。</li>
+                  <li>主要指标是策略有多容易被针对，越低越好。</li>
+                </ul>
+              </article>
+              <article>
+                <h3>为什么不能叫“确认”</h3>
+                <p>
+                  这项延长是在看过前期 Pilot 结果后才决定的，而且用了原本预留的随机起点。因此它只能提出探索性证据，不能充当事先设计的最终验证。
+                </p>
+                <p>
+                  前期 Pilot 没有让任何奖励方案晋级。选择缩放奖励继续探索，只因为它是非对照方案中全程指标最低、变换也最简单的一种，不代表 Pilot 支持它有效。
+                </p>
+                <p>
+                  结论只适用于这次 Leduc Hold'em、NFSP 和这些训练设置，不能证明所有奖励设计在其他任务里都无效。
+                </p>
+              </article>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <caption>每个随机起点在 300,000 局时的“容易被针对”数值（越低越好）</caption>
+                <thead>
+                  <tr><th scope="col">随机起点</th><th scope="col">原始奖励</th><th scope="col">奖励 ÷ 7</th><th scope="col">较好者</th></tr>
+                </thead>
+                <tbody id="seedRows">
+                  <tr><th scope="row">31415</th><td>1.166</td><td>1.310</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">27182</th><td>1.203</td><td>1.304</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">16180</th><td>1.108</td><td>1.331</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">57721</th><td>1.213</td><td>1.341</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">65537</th><td>1.151</td><td>1.317</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">99991</th><td>1.184</td><td>1.201</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">104729</th><td>1.196</td><td>1.297</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">13007</th><td>1.234</td><td>1.242</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">17011</th><td>1.156</td><td>1.326</td><td>原始奖励</td></tr>
+                  <tr><th scope="row">23003</th><td>1.186</td><td>1.305</td><td>原始奖励</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="technical-note">
+              <h3>统计数字（给需要复核的读者）</h3>
+              <p>
+                终点均值：原始奖励 1.1796，缩放奖励 1.2975；配对平均差 0.1179，配对 bootstrap 95% 区间为 0.0781–0.1554。
+                双侧 exact sign-flip p = 0.00195。
+              </p>
+              <p>
+                全程综合指标从 25,000 到 300,000 局计算，单位为“容易被针对 × 训练局数”。原始奖励均值 328,774，缩放奖励 358,724；缩放奖励高 9.1%，10 组中 9 组更差。
+              </p>
+              <p>
+                Bootstrap 按随机起点成对重采样 10,000 次；sign-flip 是 n=10、共 1,024 种符号组合的双侧检验。这些统计描述的是探索数据，不会把它变成确认性证明。
+              </p>
+              <a class="data-link" href="/rlcard/research/exploratory-report-v1.json">下载机器可读的完整报告 JSON →</a>
+            </div>
+          </div>
+        </details>
+
+        <details id="latestRunDetails" class="evidence-details run-details">
+          <summary>
+            <span>最后一次运行的真实 CSV 曲线</span>
+            <small>单个设置与随机起点，不是 10 组平均</small>
+          </summary>
+          <div class="details-body">
+            <div class="run-meta">
+              <div><span>设置</span><strong id="runArm">原始奖励</strong></div>
+              <div><span>随机起点</span><strong id="runSeed">23003</strong></div>
+              <div><span>进度</span><strong id="runProgress">300,000 / 300,000</strong></div>
+              <div><span>最终数值</span><strong id="runExploitability">1.186</strong></div>
+            </div>
+            <div id="runChartShell" class="run-chart-shell">
+              <svg id="runChart" viewBox="0 0 900 280" role="img" aria-labelledby="runChartTitle runChartDescription">
+                <title id="runChartTitle">最后一次运行的策略可利用度曲线</title>
+                <desc id="runChartDescription">原始奖励、随机起点 23003，从 25,000 到 300,000 局的单次真实 CSV 曲线。</desc>
+                <g id="runChartGrid"></g>
+                <path id="runChartLine"></path>
+                <g id="runChartPoints"></g>
+                <g id="runChartLabels"></g>
+              </svg>
+              <p id="runChartEmpty" class="run-chart-empty" hidden>曲线暂时无法读取；上面的研究总结仍来自已保存的完整报告。</p>
+            </div>
+            <p class="run-note" id="runUpdated">最后保存的运行：原始奖励 · 随机起点 23003。</p>
+          </div>
+        </details>
       </section>
+
+      <aside class="integrity-note">
+        <strong>研究诚信说明</strong>
+        <p>负面结果和例外都保留可见；原始 Pilot 结论仍是“没有候选方案晋级”，没有被这次追加探索改写。</p>
+      </aside>
     </main>
 
     <footer class="page-footer">
-      <span>RLCard 1.2.0 · EXPLORATORY SCALED V1</span>
-      <span id="footerTime">SHANGHAI --:--</span>
-      <a href="/">HARRYXIN.COM</a>
+      <span>RLCard Leduc Reward Study · 2026</span>
+      <span>数据：20 次运行 · 6,000,000 局</span>
+      <a href="/rlcard/">查看 RLCard 项目档案 →</a>
     </footer>
 
     <script src="/rlcard/research/app.js" defer></script>

@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "studyId": "leduc-reward-exploratory-scaled-v1",
+  "sourceStudyId": "leduc-reward-study-v1",
+  "analysisType": "post_outcome_exploratory",
+  "confirmatory": false,
+  "generatedAt": "2026-08-10T17:12:16.048769+00:00",
+  "arms": [
+    "terminal",
+    "scaled"
+  ],
+  "seeds": [
+    31415,
+    27182,
+    16180,
+    57721,
+    65537,
+    99991,
+    104729,
+    13007,
+    17011,
+    23003
+  ],
+  "completedRuns": 20,
+  "totalEpisodes": 6000000,
+  "metrics": {
+    "finalExploitability": {
+      "differenceDirection": "scaled_minus_terminal",
+      "perSeed": [
+        {
+          "seed": 31415,
+          "terminal": 1.1656108377862684,
+          "scaled": 1.3103060408157416,
+          "difference": 0.14469520302947325
+        },
+        {
+          "seed": 27182,
+          "terminal": 1.2028935981706241,
+          "scaled": 1.3044224516261569,
+          "difference": 0.10152885345553275
+        },
+        {
+          "seed": 16180,
+          "terminal": 1.1080523367981727,
+          "scaled": 1.3310925804591314,
+          "difference": 0.22304024366095865
+        },
+        {
+          "seed": 57721,
+          "terminal": 1.2129657857157117,
+          "scaled": 1.340850943559785,
+          "difference": 0.1278851578440734
+        },
+        {
+          "seed": 65537,
+          "terminal": 1.1505005941537312,
+          "scaled": 1.3173182505961791,
+          "difference": 0.16681765644244795
+        },
+        {
+          "seed": 99991,
+          "terminal": 1.1841468647174214,
+          "scaled": 1.201313987042301,
+          "difference": 0.017167122324879713
+        },
+        {
+          "seed": 104729,
+          "terminal": 1.1956021309598137,
+          "scaled": 1.2968633614914904,
+          "difference": 0.10126123053167668
+        },
+        {
+          "seed": 13007,
+          "terminal": 1.2341049464708413,
+          "scaled": 1.2417504468758553,
+          "difference": 0.007645500405013994
+        },
+        {
+          "seed": 17011,
+          "terminal": 1.1564215825051036,
+          "scaled": 1.3263073990155114,
+          "difference": 0.1698858165104078
+        },
+        {
+          "seed": 23003,
+          "terminal": 1.1855280481569292,
+          "scaled": 1.3049482439792879,
+          "difference": 0.11942019582235863
+        }
+      ],
+      "meanDifference": 0.11793469800268228,
+      "medianDifference": 0.12365267683321601,
+      "bootstrap95CI": [
+        0.0780670554505237,
+        0.15537807473427334
+      ],
+      "exactPairedSignFlipP": 0.001953125,
+      "pairedStandardizedMeanDifference": 1.7730599193022425,
+      "interpretation": "exploratory_only"
+    },
+    "exploitabilityAuc": {
+      "differenceDirection": "scaled_minus_terminal",
+      "perSeed": [
+        {
+          "seed": 31415,
+          "terminal": 320948.92802255444,
+          "scaled": 363473.08808323304,
+          "difference": 42524.16006067861
+        },
+        {
+          "seed": 27182,
+          "terminal": 322606.57886433817,
+          "scaled": 352227.506777913,
+          "difference": 29620.92791357485
+        },
+        {
+          "seed": 16180,
+          "terminal": 319434.76784389856,
+          "scaled": 364068.7991399553,
+          "difference": 44634.03129605675
+        },
+        {
+          "seed": 57721,
+          "terminal": 375440.1806374968,
+          "scaled": 356980.8375736869,
+          "difference": -18459.34306380991
+        },
+        {
+          "seed": 65537,
+          "terminal": 318397.75586208294,
+          "scaled": 362537.3640983912,
+          "difference": 44139.60823630827
+        },
+        {
+          "seed": 99991,
+          "terminal": 326358.0541633002,
+          "scaled": 337362.9721623257,
+          "difference": 11004.917999025492
+        },
+        {
+          "seed": 104729,
+          "terminal": 323269.29412799084,
+          "scaled": 354697.3133263072,
+          "difference": 31428.019198316382
+        },
+        {
+          "seed": 13007,
+          "terminal": 330252.79858153214,
+          "scaled": 361844.36200238264,
+          "difference": 31591.563420850493
+        },
+        {
+          "seed": 17011,
+          "terminal": 322193.9247089877,
+          "scaled": 376648.41193263006,
+          "difference": 54454.487223642354
+        },
+        {
+          "seed": 23003,
+          "terminal": 328840.22972364293,
+          "scaled": 357400.2049534572,
+          "difference": 28559.9752298143
+        }
+      ],
+      "meanDifference": 29949.83475144576,
+      "medianDifference": 31509.791309583437,
+      "bootstrap95CI": [
+        16511.385499777112,
+        40581.75695005607
+      ],
+      "exactPairedSignFlipP": 0.005859375,
+      "pairedStandardizedMeanDifference": 1.4415470076664798,
+      "interpretation": "exploratory_only",
+      "window": [
+        25000,
+        300000
+      ]
+    }
+  },
+  "exploratoryRationale": {
+    "arm": "scaled",
+    "basis": "Lowest Pilot exploitability AUC among non-control arms and the simplest reward transformation.",
+    "pilotSupport": false
+  },
+  "claimLimit": "Post-outcome exploratory evidence only; not a confirmation and not a retroactive Pilot promotion."
+}

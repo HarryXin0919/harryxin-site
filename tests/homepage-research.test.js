@@ -4,114 +4,80 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-test("homepage research card starts honest and refreshes every three seconds", async () => {
-  const homepage = await readFile(new URL("index.html", root), "utf8");
+async function fixture(path) {
+  return readFile(new URL(path, root), "utf8");
+}
+
+test("homepage presents the completed study before live telemetry arrives", async () => {
+  const homepage = await fixture("index.html");
 
   assert.match(homepage, /id="rlcard-research-project"/);
-  assert.match(homepage, /id="research-card-state">\s*IDLE · 尚未启动/);
-  assert.match(homepage, /id="research-card-phase">— \/ 07/);
-  assert.match(homepage, /id="research-card-runs">0 \/ 20/);
+  assert.match(homepage, /data-research-state="complete"/);
+  assert.match(homepage, /RLCard Reward Study · Complete/);
+  assert.match(homepage, /id="research-card-runs">20 \/ 20/);
+  assert.match(homepage, /Read the public report/);
   assert.match(homepage, /href="\/rlcard\/research\/"/);
   assert.match(homepage, /setInterval\(load, 3000\)/);
+  assert.doesNotMatch(homepage, /The Pilot promoted no reward candidate\. A separate 300K extension now/);
 });
 
 test("local development fixture does not invent Phase II research telemetry", async () => {
-  const devServer = await readFile(new URL("scripts/dev-server.js", root), "utf8");
-
+  const devServer = await fixture("scripts/dev-server.js");
   assert.doesNotMatch(devServer, /\bresearch\s*:\s*\{/);
 });
 
-test("research detail page defaults to an explicit idle state", async () => {
-  const detailPage = await readFile(
-    new URL("rlcard/research/index.html", root),
-    "utf8",
-  );
-  const detailApp = await readFile(
-    new URL("rlcard/research/app.js", root),
-    "utf8",
-  );
-  const detailStyles = await readFile(
-    new URL("rlcard/research/styles.css", root),
-    "utf8",
-  );
+test("public report leads with a plain-language answer and one primary comparison", async () => {
+  const page = await fixture("rlcard/research/index.html");
 
-  assert.match(detailPage, /id="currentPhaseLabel">尚未启动 \/ AWAITING DATA/);
-  assert.match(detailPage, /id="pilotRunCount">0 \/ 20 PLANNED/);
-  assert.match(detailPage, /id="liveProgress">0 \/ 20 RUNS/);
-  assert.match(detailPage, /id="liveThroughputLabel">THROUGHPUT \/ ETA/);
-  assert.match(detailPage, /id="liveChartEmptyTitle">EXPLORATORY SERIES AWAITING START/);
-  assert.match(detailPage, /id="liveChartEmptyDetail"/);
-  assert.match(
-    detailPage,
-    /id="pipelineChip" class="chip idle" data-state="idle">IDLE · NO LIVE PHASE/,
-  );
-  assert.match(detailApp, /pipelineChip\.dataset\.state = pipelineState/);
-  assert.match(detailApp, /PILOT COMPLETE · AWAITING SELECTION/);
-  assert.match(detailApp, /最近完成运行 \/ Latest Completed Run/);
-  assert.match(detailApp, /COMPLETED SNAPSHOT PENDING/);
-  assert.match(detailApp, /COMPLETE · SAVED/);
-  assert.match(detailApp, /document\.addEventListener\("visibilitychange"/);
-  assert.match(detailApp, /if \(!document\.hidden\) \{\s*researchRefreshTimer = setInterval/);
-  assert.match(detailStyles, /\.chip\.live,\s*\.chip\.running/);
-  assert.match(
-    detailStyles,
-    /\.phase-caption,[\s\S]*\.page-footer \{\s*font-size: 10px;/,
-  );
+  assert.match(page, /<meta name="robots" content="index, follow"/);
+  assert.match(page, /把奖励缩小 7 倍/);
+  assert.match(page, /没有让扑克 AI 学得更好/);
+  assert.match(page, /EXECUTIVE SUMMARY/);
+  assert.match(page, /先说结论/);
+  assert.match(page, /数字越低，策略越稳/);
+  assert.match(page, /10 \/ 10/);
+  assert.match(page, /\+10\.0%/);
+  assert.match(page, /6,000,000/);
+  assert.equal((page.match(/class="comparison-figure"/g) || []).length, 1);
+
+  assert.doesNotMatch(page, /id="phaseDial"/);
+  assert.doesNotMatch(page, /class="signal-rail/);
+  assert.doesNotMatch(page, /class="arm-grid/);
+  assert.doesNotMatch(page, /class="pipeline/);
+  assert.doesNotMatch(page, /GPU|COMPUTE NODE/);
 });
 
-test("frozen endpoint title keeps two intentional Chinese lines", async () => {
-  const [detailPage, detailStyles] = await Promise.all([
-    readFile(new URL("rlcard/research/index.html", root), "utf8"),
-    readFile(new URL("rlcard/research/styles.css", root), "utf8"),
-  ]);
-  const endpoint = detailPage.match(
-    /<aside class="panel endpoint-panel reveal" id="protocol">([\s\S]*?)<\/aside>/,
-  );
+test("technical language is explained before it is placed in collapsed evidence", async () => {
+  const page = await fixture("rlcard/research/index.html");
+  const summaryIndex = page.indexOf("EXECUTIVE SUMMARY");
+  const technicalIndex = page.indexOf("统计数字（给需要复核的读者）");
 
-  assert.ok(endpoint, "frozen endpoint panel is missing");
-  assert.match(endpoint[1], /class="panel-heading endpoint-heading"/);
-  assert.deepEqual(
-    Array.from(
-      endpoint[1].matchAll(/class="endpoint-title-line">([^<]+)<\/span>/g),
-      (match) => match[1],
-    ),
-    ["先保留失败，", "再延长问题。"],
-  );
-  assert.doesNotMatch(endpoint[1], /<h2>[\s\S]*?<br\s*\/?>/i);
-  assert.match(
-    detailStyles,
-    /\.endpoint-heading\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto;/s,
-  );
-  assert.match(
-    detailStyles,
-    /grid-template-areas:\s*"meta status"\s*"title title";/s,
-  );
-  assert.match(
-    detailStyles,
-    /\.endpoint-title-line\s*\{[^}]*display:\s*block;[^}]*white-space:\s*nowrap;/s,
-  );
-  assert.match(
-    detailStyles,
-    /\.endpoint-panel h2\s*\{[^}]*line-height:\s*1(?:\.\d+)?;[^}]*word-break:\s*keep-all;[^}]*line-break:\s*strict;/s,
-  );
-  assert.match(
-    detailStyles,
-    /\.formula p\s*\{[^}]*white-space:\s*nowrap;/s,
-  );
+  assert.ok(summaryIndex >= 0 && technicalIndex > summaryIndex);
+  assert.match(page, /<details class="evidence-details">/);
+  assert.match(page, /方法、10 组完整数字与研究限制/);
+  assert.match(page, /最后一次运行的真实 CSV 曲线/);
+  assert.match(page, /单个设置与随机起点，不是 10 组平均/);
+  assert.match(page, /看过前期结果后追加的探索 · 不是预先设定的验证/);
+  assert.match(page, /不能充当事先设计的最终验证/);
+  assert.match(page, /不能证明所有奖励设计在其他任务里都无效/);
+  assert.doesNotMatch(page, /\b300K CONFIRMATION\b/);
 });
 
-test("homepage distinguishes a completed snapshot from a live run", async () => {
-  const homepage = await readFile(new URL("index.html", root), "utf8");
+test("versioned report asset is complete, exploratory, and contains no private fields", async () => {
+  const source = await fixture("rlcard/research/exploratory-report-v1.json");
+  const report = JSON.parse(source);
 
-  assert.match(homepage, /id="research-card-current-label">CURRENT RUN \/ 当前任务/);
-  assert.match(homepage, /id="research-card-speed-label">THROUGHPUT/);
-  assert.match(homepage, /id="research-card-eta-label">ETA/);
-  assert.match(homepage, /LAST COMPLETED RUN \/ 最近完成/);
-  assert.match(homepage, /PILOT COMPLETE · 等待选组/);
-  assert.match(
-    homepage,
-    /researchEtaEl\.textContent = completedSnapshot \? 'SAVED'/,
-  );
+  assert.equal(report.schemaVersion, 1);
+  assert.equal(report.studyId, "leduc-reward-exploratory-scaled-v1");
+  assert.equal(report.analysisType, "post_outcome_exploratory");
+  assert.equal(report.confirmatory, false);
+  assert.equal(report.completedRuns, 20);
+  assert.equal(report.totalEpisodes, 6000000);
+  assert.equal(report.seeds.length, 10);
+  assert.equal(new Set(report.seeds).size, 10);
+  assert.equal(report.metrics.finalExploitability.perSeed.length, 10);
+  assert.equal(report.metrics.exploitabilityAuc.perSeed.length, 10);
+  assert.doesNotMatch(source, /localPath|checkpoint|publisherToken|stderr|stdout|pid|D:\\\\/i);
 });
 
 test("homepage keeps exploratory telemetry without duplicating protocol copy", async () => {
@@ -139,8 +105,37 @@ test("homepage keeps exploratory telemetry without duplicating protocol copy", a
   assert.match(homepage, /LAST COMPLETED RUN \/ 最近完成/);
 });
 
+test("frozen latest-run snapshot preserves a real, non-empty completed curve", async () => {
+  const snapshot = JSON.parse(await fixture("rlcard/research/latest-run-v1.json"));
+
+  assert.equal(snapshot.schemaVersion, 1);
+  assert.equal(snapshot.arm, "terminal");
+  assert.equal(snapshot.seed, 23003);
+  assert.equal(snapshot.target, 300000);
+  assert.equal(snapshot.series.length, 12);
+  assert.equal(snapshot.series[0].progress, 25000);
+  assert.equal(snapshot.series.at(-1).progress, 300000);
+  assert.equal(snapshot.series.at(-1).exploitability, 1.1855280481569292);
+  snapshot.series.forEach((point) => {
+    assert.equal(Number.isFinite(point.progress), true);
+    assert.equal(Number.isFinite(point.exploitability), true);
+  });
+});
+
+test("public report enhancement loads final data separately from live status", async () => {
+  const app = await fixture("rlcard/research/app.js");
+
+  assert.match(app, /exploratory-report-v1\.json/);
+  assert.match(app, /latest-run-v1\.json/);
+  assert.match(app, /\/api\/rlcard\/status/);
+  assert.match(app, /confirmatory !== false/);
+  assert.match(app, /scaled_minus_terminal/);
+  assert.match(app, /实时状态快照较旧 · 最终报告为 20 \/ 20 组/);
+  assert.doesNotMatch(app, /setInterval/);
+});
+
 test("homepage inline telemetry renderer remains valid JavaScript", async () => {
-  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const homepage = await fixture("index.html");
   const inlineScripts = Array.from(
     homepage.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi),
     (match) => match[1],
@@ -150,29 +145,4 @@ test("homepage inline telemetry renderer remains valid JavaScript", async () => 
   inlineScripts.forEach((source) => {
     assert.doesNotThrow(() => new Function(source));
   });
-});
-
-test("detail page makes the failed Pilot and exploratory amendment explicit", async () => {
-  const detailPage = await readFile(
-    new URL("rlcard/research/index.html", root),
-    "utf8",
-  );
-  const detailApp = await readFile(
-    new URL("rlcard/research/app.js", root),
-    "utf8",
-  );
-
-  assert.match(detailPage, /POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY/);
-  assert.match(detailPage, /NO CANDIDATE PROMOTED/);
-  assert.match(detailPage, /300K EXPLORATORY EXTENSION/);
-  assert.match(detailPage, /scaled 仅因非 control 方案中 AUC 最低、变换最简单/);
-  assert.doesNotMatch(detailPage, /\b300K CONFIRMATION\b/);
-  assert.doesNotMatch(detailPage, /UNSEEN · PAIRED/);
-
-  assert.match(detailApp, /isExploratory/);
-  assert.match(detailApp, /POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY/);
-  assert.match(detailApp, /QUEUED · AWAITING GPU/);
-  assert.match(detailApp, /PAUSED · CHECKPOINT SAVED/);
-  assert.match(detailApp, /REPORTING · EXPLORATORY/);
-  assert.match(detailApp, /EXPLORATORY · SINGLE ARM\/SEED/);
 });

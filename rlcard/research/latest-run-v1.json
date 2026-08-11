@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "source": "terminal/23003/training.csv",
+  "arm": "terminal",
+  "seed": 23003,
+  "target": 300000,
+  "series": [
+    { "progress": 25000, "exploitability": 1.1687111285426104 },
+    { "progress": 50000, "exploitability": 1.1825029825413091 },
+    { "progress": 75000, "exploitability": 1.1685094085633554 },
+    { "progress": 100000, "exploitability": 1.1809530876621563 },
+    { "progress": 125000, "exploitability": 1.16534267577897 },
+    { "progress": 150000, "exploitability": 1.2321809133221655 },
+    { "progress": 175000, "exploitability": 1.2169437994825025 },
+    { "progress": 200000, "exploitability": 1.1667519915691122 },
+    { "progress": 225000, "exploitability": 1.2211765635074117 },
+    { "progress": 250000, "exploitability": 1.2142753841258296 },
+    { "progress": 275000, "exploitability": 1.2278527940431352 },
+    { "progress": 300000, "exploitability": 1.1855280481569292 }
+  ]
+}
