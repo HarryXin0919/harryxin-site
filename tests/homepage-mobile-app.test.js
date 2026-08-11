@@ -5,6 +5,7 @@ import vm from "node:vm";
 
 const rootUrl = new URL("../", import.meta.url);
 const pageIds = ["home", "about", "creating", "now", "building"];
+const appMediaQuery = "(max-width: 820px), (any-pointer: coarse) and (max-width: 1400px)";
 
 function attribute(tag, name) {
   const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*(["'])(.*?)\\1`, "i"));
@@ -172,7 +173,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
       },
     },
     matchMedia(query) {
-      assert.equal(query, "(max-width: 820px)");
+      assert.equal(query, appMediaQuery);
       return appMedia;
     },
     addEventListener(type, listener) {
@@ -295,6 +296,39 @@ test("mobile app markup exposes five ordered screens and tabs", async () => {
   assert.ok(tabbar, "mobile tabbar is missing");
   const tabTags = Array.from(tabbar.matchAll(/<a\b[^>]*\bdata-app-tab\b[^>]*>/gi), (match) => match[0]);
   assert.deepEqual(tabTags.map((tag) => attribute(tag, "href")), pageIds.map((id) => `#${id}`));
+});
+
+test("App mode covers phones and iPads without capturing a fine-only desktop", async () => {
+  const homepage = await readFile(new URL("index.html", rootUrl), "utf8");
+  const escapedJsQuery = appMediaQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const cssQuery = "@media (max-width:820px), (any-pointer:coarse) and (max-width:1400px)";
+
+  assert.equal((homepage.match(new RegExp(escapedJsQuery, "g")) || []).length, 2);
+  assert.ok(homepage.split(cssQuery).length - 1 >= 4, "App shell CSS must use the iPad-aware media query");
+  assert.match(homepage, /width:min\(720px,calc\(100% - 24px/);
+  assert.match(homepage, /html\.app-mode \.wrap\{width:min\(1080px,calc\(100% - 48px\)\)\}/);
+  assert.match(homepage, /html\.app-mode \.facts\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}/);
+  assert.match(homepage, /\.mobile-tabbar a\{[\s\S]{0,220}min-height:56px/);
+
+  const matchesAppMode = ({ width, coarse }) => width <= 820 || (coarse && width <= 1400);
+  const cases = [
+    { width: 768, coarse: false, expected: true },
+    { width: 820, coarse: false, expected: true },
+    { width: 821, coarse: false, expected: false },
+    { width: 1024, coarse: true, expected: true },
+    { width: 1180, coarse: true, expected: true },
+    { width: 1194, coarse: true, expected: true },
+    { width: 1376, coarse: true, expected: true },
+    { width: 1400, coarse: true, expected: true },
+    { width: 1401, coarse: true, expected: false },
+    { width: 1024, coarse: false, expected: false },
+    { width: 1194, coarse: false, expected: false },
+    { width: 1366, coarse: false, expected: false },
+    { width: 1440, coarse: true, expected: false },
+  ];
+  for (const sample of cases) {
+    assert.equal(matchesAppMode(sample), sample.expected, `unexpected App mode at ${sample.width}px`);
+  }
 });
 
 test("routed App headings keep a visible focus indicator", async () => {
@@ -476,7 +510,7 @@ test("each screen keeps its own scroll and a repeated tab returns to top", async
   assert.deepEqual(harness.scrollCalls.at(-1), [0, 130]);
 });
 
-test("leaving the 820px app breakpoint restores the full desktop document", async () => {
+test("leaving the iPad App breakpoint restores the full desktop document", async () => {
   const harness = await createAppHarness({ hash: "#about" });
   harness.flushFrames();
   assertActivePage(harness, "about");

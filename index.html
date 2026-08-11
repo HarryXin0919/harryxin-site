@@ -41,7 +41,7 @@
   (function(){
     var pages = ['home','about','creating','now','building'];
     var mobile = false;
-    try { mobile = !!(window.matchMedia && window.matchMedia('(max-width: 820px)').matches); } catch(e){}
+    try { mobile = !!(window.matchMedia && window.matchMedia('(max-width: 820px), (any-pointer: coarse) and (max-width: 1400px)').matches); } catch(e){}
     if (!mobile) return;
     var page = (window.location.hash || '').slice(1);
     if (pages.indexOf(page) < 0) page = 'home';
@@ -487,8 +487,8 @@
     .card::before,.card::after{display:none}
   }
 
-  @media (max-width:820px){
-    .site-nav{display:none}
+  @media (max-width:820px), (any-pointer:coarse) and (max-width:1400px){
+    .site-nav,.loc{display:none}
   }
 
   @media (max-width:600px){
@@ -1872,24 +1872,6 @@
     margin:0;
     font-size:clamp(48px,6.2vw,92px);
   }
-  .card-rlcard .pd{margin:18px 0 18px}
-  .rlcard-amendment{
-    margin:0 0 24px;
-    padding:13px 14px;
-    border:1px solid rgba(232,181,77,.28);
-    border-left:3px solid #e8b54d;
-    color:var(--paper-dim);
-    background:rgba(232,181,77,.055);
-    font:12px/1.55 Georgia,"Times New Roman",serif;
-  }
-  .rlcard-amendment strong{
-    display:block;
-    margin-bottom:7px;
-    color:#f2ca72;
-    font:700 9px/1.25 var(--mono);
-    letter-spacing:.1em;
-  }
-  .rlcard-amendment span{display:block}
   .rlcard-project-links{
     display:flex;
     flex-wrap:wrap;
@@ -2652,7 +2634,6 @@
     .rlcard-project-copy{min-height:300px;padding:24px}
     .rlcard-project-kicker{margin-bottom:30px}
     .card-rlcard .pt{font-size:clamp(45px,13vw,62px)}
-    .card-rlcard .pd{font-size:15px}
     .rlcard-research-readout{padding:16px}
     .research-readout-grid{grid-template-columns:minmax(0,1fr)}
     .research-readout-grid .research-current{grid-column:auto}
@@ -3000,9 +2981,9 @@
   @keyframes hx-route-progress{to{transform:scaleX(1)}}
 
   /* ============================================================
-     HX APP SHELL / MOBILE
-     The desktop keeps its research-index composition. Phones get
-     independent app chrome, safe-area spacing and tactile cards.
+     HX APP SHELL / PHONE + IPAD
+     The desktop keeps its research-index composition. Touch devices and
+     tablet-sized viewports get independent app chrome and tactile cards.
      ============================================================ */
   .brand-mark{
     display:block;
@@ -3014,16 +2995,17 @@
   .topbar-brand::before{content:none}
   .mobile-tabbar{display:none}
 
-  @media (max-width:820px){
+  @media (max-width:820px), (any-pointer:coarse) and (max-width:1400px){
     html{scroll-padding-bottom:108px}
     body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
     .mobile-tabbar{
       position:fixed;
       z-index:12;
-      right:max(12px,env(safe-area-inset-right,0px));
+      right:auto;
       bottom:max(8px,env(safe-area-inset-bottom,0px));
-      left:max(12px,env(safe-area-inset-left,0px));
+      left:50%;
       display:grid;
+      width:min(720px,calc(100% - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)));
       grid-template-columns:repeat(5,minmax(0,1fr));
       gap:2px;
       min-height:70px;
@@ -3034,6 +3016,7 @@
       box-shadow:0 18px 48px rgba(0,0,0,.42),0 1px 0 rgba(255,255,255,.07) inset;
       -webkit-backdrop-filter:blur(24px) saturate(145%);
               backdrop-filter:blur(24px) saturate(145%);
+      transform:translateX(-50%);
     }
     .mobile-tabbar a{
       position:relative;
@@ -3086,6 +3069,16 @@
       text-transform:uppercase;
       white-space:nowrap;
     }
+  }
+
+  @media (min-width:821px) and (max-width:1400px) and (any-pointer:coarse){
+    html.app-mode .wrap{width:min(1080px,calc(100% - 48px))}
+    html.app-mode .topbar{min-height:78px}
+  }
+
+  @media (min-width:840px) and (max-width:1400px) and (any-pointer:coarse){
+    html.app-mode .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+    html.app-mode .facts .fact:last-child:nth-child(odd){grid-column:1/-1}
   }
 
   @media (max-width:600px){
@@ -3203,8 +3196,6 @@
     footer{padding-bottom:28px}
 
     .mobile-tabbar{
-      right:max(10px,env(safe-area-inset-right,0px));
-      left:max(10px,env(safe-area-inset-left,0px));
       border-radius:22px;
     }
   }
@@ -3395,7 +3386,6 @@
   html[data-theme="light"] .research-run-meta>div{background:rgba(247,249,244,.96)}
   html[data-theme="light"] .research-progress-track,
   html[data-theme="light"] .signal-track{background:rgba(10,15,12,.11)}
-  html[data-theme="light"] .rlcard-amendment strong{color:#76520f}
   html[data-theme="light"] .lab-signal{
     border-color:rgba(47,120,24,.32);
     background:linear-gradient(115deg,rgba(47,120,24,.08),transparent 42%),rgba(255,255,255,.62);
@@ -3419,7 +3409,7 @@
   html[data-theme="light"] .route-progress{background:rgba(10,15,12,.16)}
   html[data-theme="light"] .route-progress>span{box-shadow:0 0 14px rgba(47,120,24,.36)}
 
-  @media (max-width:820px){
+  @media (max-width:820px), (any-pointer:coarse) and (max-width:1400px){
     html[data-theme="light"] .mobile-tabbar{
       border-color:rgba(10,15,12,.14);
       background:rgba(247,249,244,.90);
@@ -3471,9 +3461,9 @@
     html[data-theme="light"].is-scrolled .topbar{background:var(--ink-2)}
   }
 
-  /* Mobile App pages: one semantic screen is mounted at a time while the
+  /* Phone and iPad App pages: one semantic screen is mounted at a time while the
      desktop document remains a continuous editorial index. */
-  @media (max-width:820px){
+  @media (max-width:820px), (any-pointer:coarse) and (max-width:1400px){
     html.app-mode{
       --app-enter-x:0px;
       scroll-behavior:auto;
@@ -3769,14 +3759,14 @@
       <a class="fact fact-link rise" href="https://www.ibo.org/" rel="noopener" aria-label="International Baccalaureate official website" data-motion-surface data-destination="IB DIPLOMA">
         <span class="fact-icon" aria-hidden="true"><img src="/assets/ib-dp-logo.jpg" alt="" loading="lazy" decoding="async"></span>
         <p class="k"><span data-lang="en">Studying</span><span data-lang="zh">在读</span></p>
-        <p class="v"><span data-lang="en">IB Diploma</span><span data-lang="zh">IB 文凭</span><br><small>HL Math AA · Physics · English&nbsp;B</small><br><span class="fact-official"><span data-lang="en">Official website</span><span data-lang="zh">IB 官方网站</span> · ibo.org ↗</span></p>
+        <p class="v"><span data-lang="en">IB Diploma</span><span data-lang="zh">IB 文凭</span><br><span class="fact-official"><span data-lang="en">Official website</span><span data-lang="zh">IB 官方网站</span> · ibo.org ↗</span></p>
       </a>
       <a class="fact fact-link fact-ironpulse rise" href="https://www.ironpulse.net/" rel="noopener" aria-label="IronPulse Robotics 6941 official website" data-motion-surface data-destination="IRONPULSE">
         <span class="fact-icon ironpulse-icon" aria-hidden="true"><img src="/assets/ironpulse-logo.svg" alt="" loading="lazy" decoding="async"></span>
         <p class="k"><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></p>
-        <p class="v">FRC 6941 IronPulse<br><small><span data-lang="en">Shanghai Regional Champions → Houston World Championship</span><span data-lang="zh">上海区域赛冠军 → 休斯顿世锦赛</span></small><br><span class="fact-official">ironpulse.net ↗</span></p>
+        <p class="v">FRC 6941 IronPulse<br><span class="fact-official">ironpulse.net ↗</span></p>
       </a>
-      <div class="fact rise"><p class="k"><span data-lang="en">Building</span><span data-lang="zh">在做</span></p><p class="v"><span data-lang="en">FindItem hardware</span><span data-lang="zh">FindItem 硬件</span><br><small><span data-lang="en">ESP32-C3 prototype · 30-bin architecture planning</span><span data-lang="zh">ESP32-C3 原型 · 30 箱架构规划</span></small></p></div>
+      <div class="fact rise"><p class="k"><span data-lang="en">Building</span><span data-lang="zh">在做</span></p><p class="v"><span data-lang="en">FindItem hardware</span><span data-lang="zh">FindItem 硬件</span></p></div>
     </div>
 
   </section>
@@ -3799,14 +3789,6 @@
               IDLE · 尚未启动
             </p>
             <h3 class="pt">RLCard Exploratory Extension</h3>
-            <p class="pd">
-              <span data-lang="en">The Pilot promoted no reward candidate. A separate 300K extension now compares terminal with scaled as post-outcome exploration.</span><span data-lang="zh">Pilot 没有方案晋级；另立的 300K 延长现以结果后探索比较 terminal 与 scaled。</span>
-            </p>
-            <p class="rlcard-amendment">
-              <strong>POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY</strong>
-              <span>300K EXPLORATORY EXTENSION · TERMINAL VS SCALED</span>
-              <span>NO CANDIDATE PROMOTED。scaled 仅因非 control 方案中 AUC 最低、变换最简单而被选作探索，不代表 Pilot 支持其有效。</span>
-            </p>
             <div class="rlcard-project-links">
               <a href="/rlcard/research/" data-motion-cta data-destination="RLCARD PHASE II"><span data-lang="en">Open Phase II observatory</span><span data-lang="zh">进入第二阶段实验台</span> ↗</a>
               <a href="/rlcard/" data-motion-cta data-destination="RLCARD PHASE I"><span data-lang="en">Phase I archive</span><span data-lang="zh">第一阶段归档</span> ↗</a>
@@ -4118,7 +4100,7 @@
   /* HX_MOBILE_APP_ROUTER_BEGIN */
   (function(){
     var APP_PAGE_IDS = ['home','about','creating','now','building'];
-    var appMedia = window.matchMedia ? window.matchMedia('(max-width: 820px)') : null;
+    var appMedia = window.matchMedia ? window.matchMedia('(max-width: 820px), (any-pointer: coarse) and (max-width: 1400px)') : null;
     var appScreens = document.querySelectorAll('[data-app-screen]');
     var appExtras = document.querySelectorAll('[data-app-screen-extra]');
     var activeAppPage = '';

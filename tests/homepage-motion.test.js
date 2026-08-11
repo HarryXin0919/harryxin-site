@@ -452,6 +452,22 @@ test("informational panels do not advertise a false navigation affordance", asyn
   }
 });
 
+test("Currently cards omit auxiliary metadata while retaining their primary labels", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+  const nowSectionMatch = homepage.match(/<section id="now"[\s\S]*?<\/section>/);
+  assert.ok(nowSectionMatch, "Currently section is missing");
+  const nowSection = nowSectionMatch[0];
+
+  assert.match(nowSection, /IB Diploma/);
+  assert.match(nowSection, /FRC 6941 IronPulse/);
+  assert.match(nowSection, /FindItem hardware/);
+  assert.doesNotMatch(nowSection, /HL Math AA/);
+  assert.doesNotMatch(nowSection, /Shanghai Regional Champions/);
+  assert.doesNotMatch(nowSection, /上海区域赛冠军/);
+  assert.doesNotMatch(nowSection, /ESP32-C3 prototype/);
+  assert.doesNotMatch(nowSection, /ESP32-C3 原型/);
+});
+
 test("route motion lasts 420ms and reduced motion navigates without delay", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
 

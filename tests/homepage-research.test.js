@@ -114,13 +114,18 @@ test("homepage distinguishes a completed snapshot from a live run", async () => 
   );
 });
 
-test("homepage presents the extension as post-outcome exploratory", async () => {
+test("homepage keeps exploratory telemetry without duplicating protocol copy", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
+  const cardMarker = homepage.indexOf('id="rlcard-research-project"');
+  const cardStart = homepage.lastIndexOf("<article", cardMarker);
+  const cardEnd = homepage.indexOf("</article>", cardMarker);
+  assert.ok(cardMarker >= 0 && cardStart >= 0 && cardEnd > cardMarker);
+  const card = homepage.slice(cardStart, cardEnd + "</article>".length);
 
-  assert.match(homepage, /POST-OUTCOME EXPLORATORY · NOT CONFIRMATORY/);
-  assert.match(homepage, /NO CANDIDATE PROMOTED/);
-  assert.match(homepage, /300K EXPLORATORY EXTENSION/);
-  assert.match(homepage, /scaled 仅因非 control 方案中 AUC 最低、变换最简单/);
+  assert.doesNotMatch(card, /class="pd"/);
+  assert.doesNotMatch(card, /class="rlcard-amendment"/);
+  assert.doesNotMatch(card, /The Pilot promoted no reward candidate/);
+  assert.doesNotMatch(card, /Pilot 没有方案晋级/);
   assert.match(homepage, /rawState === 'queued'/);
   assert.match(homepage, /rawState === 'blocked'/);
   assert.match(homepage, /BLOCKED · PREFLIGHT FAILED/);
