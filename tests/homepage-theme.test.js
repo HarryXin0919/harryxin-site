@@ -7,6 +7,8 @@ const homepageUrl = new URL("index.html", root);
 const sharedThemeUrl = new URL("assets/site-theme.js", root);
 const nightLogoUrl = new URL("assets/hx-logo-icon-v6-xbridge.svg", root);
 const dayLogoUrl = new URL("assets/hx-logo-icon-v6-xbridge-day.svg", root);
+const ironPulseNightUrl = new URL("assets/ironpulse-logo.svg", root);
+const ironPulseDayUrl = new URL("assets/ironpulse-logo-day.svg", root);
 
 function attribute(tag, name) {
   const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*(["'])(.*?)\\1`, "i"));
@@ -74,4 +76,56 @@ test("daylight palette and both optical logo masters are present", async () => {
   assert.match(homepage, /--amber:#2f7818/);
   assert.match(nightLogo, /fill="#9cff57"/);
   assert.match(dayLogo, /fill="#2f7818"/);
+});
+
+test("daylight switches both IronPulse placements to the black-on-white master", async () => {
+  const [homepage, nightLogo, dayLogo, dayStat] = await Promise.all([
+    readFile(homepageUrl, "utf8"),
+    readFile(ironPulseNightUrl, "utf8"),
+    readFile(ironPulseDayUrl, "utf8"),
+    stat(ironPulseDayUrl),
+  ]);
+  const ironPulseImages = [...homepage.matchAll(/<img\b[^>]*data-logo-night=["']\/assets\/ironpulse-logo\.svg["'][^>]*>/gi)]
+    .map((match) => match[0]);
+
+  assert.ok(dayStat.isFile(), "daylight IronPulse master is missing");
+  assert.equal(ironPulseImages.length, 2, "About and Currently must use the same theme-aware IronPulse mark");
+  for (const image of ironPulseImages) {
+    assert.equal(attribute(image, "src"), "/assets/ironpulse-logo.svg");
+    assert.equal(attribute(image, "data-logo-night"), "/assets/ironpulse-logo.svg");
+    assert.equal(attribute(image, "data-logo-day"), "/assets/ironpulse-logo-day.svg");
+  }
+
+  assert.match(nightLogo, /fill="#FFFFFF"/);
+  assert.match(nightLogo, /fill="#61C4E3"/);
+  assert.match(dayLogo, /<rect\b[^>]*fill="#FFFFFF"/);
+  assert.equal((dayLogo.match(/<path\b[^>]*fill="#0A0F0C"/g) || []).length, 4);
+  assert.doesNotMatch(dayLogo, /fill="#61C4E3"/);
+});
+
+test("daylight player uses paper chrome in rest, hover, and compact layouts", async () => {
+  const homepage = await readFile(homepageUrl, "utf8");
+  const play = homepage.match(/html\[data-theme="light"\] \.show-play\{([^}]*)\}/)?.[1];
+  const duration = homepage.match(/html\[data-theme="light"\] \.show-duration\{([^}]*)\}/)?.[1];
+  const hover = homepage.match(/html\[data-theme="light"\] \.show-feature:hover \.show-play,\s*html\[data-theme="light"\] \.show-feature:focus-visible \.show-play\{([^}]*)\}/)?.[1];
+
+  assert.ok(play, "daylight play control rule is missing");
+  assert.match(play, /color:#0a0f0c/);
+  assert.match(play, /background:rgba\(247,249,244,\.92\)/);
+  assert.match(play, /border-color:rgba\(10,15,12,\.40\)/);
+  assert.doesNotMatch(play, /rgba\(8,11,10/);
+
+  assert.ok(duration, "daylight duration chip rule is missing");
+  assert.match(duration, /color:#0a0f0c/);
+  assert.match(duration, /background:rgba\(247,249,244,\.86\)/);
+
+  assert.ok(hover, "daylight hover and keyboard-focus player rule is missing");
+  assert.match(hover, /background:rgba\(255,255,255,\.97\)/);
+  assert.match(hover, /border-color:rgba\(47,120,24,\.62\)/);
+
+  assert.match(homepage, /\.show-play\{[\s\S]*?width:76px;[\s\S]*?height:76px/);
+  assert.match(homepage, /\.show-play svg\{[\s\S]*?width:34px;[\s\S]*?height:34px/);
+  assert.match(homepage, /@media \(max-width:600px\)[\s\S]*?\.show-play\{width:64px;height:64px\}/);
+  assert.match(homepage, /@media \(max-width:600px\)[\s\S]*?\.show-play svg\{width:30px;height:30px\}/);
+  assert.match(homepage, /@media \(max-width:1050px\)\{[\s\S]*?html\[data-theme="light"\] \.show-cover::before/);
 });

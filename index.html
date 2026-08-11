@@ -3370,7 +3370,7 @@
   html[data-theme="light"] .about-robotics-mark{
     align-self:stretch;
     padding:12px 16px;
-    background:#0b100d;
+    background:#fff;
   }
   html[data-theme="light"] .about-robotics-location{color:#087d96}
   html[data-theme="light"] .about-robotics-divider{
@@ -3390,6 +3390,62 @@
   html[data-theme="light"] .show-feature:hover{
     border-color:rgba(47,120,24,.42);
     background-color:rgba(47,120,24,.055);
+  }
+  html[data-theme="light"] .facts .fact-ironpulse{
+    border-color:rgba(10,15,12,.20);
+    background:
+      linear-gradient(128deg,rgba(47,120,24,.055),transparent 46%),
+      #fff;
+    box-shadow:0 18px 44px rgba(19,33,23,.08),inset 0 1px 0 rgba(255,255,255,.96);
+  }
+  html[data-theme="light"] .facts .fact-ironpulse:hover{
+    border-color:rgba(47,120,24,.42);
+    background:
+      linear-gradient(128deg,rgba(47,120,24,.09),transparent 46%),
+      #fff;
+  }
+  html[data-theme="light"] .facts .fact-ironpulse .v{color:var(--paper)}
+  html[data-theme="light"] .facts .fact-ironpulse .k,
+  html[data-theme="light"] .facts .fact-ironpulse .fact-official{color:#087d96}
+  html[data-theme="light"] .facts .fact-ironpulse::after{color:rgba(10,15,12,.56)}
+  html[data-theme="light"] .fact-ironpulse .ironpulse-icon{background:#fff}
+  html[data-theme="light"] .fact-ironpulse .ironpulse-icon img{
+    filter:drop-shadow(0 12px 22px rgba(19,33,23,.16));
+  }
+  html[data-theme="light"] .show-cover{background:#e9ede5}
+  html[data-theme="light"] .show-cover::before{
+    background:
+      linear-gradient(90deg,transparent 70%,rgba(243,245,239,.34) 100%),
+      repeating-linear-gradient(0deg,rgba(10,15,12,.015) 0,rgba(10,15,12,.015) 1px,transparent 1px,transparent 4px);
+  }
+  html[data-theme="light"] .show-cover img{
+    filter:saturate(.96) contrast(1.01) brightness(.98);
+  }
+  html[data-theme="light"] .show-play{
+    color:#0a0f0c;
+    border-color:rgba(10,15,12,.40);
+    background:rgba(247,249,244,.92);
+    box-shadow:0 12px 30px rgba(19,33,23,.22),inset 0 1px 0 rgba(255,255,255,.92);
+  }
+  html[data-theme="light"] .show-duration{
+    color:#0a0f0c;
+    border-color:rgba(10,15,12,.26);
+    background:rgba(247,249,244,.86);
+    box-shadow:0 6px 18px rgba(19,33,23,.14);
+  }
+  html[data-theme="light"] .show-feature:hover .show-play,
+  html[data-theme="light"] .show-feature:focus-visible .show-play{
+    color:var(--amber);
+    border-color:rgba(47,120,24,.62);
+    background:rgba(255,255,255,.97);
+    box-shadow:0 0 0 5px rgba(47,120,24,.14),0 14px 36px rgba(19,33,23,.22);
+  }
+  html[data-theme="light"] .show-feature:hover .show-cover img,
+  html[data-theme="light"] .show-feature:focus-visible .show-cover img{
+    filter:saturate(1) contrast(1.02) brightness(1.02);
+  }
+  html[data-theme="light"] .show-feature:focus-visible .show-play svg{
+    transform:translateX(1px) scale(1.04);
   }
   html[data-theme="light"] .card-rlcard:hover{background-color:rgba(255,255,255,.58)}
   html[data-theme="light"] .rlcard-research-readout{
@@ -3423,6 +3479,14 @@
   }
   html[data-theme="light"] .route-progress{background:rgba(10,15,12,.16)}
   html[data-theme="light"] .route-progress>span{box-shadow:0 0 14px rgba(47,120,24,.36)}
+
+  @media (max-width:1050px){
+    html[data-theme="light"] .show-cover::before{
+      background:
+        linear-gradient(0deg,rgba(243,245,239,.32),transparent 35%),
+        repeating-linear-gradient(0deg,rgba(10,15,12,.015) 0,rgba(10,15,12,.015) 1px,transparent 1px,transparent 4px);
+    }
+  }
 
   @media (max-width:820px), (any-pointer:coarse) and (max-width:1400px){
     html[data-theme="light"] .mobile-tabbar{
@@ -3745,7 +3809,7 @@
           </p>
           <div class="about-robotics-lockup" aria-hidden="true">
             <span class="about-robotics-mark">
-              <img class="about-robotics-logo" src="/assets/ironpulse-logo.svg" width="809" height="445" loading="lazy" decoding="async" alt="">
+              <img class="about-robotics-logo" src="/assets/ironpulse-logo.svg" data-logo-night="/assets/ironpulse-logo.svg" data-logo-day="/assets/ironpulse-logo-day.svg" width="809" height="445" loading="lazy" decoding="async" alt="">
             </span>
             <span class="about-robotics-divider"></span>
             <span class="about-robotics-id">
@@ -3830,7 +3894,7 @@
         <p class="v"><span data-lang="en">IB Diploma</span><span data-lang="zh">IB 文凭</span><br><span class="fact-official"><span data-lang="en">Official website</span><span data-lang="zh">IB 官方网站</span> · ibo.org ↗</span></p>
       </a>
       <a class="fact fact-link fact-ironpulse rise" href="https://www.ironpulse.net/" rel="noopener" aria-label="IronPulse Robotics 6941 official website" data-motion-surface data-destination="IRONPULSE">
-        <span class="fact-icon ironpulse-icon" aria-hidden="true"><img src="/assets/ironpulse-logo.svg" alt="" loading="lazy" decoding="async"></span>
+        <span class="fact-icon ironpulse-icon" aria-hidden="true"><img src="/assets/ironpulse-logo.svg" data-logo-night="/assets/ironpulse-logo.svg" data-logo-day="/assets/ironpulse-logo-day.svg" alt="" loading="lazy" decoding="async"></span>
         <p class="k"><span data-lang="en">Robotics</span><span data-lang="zh">机器人</span></p>
         <p class="v">FRC 6941 IronPulse<br><span class="fact-official">ironpulse.net ↗</span></p>
       </a>
