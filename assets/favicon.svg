@@ -1,4 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="13" fill="#0a0f0c"/>
-  <text x="32" y="44" font-family="Georgia,'Playfair Display',serif" font-size="40" font-weight="700" fill="#3ee87b" text-anchor="middle">H</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">Harry Xin X-Bridge icon</title>
+  <desc id="desc">The HX monogram created for Harry Xin, in white and phosphor green on a dark tile.</desc>
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="#080c0a"/>
+  <path fill="#e9eee9" d="M8 6h11l26 40V6h11v52H45L19 18v40H8Z"/>
+  <path fill="#9cff57" d="M19 46v12l26-40V6Z"/>
+  <path fill="#e9eee9" shape-rendering="crispEdges" d="M8 6h11v52H8ZM45 6h11v52H45Z"/>
 </svg>

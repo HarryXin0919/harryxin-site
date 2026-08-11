@@ -11,7 +11,15 @@
 <meta property="og:url" content="https://harryxin.com/" />
 <meta property="og:type" content="website" />
 <meta id="theme-color" name="theme-color" content="#080b0a" />
-<link id="site-favicon" rel="icon" type="image/svg+xml" href="./assets/hx-logo-icon-v6-xbridge.svg" />
+<meta name="application-name" content="Harry Xin" />
+<meta name="apple-mobile-web-app-title" content="Harry Xin" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=7" />
+<link id="site-favicon" rel="icon" type="image/svg+xml" sizes="any" href="./assets/hx-logo-icon-v6-xbridge.svg?v=7" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=7" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=7" />
+<link rel="manifest" href="/site.webmanifest?v=7" />
 <script>
   /* Restore the site theme before CSS is parsed so a saved light theme never
      flashes through the night palette. The homepage owns a namespaced key;
@@ -31,7 +39,7 @@
     var color = document.getElementById('theme-color');
     var icon = document.getElementById('site-favicon');
     if (color) color.setAttribute('content', theme === 'light' ? '#f3f5ef' : '#080b0a');
-    if (icon) icon.setAttribute('href', theme === 'light' ? './assets/hx-logo-icon-v6-xbridge-day.svg' : './assets/hx-logo-icon-v6-xbridge.svg');
+    if (icon) icon.setAttribute('href', theme === 'light' ? './assets/hx-logo-icon-v6-xbridge-day.svg?v=7' : './assets/hx-logo-icon-v6-xbridge.svg?v=7');
   })();
 </script>
 <script>
@@ -72,6 +80,12 @@
     var motionQuery = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)');
     if (motionQuery && motionQuery.matches) return;
     var motionRoot = document.documentElement;
+    /* App mode owns a shorter, spatial launch sequence below. Keep the
+       desktop signal-lock preload out of phone and iPad first paint. */
+    if (motionRoot.classList.contains('app-mode')) {
+      motionRoot.classList.add('motion-enabled');
+      return;
+    }
     motionRoot.classList.add('motion-enabled','motion-preload');
     window.__hxMotionFailSafe = window.setTimeout(function(){
       motionRoot.classList.remove('motion-preload','is-entering','is-leaving');
@@ -3072,6 +3086,7 @@
   }
 
   @media (min-width:821px) and (max-width:1400px) and (any-pointer:coarse){
+    html.app-mode{--app-enter-step:12px;--app-launch-y:10px}
     html.app-mode .wrap{width:min(1080px,calc(100% - 48px))}
     html.app-mode .topbar{min-height:78px}
   }
@@ -3465,13 +3480,15 @@
      desktop document remains a continuous editorial index. */
   @media (max-width:820px), (any-pointer:coarse) and (max-width:1400px){
     html.app-mode{
+      --app-enter-step:18px;
       --app-enter-x:0px;
+      --app-launch-y:14px;
       scroll-behavior:auto;
       scroll-padding-top:82px;
       scroll-padding-bottom:112px;
     }
-    html.app-mode[data-app-direction="forward"]{--app-enter-x:12px}
-    html.app-mode[data-app-direction="back"]{--app-enter-x:-12px}
+    html.app-mode[data-app-direction="forward"]{--app-enter-x:var(--app-enter-step)}
+    html.app-mode[data-app-direction="back"]{--app-enter-x:calc(var(--app-enter-step) * -1)}
     html.app-mode body{min-height:100svh}
     html.app-mode .wrap{min-height:100svh}
     html.app-mode [data-app-screen],
@@ -3484,9 +3501,17 @@
     html.app-mode[data-app-page="building"] [data-app-screen-extra="building"]{display:block!important}
     html.app-mode [data-app-screen][hidden],
     html.app-mode [data-app-screen-extra][hidden]{display:none!important}
+    /* The App shell moves one page plane. Desktop child-by-child reveals would
+       make the same screen feel delayed and web-like, so they stay settled. */
+    html.app-mode [data-app-screen] .rise{
+      --reveal-y:0px;
+      animation:none!important;
+      opacity:1;
+      transition-delay:0ms;
+    }
     html.app-mode [data-app-screen]:not([hidden]){
       min-height:calc(100svh - 188px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
-      animation:hx-app-page-in 220ms var(--ease-spring) both;
+      animation:hx-app-page-switch-in 260ms cubic-bezier(.2,.8,.2,1) both;
     }
     html.app-mode [data-app-screen] h1[tabindex="-1"]:focus,
     html.app-mode [data-app-screen] h2[tabindex="-1"]:focus{
@@ -3496,9 +3521,48 @@
       text-decoration-thickness:3px;
       text-underline-offset:.16em;
     }
-    @keyframes hx-app-page-in{
-      from{opacity:.72;transform:translate3d(var(--app-enter-x),0,0)}
-      to{opacity:1;transform:translate3d(0,0,0)}
+    /* No direction means the App is launching, not changing tabs. Chrome and
+       content materialise as three independent, non-blocking layers. */
+    html.app-mode:not([data-app-direction]) .topbar{
+      animation:hx-app-launch-topbar 260ms 20ms cubic-bezier(.22,1,.36,1) both;
+    }
+    html.app-mode:not([data-app-direction]) [data-app-screen]:not([hidden]){
+      animation:hx-app-launch-screen 390ms 70ms cubic-bezier(.22,1,.36,1) both;
+    }
+    html.app-mode:not([data-app-direction]) .mobile-tabbar{
+      animation:hx-app-launch-tabbar 340ms 150ms cubic-bezier(.22,1,.36,1) both;
+    }
+    html.app-mode:not([data-app-direction]) .brand-mark{
+      animation:hx-app-launch-mark 360ms 170ms cubic-bezier(.22,1,.36,1) both;
+    }
+    html.app-mode:not([data-app-direction]) .mobile-tabbar a[aria-current]::after{
+      animation:hx-app-launch-signal 300ms 230ms cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes hx-app-page-switch-in{
+      from{opacity:.56;transform:translate3d(var(--app-enter-x),6px,0) scale(.994)}
+      to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+    }
+    @keyframes hx-app-launch-topbar{
+      from{opacity:0;transform:translate3d(0,-8px,0) scale(.985)}
+      to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+    }
+    @keyframes hx-app-launch-screen{
+      from{opacity:.28;transform:translate3d(0,var(--app-launch-y),0) scale(.992)}
+      to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+    }
+    @keyframes hx-app-launch-tabbar{
+      from{opacity:0;transform:translate3d(-50%,18px,0) scale(.985)}
+      to{opacity:1;transform:translate3d(-50%,0,0) scale(1)}
+    }
+    @keyframes hx-app-launch-mark{
+      0%{opacity:.42;transform:scale(.94);filter:drop-shadow(0 0 0 rgba(156,255,87,0))}
+      62%{opacity:1;transform:scale(1.025);filter:drop-shadow(0 0 8px rgba(156,255,87,.42))}
+      100%{opacity:1;transform:scale(1);filter:drop-shadow(0 0 0 rgba(156,255,87,0))}
+    }
+    @keyframes hx-app-launch-signal{
+      0%{opacity:0;transform:scaleX(.5) scaleY(.5)}
+      58%{opacity:1;transform:scaleX(4) scaleY(.5)}
+      100%{opacity:1;transform:scale(1)}
     }
   }
 
@@ -3534,6 +3598,10 @@
     .about-robotics-logo,
     .about-mini-video img{transition:none!important;transform:none!important}
     .route-transition{display:none!important}
+    html.app-mode .topbar,
+    html.app-mode .mobile-tabbar,
+    html.app-mode .brand-mark,
+    html.app-mode .mobile-tabbar a[aria-current]::after,
     html.app-mode [data-app-screen]:not([hidden]){animation:none!important}
   }
 </style>
@@ -4024,7 +4092,7 @@
       toggle.setAttribute('title', theme === 'light' ? 'Switch to night theme' : 'Switch to daylight theme');
       if (label) label.textContent = theme === 'light' ? 'DAY' : 'NIGHT';
       if (brand) brand.setAttribute('src', theme === 'light' ? brand.getAttribute('data-logo-day') : brand.getAttribute('data-logo-night'));
-      if (favicon) favicon.setAttribute('href', theme === 'light' ? './assets/hx-logo-icon-v6-xbridge-day.svg' : './assets/hx-logo-icon-v6-xbridge.svg');
+      if (favicon) favicon.setAttribute('href', theme === 'light' ? './assets/hx-logo-icon-v6-xbridge-day.svg?v=7' : './assets/hx-logo-icon-v6-xbridge.svg?v=7');
       if (themeColor) themeColor.setAttribute('content', theme === 'light' ? '#f3f5ef' : '#080b0a');
       if (persist) {
         followsSystem = false;
@@ -4912,7 +4980,15 @@
       });
     });
   };
-  if (root.classList.contains('motion-preload')) beginBoot();
+  if (root.classList.contains('app-mode')) {
+    if (window.__hxMotionFailSafe) window.clearTimeout(window.__hxMotionFailSafe);
+    root.classList.remove('motion-preload','is-entering');
+    root.classList.add('is-entered');
+    /* App pages animate as a single spatial plane. Mark every child reveal as
+       settled so hidden tabs never replay the desktop vertical stagger. */
+    var appRise = document.querySelectorAll('[data-app-screen] .rise');
+    for (var ar=0;ar<appRise.length;ar++) appRise[ar].classList.add('in','reveal-complete');
+  } else if (root.classList.contains('motion-preload')) beginBoot();
   else {
     root.classList.add('is-entered');
     if (hero) {

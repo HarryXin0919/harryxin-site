@@ -309,6 +309,26 @@ test("App mode covers phones and iPads without capturing a fine-only desktop", a
   assert.match(homepage, /html\.app-mode \.wrap\{width:min\(1080px,calc\(100% - 48px\)\)\}/);
   assert.match(homepage, /html\.app-mode \.facts\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}/);
   assert.match(homepage, /\.mobile-tabbar a\{[\s\S]{0,220}min-height:56px/);
+  assert.match(homepage, /html\.app-mode:not\(\[data-app-direction\]\) \[data-app-screen\]:not\(\[hidden\]\)\{\s*animation:hx-app-launch-screen/);
+  assert.match(homepage, /html\.app-mode \[data-app-screen\]:not\(\[hidden\]\)\{[\s\S]{0,220}animation:hx-app-page-switch-in/);
+  assert.match(homepage, /html\.app-mode:not\(\[data-app-direction\]\) \.topbar\{\s*animation:hx-app-launch-topbar/);
+  assert.match(homepage, /html\.app-mode:not\(\[data-app-direction\]\) \.mobile-tabbar\{\s*animation:hx-app-launch-tabbar/);
+  assert.match(homepage, /html\.app-mode \[data-app-screen\] \.rise\{[\s\S]{0,180}animation:none!important/);
+  for (const name of [
+    "hx-app-page-switch-in",
+    "hx-app-launch-topbar",
+    "hx-app-launch-screen",
+    "hx-app-launch-tabbar",
+    "hx-app-launch-mark",
+    "hx-app-launch-signal",
+  ]) {
+    assert.match(homepage, new RegExp(`@keyframes ${name}\\{`), `${name} keyframes are missing`);
+  }
+  assert.match(
+    homepage,
+    /if \(motionRoot\.classList\.contains\('app-mode'\)\) \{[\s\S]{0,180}motionRoot\.classList\.add\('motion-enabled'\);[\s\S]{0,80}return;/,
+    "App first paint must bypass the desktop signal-lock preload",
+  );
 
   const matchesAppMode = ({ width, coarse }) => width <= 820 || (coarse && width <= 1400);
   const cases = [
@@ -342,6 +362,7 @@ test("routed App headings keep a visible focus indicator", async () => {
 test("valid initial hash opens exactly one accessible app screen", async () => {
   const harness = await createAppHarness({ hash: "#creating" });
   assertActivePage(harness, "creating");
+  assert.equal(harness.root.getAttribute("data-app-direction"), null, "initial App launch must not impersonate a tab change");
   assert.equal(harness.historyPushes.length, 0, "initial deep link must not add history");
   harness.flushFrames();
   assert.deepEqual(harness.scrollCalls.at(-1), [0, 0]);
@@ -389,6 +410,7 @@ test("mobile links activate one page and push history once", async () => {
   assert.equal(harness.historyPushes[0].url, "#building");
   assert.equal(harness.location.hash, "#building");
   assertActivePage(harness, "building");
+  assert.equal(harness.root.getAttribute("data-app-direction"), "forward");
   harness.flushFrames();
   assert.equal(harness.screens.get("building").heading.focusCount, 1, "new page heading should be announced");
 });
@@ -435,6 +457,25 @@ test("one history traversal is deduplicated across popstate and hashchange", asy
   harness.flushFrames();
   assert.equal(harness.scrollCalls.length, scrollsBeforeBack + 1);
   assert.equal(harness.screens.get("about").heading.focusCount, focusBeforeBack + 1);
+});
+
+test("rapid App tab changes keep only the final page motion and focus target", async () => {
+  const harness = await createAppHarness();
+  harness.flushFrames();
+  const scrollsBefore = harness.scrollCalls.length;
+
+  harness.click("about");
+  harness.click("building");
+  harness.click("creating");
+
+  assertActivePage(harness, "creating");
+  assert.equal(harness.root.getAttribute("data-app-direction"), "back");
+  assert.equal(harness.historyPushes.length, 3);
+  harness.flushFrames();
+  assert.equal(harness.scrollCalls.length, scrollsBefore + 1, "superseded App frames must be cancelled");
+  assert.equal(harness.screens.get("about").heading.focusCount, 0);
+  assert.equal(harness.screens.get("building").heading.focusCount, 0);
+  assert.equal(harness.screens.get("creating").heading.focusCount, 1);
 });
 
 test("non-page hashes do not switch the active App screen", async () => {
@@ -528,6 +569,37 @@ test("leaving the iPad App breakpoint restores the full desktop document", async
 
   harness.setMobile(true);
   assertActivePage(harness, "about");
+});
+
+test("a fine-only desktop starts without App motion or mounted-screen side effects", async () => {
+  const harness = await createAppHarness({ mobile: false });
+  assert.equal(harness.root.classList.contains("app-mode"), false);
+  assert.equal(harness.root.getAttribute("data-app-page"), null);
+  assert.equal(harness.root.getAttribute("data-app-direction"), null);
+  for (const id of pageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  assertPartState(harness.footer, true, "desktop footer");
+  const event = harness.click("about");
+  assert.equal(event.defaultPrevented, false);
+  assert.equal(harness.historyPushes.length, 0);
+  assert.equal(harness.scrollCalls.length, 0);
+});
+
+test("reduced motion disables every App launch and page-plane animation", async () => {
+  const homepage = await readFile(new URL("index.html", rootUrl), "utf8");
+  const start = homepage.lastIndexOf("@media (prefers-reduced-motion:reduce){");
+  const end = homepage.indexOf("</style>", start);
+  assert.ok(start >= 0 && end > start, "final reduced-motion block is missing");
+  const reducedBlock = homepage.slice(start, end);
+  for (const selector of [
+    "html.app-mode .topbar",
+    "html.app-mode .mobile-tabbar",
+    "html.app-mode .brand-mark",
+    "html.app-mode .mobile-tabbar a[aria-current]::after",
+    "html.app-mode [data-app-screen]:not([hidden])",
+  ]) {
+    assert.ok(reducedBlock.includes(selector), `${selector} must be static for reduced-motion users`);
+  }
+  assert.match(reducedBlock, /\{animation:none!important\}/);
 });
 
 test("leaving App mode cancels a pending mobile scroll frame", async () => {

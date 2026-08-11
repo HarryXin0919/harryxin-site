@@ -101,9 +101,16 @@ test("FindItem metadata and navigation belong to harryxin.com", async () => {
   assert.ok(openGraphUrl, "FindItem og:url metadata is missing");
   assert.equal(attribute(openGraphUrl, "content"), canonicalUrl);
 
-  const favicon = links.find((tag) => relIncludes(tag, "icon"));
-  assert.ok(favicon, "FindItem favicon link is missing");
-  assert.equal(attribute(favicon, "href"), "/assets/favicon.svg");
+  const favicons = links.filter((tag) => relIncludes(tag, "icon"));
+  assert.ok(favicons.length >= 2, "FindItem needs ICO and SVG favicon fallbacks");
+  assert.ok(
+    favicons.some((tag) => attribute(tag, "href") === "/favicon.ico?v=7"),
+    "FindItem Windows favicon is missing",
+  );
+  assert.ok(
+    favicons.some((tag) => attribute(tag, "href") === "/assets/hx-logo-icon-v6-xbridge.svg?v=7"),
+    "FindItem HX favicon is missing",
+  );
 
   const projectBackLinks = anchors.filter((tag) => attribute(tag, "href") === "/#building");
   assert.ok(
