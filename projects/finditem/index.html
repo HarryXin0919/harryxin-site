@@ -31,12 +31,13 @@
             var key = 'harryxin-theme';
             var saved = null;
             try { saved = localStorage.getItem(key); } catch(error) {}
-            if (saved !== 'light' && saved !== 'dark') saved = null;
+            if (saved !== 'system' && saved !== 'light' && saved !== 'dark') saved = 'system';
             var systemLight = false;
             try { systemLight = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches); } catch(error) {}
-            var theme = saved || (systemLight ? 'light' : 'dark');
+            var theme = saved === 'system' ? (systemLight ? 'light' : 'dark') : saved;
             var root = document.documentElement;
             root.setAttribute('data-theme', theme);
+            root.setAttribute('data-theme-mode', saved);
             root.style.colorScheme = theme;
             root.classList.add('loading');
             window.__hxInitialTheme = theme;

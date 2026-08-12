@@ -38,20 +38,21 @@
     <script>
       (() => {
         const key = "harryxin-theme";
-        let theme = null;
+        let mode = "system";
 
         try {
           const stored = localStorage.getItem(key);
-          if (stored === "light" || stored === "dark") theme = stored;
+          if (stored === "system" || stored === "light" || stored === "dark") mode = stored;
         } catch (error) {
           // Storage can be unavailable in strict privacy modes.
         }
 
-        if (!theme) {
-          theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-        }
+        const theme = mode === "system"
+          ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+          : mode;
 
         document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.setAttribute("data-theme-mode", mode);
         document.documentElement.style.colorScheme = theme;
       })();
     </script>

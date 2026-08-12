@@ -37,10 +37,16 @@ test("theme is restored before CSS and uses the shared site preference", async (
   assert.ok(prepaintIndex > -1 && prepaintIndex < styleIndex, "saved theme must be restored before CSS is parsed");
   assert.match(homepage, /localStorage\.getItem\(key\)/);
   assert.match(homepage, /src=["']\/assets\/site-theme\.js["'][^>]*\bdefer\b/);
-  assert.match(sharedTheme, /localStorage\.setItem\([^,]+,\s*theme\)/);
+  assert.match(sharedTheme, /localStorage\.setItem\([^,]+,\s*mode\)/);
   assert.doesNotMatch(`${homepage}\n${sharedTheme}`, /localStorage\.(?:getItem|setItem)\(\s*['"]theme['"]/, "generic theme storage would collide with other pages");
   assert.doesNotMatch(`${homepage}\n${sharedTheme}`, /finditem-theme/, "all routes must share harryxin-theme");
-  assert.match(homepage, /saved !== 'light' && saved !== 'dark'/, "stored values must be validated");
+  assert.match(
+    homepage,
+    /saved !== 'system' && saved !== 'light' && saved !== 'dark'/,
+    "stored system, light, and dark modes must be validated",
+  );
+  assert.match(homepage, /setAttribute\('data-theme-mode',\s*saved\)/, "prepaint must preserve the selected mode separately");
+  assert.match(homepage, /saved === 'system' \? \(systemLight \? 'light' : 'dark'\) : saved/, "system mode must resolve before CSS");
   assert.match(homepage, /prefers-color-scheme:light/, "first visit should follow the system color scheme");
 });
 

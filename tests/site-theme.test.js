@@ -57,11 +57,12 @@ test("every public entry restores the shared theme before styles and exposes one
       `${entry.name} must restore harryxin-theme before CSS is parsed`,
     );
     assert.match(html.slice(prepaintIndex, styleIndex), /localStorage\.getItem\(/, `${entry.name} prepaint must read storage`);
-    assert.match(
-      html.slice(prepaintIndex, styleIndex),
-      /(?:===\s*["']light["'][\s\S]{0,120}===\s*["']dark["']|!==\s*["']light["'][\s\S]{0,120}!==\s*["']dark["'])/i,
-      `${entry.name} must validate light and dark values`,
-    );
+    const prepaint = html.slice(prepaintIndex, styleIndex);
+    assert.match(prepaint, /["']system["']/i, `${entry.name} must accept system theme mode`);
+    assert.match(prepaint, /["']light["']/i, `${entry.name} must accept light theme mode`);
+    assert.match(prepaint, /["']dark["']/i, `${entry.name} must accept dark theme mode`);
+    assert.match(prepaint, /data-theme-mode/i, `${entry.name} must preserve mode separately from its resolved palette`);
+    assert.match(prepaint, /data-theme/i, `${entry.name} must resolve an actual light or dark palette before CSS`);
     assert.match(html.slice(prepaintIndex, styleIndex), /prefers-color-scheme:\s*light/i, `${entry.name} must fall back to the system theme`);
     assert.doesNotMatch(html, /finditem-theme/, `${entry.name} must not keep a route-specific preference`);
 
@@ -81,6 +82,8 @@ test("shared controller persists, synchronizes, and updates all theme-sensitive 
   assert.match(source, /localStorage\.getItem\(/);
   assert.match(source, /localStorage\.setItem\(/);
   assert.match(source, /\[data-theme-toggle\]/);
+  assert.match(source, /\[data-settheme\]/);
+  assert.match(source, /data-theme-mode/);
   assert.match(source, /addEventListener\(["']click["']/);
   assert.match(source, /addEventListener\(["']storage["']/);
   assert.match(source, /addEventListener\(["']pageshow["']/);
@@ -93,17 +96,18 @@ test("shared controller persists, synchronizes, and updates all theme-sensitive 
   assert.doesNotMatch(source, /finditem-theme/);
 });
 
-test("shared controller behavior follows click, storage, page restore, and system preference", async () => {
+test("shared controller keeps system mode separate from the resolved theme across every sync path", async () => {
   const source = await readFile(new URL("assets/site-theme.js", root), "utf8");
   const windowListeners = new Map();
   const mediaListeners = new Map();
-  const storage = new Map([["harryxin-theme", "dark"]]);
+  const storage = new Map([["harryxin-theme", "system"]]);
 
   function node(initial = {}) {
     const attributes = new Map(Object.entries(initial));
     const listeners = new Map();
     const classes = new Set();
     return {
+      focusCount: 0,
       attributes,
       dataset: {},
       style: {},
@@ -119,6 +123,7 @@ test("shared controller behavior follows click, storage, page restore, and syste
       setAttribute(name, value) {
         attributes.set(name, String(value));
         if (name === "data-theme") this.dataset.theme = String(value);
+        if (name === "data-theme-mode") this.dataset.themeMode = String(value);
       },
       removeAttribute(name) {
         attributes.delete(name);
@@ -126,8 +131,11 @@ test("shared controller behavior follows click, storage, page restore, and syste
       addEventListener(type, callback) {
         listeners.set(type, callback);
       },
+      focus() {
+        this.focusCount += 1;
+      },
       dispatch(type, event = {}) {
-        listeners.get(type)?.({ currentTarget: this, preventDefault() {}, ...event });
+        listeners.get(type)?.call(this, { currentTarget: this, preventDefault() {}, ...event });
       },
       querySelector(selector) {
         if (selector.includes("data-theme-label")) return this.label || null;
@@ -146,6 +154,11 @@ test("shared controller behavior follows click, storage, page restore, and syste
   toggle.moon = moon;
   toggle.sun = sun;
   toggle.label = label;
+  const choices = {
+    system: node({ "data-settheme": "system", role: "radio", "aria-checked": "true", "aria-pressed": "true" }),
+    light: node({ "data-settheme": "light", role: "radio", "aria-checked": "false", "aria-pressed": "false" }),
+    dark: node({ "data-settheme": "dark", role: "radio", "aria-checked": "false", "aria-pressed": "false" }),
+  };
   const themeColor = node({
     id: "theme-color",
     "data-theme-dark": "#080b0a",
@@ -179,6 +192,7 @@ test("shared controller behavior follows click, storage, page restore, and syste
     },
     querySelectorAll(selector) {
       if (selector.includes("data-theme-toggle")) return [toggle];
+      if (selector.includes("data-settheme")) return Object.values(choices);
       if (selector.includes('data-theme-icon="moon"')) return [moon];
       if (selector.includes('data-theme-icon="sun"')) return [sun];
       if (selector.includes("data-theme-icon")) return [moon, sun];
@@ -231,28 +245,86 @@ test("shared controller behavior follows click, storage, page restore, and syste
     console,
   });
 
-  assert.equal(rootNode.dataset.theme, "dark");
-  toggle.dispatch("click");
-  assert.equal(rootNode.dataset.theme, "light", "click must switch to light");
-  assert.equal(storage.get("harryxin-theme"), "light", "click must persist the choice");
-  assert.equal(toggle.getAttribute("aria-pressed"), "true");
-  assert.equal(moon.style.display, "none", "daylight mode must hide the moon SVG on iOS");
-  assert.equal(sun.style.display, "block", "daylight mode must show the sun SVG on iOS");
+  assert.equal(rootNode.dataset.themeMode, "system");
+  assert.equal(rootNode.dataset.theme, "dark", "system mode should initially resolve from the OS");
+  assert.equal(choices.system.getAttribute("aria-checked"), "true");
+  assert.equal(choices.light.getAttribute("aria-checked"), "false");
+  assert.equal(choices.dark.getAttribute("aria-checked"), "false");
+  assert.equal(choices.system.getAttribute("tabindex"), "0");
+  assert.equal(choices.light.getAttribute("tabindex"), "-1");
+  assert.equal(choices.dark.getAttribute("tabindex"), "-1");
+
+  media.matches = true;
+  mediaListeners.get("change")?.({ matches: true });
+  assert.equal(rootNode.dataset.themeMode, "system", "an OS change must not replace the selected mode");
+  assert.equal(rootNode.dataset.theme, "light", "system mode must follow an OS change live");
+  assert.equal(storage.get("harryxin-theme"), "system");
   assert.equal(themeColor.getAttribute("content"), "#f3f5ef");
   assert.equal(favicon.getAttribute("href"), "/day.svg");
   assert.equal(brand.getAttribute("src"), "/day-mark.svg");
 
-  windowListeners.get("storage")?.({ key: "harryxin-theme", newValue: "dark" });
-  assert.equal(rootNode.dataset.theme, "dark", "another tab must update the page theme");
+  toggle.dispatch("click");
+  assert.equal(rootNode.dataset.themeMode, "dark", "the legacy binary toggle must exit system mode");
+  assert.equal(rootNode.dataset.theme, "dark", "the legacy toggle must switch away from the resolved daylight theme");
+  assert.equal(storage.get("harryxin-theme"), "dark", "the legacy toggle must persist the explicit mode");
+  assert.equal(toggle.getAttribute("aria-pressed"), "false");
+  assert.equal(choices.dark.getAttribute("aria-checked"), "true");
 
-  storage.set("harryxin-theme", "light");
-  windowListeners.get("pageshow")?.({ persisted: true });
-  assert.equal(rootNode.dataset.theme, "light", "BFCache restore must re-read the preference");
-
-  storage.delete("harryxin-theme");
   media.matches = false;
   mediaListeners.get("change")?.({ matches: false });
-  assert.equal(rootNode.dataset.theme, "dark", "system changes must apply without a manual preference");
+  assert.equal(rootNode.dataset.theme, "dark", "OS changes must not override an explicit mode");
+
+  choices.system.dispatch("click");
+  assert.equal(storage.get("harryxin-theme"), "system");
+  assert.equal(rootNode.dataset.themeMode, "system");
+  assert.equal(rootNode.dataset.theme, "dark");
+  assert.equal(choices.system.getAttribute("aria-checked"), "true");
+
+  media.matches = true;
+  mediaListeners.get("change")?.({ matches: true });
+  assert.equal(rootNode.dataset.theme, "light");
+  assert.equal(moon.style.display, "none", "resolved daylight must hide the moon SVG on iOS");
+  assert.equal(sun.style.display, "block", "resolved daylight must show the sun SVG on iOS");
+
+  windowListeners.get("storage")?.({ key: "harryxin-theme", newValue: "light" });
+  assert.equal(rootNode.dataset.themeMode, "light", "another tab must update the selected mode");
+  assert.equal(rootNode.dataset.theme, "light");
+  assert.equal(choices.light.getAttribute("aria-checked"), "true");
+
+  windowListeners.get("storage")?.({ key: "harryxin-theme", newValue: "not-a-mode" });
+  assert.equal(rootNode.dataset.themeMode, "system", "an invalid synchronized value must safely fall back to system");
+  assert.equal(rootNode.dataset.theme, "light");
+
+  storage.set("harryxin-theme", "system");
+  windowListeners.get("pageshow")?.({ persisted: true });
+  assert.equal(rootNode.dataset.themeMode, "system", "BFCache restore must re-read the selected mode");
+  assert.equal(rootNode.dataset.theme, "light");
+  assert.equal(window.HXSiteTheme.current(), "light");
+  assert.equal(window.HXSiteTheme.mode(), "system");
+
+  let prevented = 0;
+  choices.system.dispatch("keydown", { key: "ArrowLeft", preventDefault: () => { prevented += 1; } });
+  assert.equal(prevented, 1, "an appearance arrow key must suppress native scrolling");
+  assert.equal(choices.dark.focusCount, 1, "ArrowLeft should wrap from System to Night");
+  assert.equal(storage.get("harryxin-theme"), "dark");
+  assert.equal(rootNode.dataset.themeMode, "dark");
+  assert.equal(choices.dark.getAttribute("aria-checked"), "true");
+  assert.equal(choices.dark.getAttribute("tabindex"), "0");
+  assert.equal(choices.system.getAttribute("tabindex"), "-1");
+
+  choices.dark.dispatch("keydown", { key: "Home", preventDefault: () => { prevented += 1; } });
+  assert.equal(choices.system.focusCount, 1, "Home should focus and select the first appearance option");
+  assert.equal(rootNode.dataset.themeMode, "system");
+  assert.equal(choices.system.getAttribute("tabindex"), "0");
+
+  choices.system.dispatch("keydown", { key: "End", preventDefault: () => { prevented += 1; } });
+  assert.equal(choices.dark.focusCount, 2, "End should focus and select the last appearance option");
+  assert.equal(rootNode.dataset.themeMode, "dark");
+  assert.equal(choices.dark.getAttribute("tabindex"), "0");
+  assert.equal(prevented, 3);
+
+  choices.dark.dispatch("keydown", { key: "Tab", preventDefault: () => { prevented += 1; } });
+  assert.equal(prevented, 3, "unhandled keys must keep native keyboard behavior");
 });
 
 test("RLCard and Research ship paper-like daylight tokens and full-size controls", async () => {

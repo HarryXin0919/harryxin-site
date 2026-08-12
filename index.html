@@ -27,12 +27,13 @@
     var key = 'harryxin-theme';
     var saved = null;
     try { saved = localStorage.getItem(key); } catch(e){}
-    if (saved !== 'light' && saved !== 'dark') saved = null;
+    if (saved !== 'system' && saved !== 'light' && saved !== 'dark') saved = 'system';
     var systemLight = false;
     try { systemLight = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme:light)').matches); } catch(e){}
-    var theme = saved || (systemLight ? 'light' : 'dark');
+    var theme = saved === 'system' ? (systemLight ? 'light' : 'dark') : saved;
     var root = document.documentElement;
     root.setAttribute('data-theme', theme);
+    root.setAttribute('data-theme-mode', saved);
     root.style.colorScheme = theme;
     window.__hxInitialTheme = theme;
     var color = document.getElementById('theme-color');
@@ -47,7 +48,7 @@
      controller below takes over after the DOM is ready; this timeout is a
      no-JS/partial-load escape hatch back to the complete document. */
   (function(){
-    var pages = ['home','about','creating','now','building'];
+    var pages = ['home','about','creating','now','building','settings'];
     var mobile = false;
     try { mobile = !!(window.matchMedia && window.matchMedia('(max-width: 820px), (any-pointer: coarse) and (max-width: 1400px)').matches); } catch(e){}
     if (!mobile) return;
@@ -3008,6 +3009,7 @@
   }
   .topbar-brand::before{content:none}
   .mobile-tabbar{display:none}
+  .app-settings-trigger,.app-settings{display:none}
 
   @media (max-width:820px), (any-pointer:coarse) and (max-width:1400px){
     html{scroll-padding-bottom:108px}
@@ -3083,6 +3085,58 @@
       text-transform:uppercase;
       white-space:nowrap;
     }
+    html.app-mode{
+      scroll-padding-top:calc(12px + env(safe-area-inset-top,0px));
+    }
+    html.app-mode body{
+      min-height:100vh;
+      min-height:100svh;
+    }
+    html.app-mode .wrap{
+      width:min(1120px,100%);
+      min-height:100vh;
+      min-height:100svh;
+      padding-top:max(8px,env(safe-area-inset-top,0px));
+      padding-right:max(24px,calc(env(safe-area-inset-right,0px) + 12px));
+      padding-left:max(24px,calc(env(safe-area-inset-left,0px) + 12px));
+    }
+    html.app-mode .topbar,
+    html.app-mode.is-scrolled .topbar{
+      position:relative;
+      top:auto;
+      margin:0;
+    }
+    html.app-mode .topbar::before,
+    html.app-mode .topbar::after{display:none}
+    html.app-mode .site-nav,
+    html.app-mode .topbar .right{display:none}
+    html.app-mode .scope-tag{display:none}
+    html.app-mode .app-settings-trigger{
+      display:grid;
+      width:44px;
+      height:44px;
+      margin-left:auto;
+      padding:0;
+      place-items:center;
+      border:1px solid var(--line);
+      border-radius:14px;
+      color:var(--paper);
+      background:rgba(233,238,233,.035);
+      text-decoration:none;
+      transition:color 160ms ease,border-color 160ms ease,background-color 160ms ease,transform 80ms ease-out;
+    }
+    html.app-mode .app-settings-trigger:hover{color:var(--amber);border-color:var(--amber)}
+    html.app-mode .app-settings-trigger:active{transform:scale(.94)}
+    html.app-mode .app-settings-trigger:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+    .app-settings-trigger svg,.app-settings-back svg{
+      width:21px;
+      height:21px;
+      fill:none;
+      stroke:currentColor;
+      stroke-width:1.7;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
   }
 
   @media (min-width:821px) and (max-width:1400px) and (any-pointer:coarse){
@@ -3104,8 +3158,8 @@
     }
     .wrap{
       width:100%;
-      padding-right:max(10px,env(safe-area-inset-right,0px));
-      padding-left:max(10px,env(safe-area-inset-left,0px));
+      padding-right:calc(12px + env(safe-area-inset-right,0px));
+      padding-left:calc(12px + env(safe-area-inset-left,0px));
     }
     .topbar{
       top:max(8px,env(safe-area-inset-top,0px));
@@ -3294,6 +3348,11 @@
     --glass-line:rgba(10,15,12,.16);
     background:var(--ink);
   }
+  html[data-theme="light"] .app-settings-trigger,
+  html[data-theme="light"] .app-settings-back{background:rgba(10,15,12,.035)}
+  html[data-theme="light"] .settings-group{background:rgba(255,255,255,.48);box-shadow:0 18px 44px rgba(19,33,23,.06)}
+  html[data-theme="light"] .settings-choice{background:rgba(255,255,255,.22)}
+  html[data-theme="light"] .settings-choice:hover{background:rgba(47,120,24,.06)}
   html[data-theme="light"] body{
     background:
       linear-gradient(rgba(10,15,12,.045) 1px,transparent 1px),
@@ -3548,13 +3607,15 @@
       --app-enter-x:0px;
       --app-launch-y:14px;
       scroll-behavior:auto;
-      scroll-padding-top:82px;
+      scroll-padding-top:calc(12px + env(safe-area-inset-top,0px));
       scroll-padding-bottom:112px;
     }
+    html.app-mode .topbar,
+    html.app-mode.is-scrolled .topbar{position:relative;top:auto}
     html.app-mode[data-app-direction="forward"]{--app-enter-x:var(--app-enter-step)}
     html.app-mode[data-app-direction="back"]{--app-enter-x:calc(var(--app-enter-step) * -1)}
-    html.app-mode body{min-height:100svh}
-    html.app-mode .wrap{min-height:100svh}
+    html.app-mode body{min-height:100vh;min-height:100svh}
+    html.app-mode .wrap{min-height:100vh;min-height:100svh}
     html.app-mode [data-app-screen],
     html.app-mode [data-app-screen-extra]{display:none!important}
     html.app-mode[data-app-page="home"] [data-app-screen="home"]{display:grid!important}
@@ -3563,6 +3624,7 @@
     html.app-mode[data-app-page="now"] [data-app-screen="now"],
     html.app-mode[data-app-page="building"] [data-app-screen="building"],
     html.app-mode[data-app-page="building"] [data-app-screen-extra="building"]{display:block!important}
+    html.app-mode[data-app-page="settings"] [data-app-screen="settings"]{display:block!important}
     html.app-mode [data-app-screen][hidden],
     html.app-mode [data-app-screen-extra][hidden]{display:none!important}
     /* The App shell moves one page plane. Desktop child-by-child reveals would
@@ -3574,9 +3636,103 @@
       transition-delay:0ms;
     }
     html.app-mode [data-app-screen]:not([hidden]){
+      min-height:calc(100vh - 188px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
       min-height:calc(100svh - 188px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
       animation:hx-app-page-switch-in 260ms cubic-bezier(.2,.8,.2,1) both;
     }
+    html.app-mode[data-app-page="settings"] body{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+    html.app-mode[data-app-page="settings"] .topbar,
+    html.app-mode[data-app-page="settings"] .mobile-tabbar,
+    html.app-mode[data-app-page="settings"] [data-app-screen-extra]{display:none!important}
+    .app-settings{
+      width:min(680px,100%);
+      margin:0 auto;
+      padding:0 0 calc(24px + env(safe-area-inset-bottom,0px));
+      border:0;
+      background:transparent;
+    }
+    .app-settings__header{
+      display:grid;
+      grid-template-columns:44px minmax(0,1fr) 44px;
+      min-height:64px;
+      align-items:center;
+      margin:0 0 18px;
+    }
+    .app-settings__header h2{
+      margin:0;
+      color:var(--paper);
+      font:650 clamp(19px,3.6vw,24px)/1.2 var(--display);
+      letter-spacing:-.015em;
+      text-align:center;
+    }
+    .app-settings-back{
+      display:grid;
+      width:44px;
+      height:44px;
+      padding:0;
+      place-items:center;
+      border:1px solid var(--line);
+      border-radius:14px;
+      color:var(--paper);
+      background:rgba(233,238,233,.035);
+      cursor:pointer;
+    }
+    .app-settings-back:active{transform:scale(.94)}
+    .app-settings-back:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+    .settings-group{
+      margin:0 0 14px;
+      padding:0;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:rgba(233,238,233,.025);
+      box-shadow:0 18px 44px rgba(0,0,0,.10);
+    }
+    .settings-group legend{
+      width:100%;
+      padding:18px 18px 10px;
+      color:var(--paper-dim);
+      font:650 10px/1.2 var(--mono);
+      letter-spacing:.15em;
+      text-transform:uppercase;
+    }
+    .settings-choice{
+      position:relative;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      width:100%;
+      min-height:56px;
+      margin:0;
+      padding:14px 16px;
+      align-items:center;
+      gap:16px;
+      border:0;
+      border-top:1px solid var(--line);
+      color:var(--paper);
+      background:rgba(233,238,233,.012);
+      font:600 15px/1.35 var(--display);
+      text-align:left;
+      cursor:pointer;
+    }
+    .settings-choice:hover{background:rgba(156,255,87,.035)}
+    .settings-choice:active{transform:scale(.99)}
+    .settings-choice:focus-visible{z-index:1;outline:2px solid var(--amber);outline-offset:-3px}
+    .settings-choice::after{
+      content:"";
+      width:10px;
+      height:10px;
+      border:1px solid var(--line);
+      border-radius:50%;
+      background:transparent;
+      box-shadow:0 0 0 0 rgba(156,255,87,0);
+    }
+    .settings-choice[aria-checked="true"]{color:var(--amber)}
+    .settings-choice[aria-checked="true"]::after{
+      border-color:var(--amber);
+      background:var(--amber);
+      box-shadow:0 0 0 4px rgba(156,255,87,.10),0 0 12px rgba(156,255,87,.34);
+    }
+    .settings-choice span{min-width:0;overflow-wrap:anywhere}
     html.app-mode [data-app-screen] h1[tabindex="-1"]:focus,
     html.app-mode [data-app-screen] h2[tabindex="-1"]:focus{
       outline:none;
@@ -3665,6 +3821,9 @@
     html.app-mode .topbar,
     html.app-mode .mobile-tabbar,
     html.app-mode .brand-mark,
+    html.app-mode .app-settings-trigger,
+    html.app-mode .app-settings-back,
+    html.app-mode .settings-choice,
     html.app-mode .mobile-tabbar a[aria-current]::after,
     html.app-mode [data-app-screen]:not([hidden]){animation:none!important}
   }
@@ -3712,6 +3871,9 @@
         <button type="button" data-setlang="en">EN</button><span class="sep" aria-hidden="true">/</span><button type="button" data-setlang="zh">中</button>
       </span>
     </span>
+    <a class="app-settings-trigger" href="#settings" data-app-settings-link aria-label="Settings / 设置" aria-controls="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.08A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.2 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.4v-4h.1A1.7 1.7 0 0 0 4.2 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.66 3.8l.06.06A1.7 1.7 0 0 0 8.6 4.2a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 10 2.5V2.4h4v.1A1.7 1.7 0 0 0 15 4.2a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.6a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1.1.4h.1v4h-.1a1.7 1.7 0 0 0-1.7 1Z"/></svg>
+    </a>
   </div>
 
   <main id="main">
@@ -4051,6 +4213,29 @@
     </div>
   </section>
 
+  <section id="settings" class="app-settings" data-app-screen="settings">
+    <div class="app-settings__header">
+      <button class="app-settings-back" type="button" data-app-settings-back aria-label="Back / 返回">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <h2><span data-lang="en">Settings</span><span data-lang="zh">设置</span></h2>
+      <span aria-hidden="true"></span>
+    </div>
+
+    <fieldset class="settings-group" role="radiogroup" aria-label="Appearance / 外观">
+      <legend><span data-lang="en">Appearance</span><span data-lang="zh">外观</span></legend>
+      <button class="settings-choice" type="button" role="radio" data-settheme="system" aria-checked="true" aria-pressed="true" tabindex="0"><span><span data-lang="en">System</span><span data-lang="zh">系统</span></span></button>
+      <button class="settings-choice" type="button" role="radio" data-settheme="light" aria-checked="false" aria-pressed="false" tabindex="-1"><span><span data-lang="en">Daylight</span><span data-lang="zh">白昼</span></span></button>
+      <button class="settings-choice" type="button" role="radio" data-settheme="dark" aria-checked="false" aria-pressed="false" tabindex="-1"><span><span data-lang="en">Night</span><span data-lang="zh">暗夜</span></span></button>
+    </fieldset>
+
+    <fieldset class="settings-group" role="radiogroup" aria-label="Language / 语言">
+      <legend><span data-lang="en">Language</span><span data-lang="zh">语言</span></legend>
+      <button class="settings-choice" type="button" role="radio" data-setlang="en" aria-checked="true" aria-pressed="true" tabindex="0"><span>English</span></button>
+      <button class="settings-choice" type="button" role="radio" data-setlang="zh" aria-checked="false" aria-pressed="false" tabindex="-1"><span>简体中文</span></button>
+    </fieldset>
+  </section>
+
   </main>
 
   <!-- ===================== FOOTER ===================== -->
@@ -4136,20 +4321,29 @@
      Initial pick: saved choice → browser language → English fallback. */
   (function(){
     var KEY = 'lang';
-    var btns = document.querySelectorAll('.langsw button[data-setlang]');
+    var btns = document.querySelectorAll('[data-setlang]');
     if (!btns.length) return;
-    var apply = function(lang){
+    var apply = function(lang, persist){
       lang = (lang === 'zh') ? 'zh' : 'en';
       root.setAttribute('lang', lang === 'zh' ? 'zh-Hans' : 'en');
       root.classList.remove('lang-en','lang-zh');
       root.classList.add('lang-' + lang);
-      for (var i=0;i<btns.length;i++) btns[i].setAttribute('aria-pressed', String(btns[i].getAttribute('data-setlang') === lang));
+      for (var i=0;i<btns.length;i++) {
+        var selected = btns[i].getAttribute('data-setlang') === lang;
+        btns[i].setAttribute('aria-pressed', String(selected));
+        if (btns[i].getAttribute('role') === 'radio') {
+          btns[i].setAttribute('aria-checked', String(selected));
+          btns[i].setAttribute('tabindex', selected ? '0' : '-1');
+        }
+      }
       var localizedCovers = document.querySelectorAll('[data-cover-en][data-cover-zh]');
       for (var c=0;c<localizedCovers.length;c++){
         var nextCover = localizedCovers[c].getAttribute('data-cover-' + lang);
         if (nextCover && localizedCovers[c].getAttribute('src') !== nextCover) localizedCovers[c].setAttribute('src', nextCover);
       }
-      try { localStorage.setItem(KEY, lang); } catch(e){}
+      if (persist !== false) {
+        try { localStorage.setItem(KEY, lang); } catch(e){}
+      }
     };
     var saved = null;
     try { saved = localStorage.getItem(KEY); } catch(e){}
@@ -4157,7 +4351,31 @@
     apply(initial);
     for (var b=0;b<btns.length;b++){
       btns[b].addEventListener('click', function(){ apply(this.getAttribute('data-setlang')); });
+      if (btns[b].getAttribute('role') === 'radio') {
+        btns[b].addEventListener('keydown', function(event){
+          var key = event.key;
+          if (key !== 'ArrowLeft' && key !== 'ArrowUp' && key !== 'ArrowRight' && key !== 'ArrowDown' && key !== 'Home' && key !== 'End') return;
+          var group = this.parentNode.querySelectorAll('[role="radio"][data-setlang]');
+          var current = Array.prototype.indexOf.call(group, this);
+          var next = current;
+          event.preventDefault();
+          if (key === 'Home') next = 0;
+          else if (key === 'End') next = group.length - 1;
+          else if (key === 'ArrowLeft' || key === 'ArrowUp') next = (current - 1 + group.length) % group.length;
+          else next = (current + 1) % group.length;
+          group[next].focus();
+          apply(group[next].getAttribute('data-setlang'));
+        });
+      }
     }
+    window.addEventListener('storage', function(event){
+      if (event.key === KEY) apply(event.newValue || initial, false);
+    });
+    window.addEventListener('pageshow', function(){
+      var restored = null;
+      try { restored = localStorage.getItem(KEY); } catch(e){}
+      apply(restored || initial, false);
+    });
   })();
 
   /* Floating chrome: materialize only after content begins to pass under it. */
@@ -4186,7 +4404,8 @@
 
   /* HX_MOBILE_APP_ROUTER_BEGIN */
   (function(){
-    var APP_PAGE_IDS = ['home','about','creating','now','building'];
+    var PRIMARY_PAGE_IDS = ['home','about','creating','now','building'];
+    var APP_PAGE_IDS = PRIMARY_PAGE_IDS.concat(['settings']);
     var appMedia = window.matchMedia ? window.matchMedia('(max-width: 820px), (any-pointer: coarse) and (max-width: 1400px)') : null;
     var appScreens = document.querySelectorAll('[data-app-screen]');
     var appExtras = document.querySelectorAll('[data-app-screen-extra]');
@@ -4194,12 +4413,14 @@
     var appScroll = Object.create(null);
     var appReadingOffset = Object.create(null);
     var appFrame = null;
+    var settingsOrigin = 'home';
     var initialAppInteracted = false;
     var lastAppMediaMatch = appMedia ? appMedia.matches : false;
 
     if (!appMedia || !appScreens.length) return;
 
     var isAppPage = function(id){ return APP_PAGE_IDS.indexOf(id) !== -1; };
+    var isPrimaryPage = function(id){ return PRIMARY_PAGE_IDS.indexOf(id) !== -1; };
     var pageFromHash = function(){
       var id = (window.location.hash || '').slice(1);
       return isAppPage(id) ? id : 'home';
@@ -4211,7 +4432,7 @@
     };
     var initialAppPage = pageFromHash();
     var pageAtDesktopViewport = function(){
-      var fallback = isAppPage(currentSectionId) ? currentSectionId : pageFromHash();
+      var fallback = isPrimaryPage(currentSectionId) ? currentSectionId : 'home';
       var anchor = Math.min((window.innerHeight || 800) * .25, 160);
       var nearest = fallback;
       var nearestDistance = Infinity;
@@ -4219,6 +4440,7 @@
         if (typeof appScreens[i].getBoundingClientRect !== 'function') continue;
         var rect = appScreens[i].getBoundingClientRect();
         var id = appScreens[i].getAttribute('data-app-screen');
+        if (!isPrimaryPage(id)) continue;
         if (rect.top <= anchor && rect.bottom > anchor) return id;
         var distance = Math.abs(rect.top - anchor);
         if (distance < nearestDistance) {
@@ -4232,7 +4454,7 @@
       return window.pageYOffset || document.documentElement.scrollTop || 0;
     };
     var captureAppReadingOffset = function(){
-      if (!appMedia.matches || !activeAppPage || window.location.hash === '#main') return;
+      if (!appMedia.matches || !isPrimaryPage(activeAppPage) || window.location.hash === '#main') return;
       var screen = document.querySelector('[data-app-screen="' + activeAppPage + '"]');
       if (!screen || typeof screen.getBoundingClientRect !== 'function') return;
       var scroll = currentScroll();
@@ -4276,7 +4498,8 @@
       for (var e=0;e<appExtras.length;e++){
         setAppPart(appExtras[e], appExtras[e].getAttribute('data-app-screen-extra') === id);
       }
-      setCurrentSection(id);
+      if (isPrimaryPage(id)) setCurrentSection(id);
+      else setCurrentSection('');
     };
     var scrollAppPage = function(id, top, announce){
       if (appFrame) cancelAnimationFrame(appFrame);
@@ -4308,10 +4531,17 @@
       }
 
       activeAppPage = id;
+      if (id === 'settings') {
+        var fromState = window.history.state && window.history.state.fromAppPage;
+        if (isPrimaryPage(options.fromAppPage)) settingsOrigin = options.fromAppPage;
+        else if (isPrimaryPage(fromState)) settingsOrigin = fromState;
+      }
       paintAppPage(id);
 
       if (options.history === 'push' && window.location.hash !== '#' + id) {
-        window.history.pushState({appPage:id}, '', '#' + id);
+        var state = {appPage:id};
+        if (id === 'settings') state.fromAppPage = settingsOrigin;
+        window.history.pushState(state, '', '#' + id);
       }
 
       var target = typeof options.scrollTop === 'number'
@@ -4325,10 +4555,15 @@
         cancelAnimationFrame(appFrame);
         appFrame = null;
       }
-      var mobileScroll = activeAppPage && Object.prototype.hasOwnProperty.call(appScroll,activeAppPage)
-        ? appScroll[activeAppPage]
+      var desktopPage = activeAppPage === 'settings' ? settingsOrigin : activeAppPage;
+      if (desktopPage && !isPrimaryPage(desktopPage)) desktopPage = 'home';
+      if (activeAppPage === 'settings' && window.history.replaceState) {
+        window.history.replaceState({appPage:desktopPage}, '', '#' + desktopPage);
+      }
+      var mobileScroll = desktopPage && Object.prototype.hasOwnProperty.call(appScroll,desktopPage)
+        ? appScroll[desktopPage]
         : currentScroll();
-      var mobileScreen = activeAppPage ? document.querySelector('[data-app-screen="' + activeAppPage + '"]') : null;
+      var mobileScreen = desktopPage ? document.querySelector('[data-app-screen="' + desktopPage + '"]') : null;
       var mobileChrome = document.querySelector('.topbar');
       var mobileAnchor = mobileChrome && typeof mobileChrome.getBoundingClientRect === 'function'
         ? Math.max(0, mobileChrome.getBoundingClientRect().bottom)
@@ -4336,16 +4571,18 @@
       var mobileScreenTop = mobileScreen && typeof mobileScreen.getBoundingClientRect === 'function'
         ? mobileScroll + mobileScreen.getBoundingClientRect().top
         : mobileScroll;
-      var pageOffset = activeAppPage && Object.prototype.hasOwnProperty.call(appReadingOffset,activeAppPage)
-        ? appReadingOffset[activeAppPage]
+      var pageOffset = desktopPage && Object.prototype.hasOwnProperty.call(appReadingOffset,desktopPage)
+        ? appReadingOffset[desktopPage]
         : Math.max(0, mobileScroll + mobileAnchor - mobileScreenTop);
-      if (activeAppPage) appScroll[activeAppPage] = mobileScroll;
-      var desktopPage = activeAppPage;
+      if (desktopPage) appScroll[desktopPage] = mobileScroll;
       activeAppPage = '';
       root.classList.remove('app-mode');
       root.removeAttribute('data-app-page');
       root.removeAttribute('data-app-direction');
-      for (var i=0;i<appScreens.length;i++) setAppPart(appScreens[i], true);
+      for (var i=0;i<appScreens.length;i++) {
+        var desktopId = appScreens[i].getAttribute('data-app-screen');
+        setAppPart(appScreens[i], isPrimaryPage(desktopId));
+      }
       for (var e=0;e<appExtras.length;e++) setAppPart(appExtras[e], true);
       if (desktopPage) {
         setCurrentSection(desktopPage);
@@ -4387,6 +4624,10 @@
         }
         activateAppPage(id, {history:'none'});
       } else {
+        if (window.location.hash === '#settings' && window.history.replaceState) {
+          var desktopFallback = activeAppPage === 'settings' && isPrimaryPage(settingsOrigin) ? settingsOrigin : 'home';
+          window.history.replaceState({appPage:desktopFallback}, '', '#' + desktopFallback);
+        }
         leaveAppMode();
       }
       lastAppMediaMatch = appMedia.matches;
@@ -4394,6 +4635,7 @@
     var syncAppHistory = function(event){
       if (!appMedia.matches) return;
       var statePage = event && event.state && isAppPage(event.state.appPage) ? event.state.appPage : null;
+      if (statePage === 'settings' && event.state && isPrimaryPage(event.state.fromAppPage)) settingsOrigin = event.state.fromAppPage;
       var id = statePage || pageFromNavigationHash();
       if (!id && event && event.type === 'popstate' && window.location.hash === '#main') id = 'home';
       if (!id) return;
@@ -4405,6 +4647,7 @@
         }
         return;
       }
+      if (id === 'settings' && isPrimaryPage(activeAppPage)) settingsOrigin = activeAppPage;
       activateAppPage(id, {
         history:'none',
         announce:true,
@@ -4444,6 +4687,15 @@
       if (!isAppPage(id)) return;
       event.preventDefault();
       initialAppInteracted = true;
+      if (id === 'settings') {
+        if (activeAppPage === 'settings') {
+          scrollAppPage('settings', 0, false);
+          return;
+        }
+        settingsOrigin = isPrimaryPage(activeAppPage) ? activeAppPage : settingsOrigin;
+        activateAppPage('settings', {history:'push', announce:true, fromAppPage:settingsOrigin});
+        return;
+      }
       if (id === activeAppPage) {
         appScroll[id] = 0;
         setCurrentSection(id);
@@ -4451,6 +4703,23 @@
         return;
       }
       activateAppPage(id, {history:'push', announce:true, skipSave:window.location.hash === '#main'});
+    });
+    document.addEventListener('click', function(event){
+      var target = event.target;
+      while (target && target !== document) {
+        if (target.hasAttribute && target.hasAttribute('data-app-settings-back')) break;
+        target = target.parentNode;
+      }
+      if (!target || target === document || !appMedia.matches) return;
+      event.preventDefault();
+      var state = window.history.state;
+      if (state && state.appPage === 'settings' && isPrimaryPage(state.fromAppPage) && typeof window.history.back === 'function') {
+        window.history.back();
+        return;
+      }
+      var fallback = isPrimaryPage(settingsOrigin) ? settingsOrigin : 'home';
+      if (window.history.replaceState) window.history.replaceState({appPage:fallback}, '', '#' + fallback);
+      activateAppPage(fallback, {history:'none', announce:true});
     });
     window.addEventListener('popstate', syncAppHistory);
     window.addEventListener('hashchange', syncAppHistory);
@@ -4460,6 +4729,10 @@
     if (window.__hxAppBootFailSafe) {
       clearTimeout(window.__hxAppBootFailSafe);
       window.__hxAppBootFailSafe = null;
+    }
+    if (initialAppPage === 'settings') {
+      var initialStateOrigin = window.history.state && window.history.state.fromAppPage;
+      settingsOrigin = isPrimaryPage(initialStateOrigin) ? initialStateOrigin : 'home';
     }
     syncAppMode();
     var settleInitialAppPage = function(){

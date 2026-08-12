@@ -31,15 +31,16 @@
     <script>
       (() => {
         const key = "harryxin-theme";
-        let theme = null;
+        let mode = "system";
         try {
           const stored = localStorage.getItem(key);
-          if (stored === "light" || stored === "dark") theme = stored;
+          if (stored === "system" || stored === "light" || stored === "dark") mode = stored;
         } catch (_) {}
-        if (!theme) {
-          theme = window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
-        }
-        document.documentElement.dataset.theme = theme;
+        const theme = mode === "system"
+          ? (window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark")
+          : mode;
+        document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.setAttribute("data-theme-mode", mode);
         document.documentElement.style.colorScheme = theme;
       })();
     </script>

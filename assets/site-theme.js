@@ -9,14 +9,14 @@
     systemQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)');
   } catch (error) {}
 
-  function isTheme(value) {
-    return value === 'light' || value === 'dark';
+  function isThemeMode(value) {
+    return value === 'system' || value === 'light' || value === 'dark';
   }
 
   function readStoredTheme() {
     var value = null;
     try { value = localStorage.getItem(STORAGE_KEY); } catch (error) {}
-    return isTheme(value) ? value : null;
+    return isThemeMode(value) ? value : 'system';
   }
 
   function systemTheme() {
@@ -51,7 +51,7 @@
     }
   }
 
-  function updateControls(theme) {
+  function updateControls(theme, mode) {
     var toggles = document.querySelectorAll('[data-theme-toggle]');
     for (var i = 0; i < toggles.length; i += 1) {
       var toggle = toggles[i];
@@ -70,6 +70,14 @@
       setIconVisibility(moon, !light);
       setIconVisibility(sun, light);
     }
+
+    var choices = document.querySelectorAll('[data-settheme]');
+    for (var c = 0; c < choices.length; c += 1) {
+      var selected = choices[c].getAttribute('data-settheme') === mode;
+      choices[c].setAttribute('aria-checked', String(selected));
+      choices[c].setAttribute('aria-pressed', String(selected));
+      if (choices[c].getAttribute('role') === 'radio') choices[c].setAttribute('tabindex', selected ? '0' : '-1');
+    }
   }
 
   /* SVG elements do not consistently implement HTMLElement.hidden on older
@@ -81,9 +89,10 @@
     icon.style.display = visible ? 'block' : 'none';
   }
 
-  function applyTheme(theme, options) {
+  function applyTheme(mode, options) {
     options = options || {};
-    theme = isTheme(theme) ? theme : systemTheme();
+    mode = isThemeMode(mode) ? mode : 'system';
+    var theme = mode === 'system' ? systemTheme() : mode;
 
     if (options.transition) {
       root.classList.add('theme-transition');
@@ -94,19 +103,20 @@
     }
 
     root.setAttribute('data-theme', theme);
+    root.setAttribute('data-theme-mode', mode);
     root.style.colorScheme = theme;
     updateChrome(theme);
-    updateControls(theme);
+    updateControls(theme, mode);
 
     if (options.persist) {
-      try { localStorage.setItem(STORAGE_KEY, theme); } catch (error) {}
+      try { localStorage.setItem(STORAGE_KEY, mode); } catch (error) {}
     }
 
     return theme;
   }
 
   function preferredTheme() {
-    return readStoredTheme() || systemTheme();
+    return readStoredTheme();
   }
 
   function bindControls() {
@@ -117,14 +127,34 @@
         applyTheme(current === 'light' ? 'dark' : 'light', { persist: true, transition: true });
       });
     }
+
+    var choices = document.querySelectorAll('[data-settheme]');
+    for (var c = 0; c < choices.length; c += 1) {
+      choices[c].addEventListener('click', function () {
+        applyTheme(this.getAttribute('data-settheme'), { persist: true, transition: true });
+      });
+      choices[c].addEventListener('keydown', function (event) {
+        var key = event.key;
+        if (key !== 'ArrowLeft' && key !== 'ArrowUp' && key !== 'ArrowRight' && key !== 'ArrowDown' && key !== 'Home' && key !== 'End') return;
+        event.preventDefault();
+        var current = Array.prototype.indexOf.call(choices, this);
+        var next = current;
+        if (key === 'Home') next = 0;
+        else if (key === 'End') next = choices.length - 1;
+        else if (key === 'ArrowLeft' || key === 'ArrowUp') next = (current - 1 + choices.length) % choices.length;
+        else next = (current + 1) % choices.length;
+        choices[next].focus();
+        applyTheme(choices[next].getAttribute('data-settheme'), { persist: true, transition: true });
+      });
+    }
   }
 
   bindControls();
-  applyTheme(isTheme(root.getAttribute('data-theme')) ? root.getAttribute('data-theme') : preferredTheme());
+  applyTheme(isThemeMode(root.getAttribute('data-theme-mode')) ? root.getAttribute('data-theme-mode') : preferredTheme());
 
   window.addEventListener('storage', function (event) {
     if (event.key !== STORAGE_KEY) return;
-    applyTheme(isTheme(event.newValue) ? event.newValue : systemTheme());
+    applyTheme(isThemeMode(event.newValue) ? event.newValue : 'system');
   });
 
   window.addEventListener('pageshow', function () {
@@ -133,7 +163,7 @@
 
   if (systemQuery) {
     var handleSystemChange = function (event) {
-      if (!readStoredTheme()) applyTheme(event.matches ? 'light' : 'dark');
+      if (readStoredTheme() === 'system') applyTheme('system');
     };
     if (systemQuery.addEventListener) systemQuery.addEventListener('change', handleSystemChange);
     else if (systemQuery.addListener) systemQuery.addListener(handleSystemChange);
@@ -141,6 +171,7 @@
 
   window.HXSiteTheme = {
     apply: applyTheme,
-    current: function () { return root.getAttribute('data-theme'); }
+    current: function () { return root.getAttribute('data-theme'); },
+    mode: function () { return root.getAttribute('data-theme-mode') || 'system'; }
   };
 })();

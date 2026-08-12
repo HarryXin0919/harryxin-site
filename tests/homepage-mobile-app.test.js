@@ -4,7 +4,8 @@ import test from "node:test";
 import vm from "node:vm";
 
 const rootUrl = new URL("../", import.meta.url);
-const pageIds = ["home", "about", "creating", "now", "building"];
+const primaryPageIds = ["home", "about", "creating", "now", "building"];
+const appPageIds = [...primaryPageIds, "settings"];
 const appMediaQuery = "(max-width: 820px), (any-pointer: coarse) and (max-width: 1400px)";
 
 function attribute(tag, name) {
@@ -78,6 +79,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
   const frames = new Map();
   const historyPushes = [];
   const historyReplaces = [];
+  const historyBacks = [];
   const scrollCalls = [];
   let nextFrameId = 1;
 
@@ -88,7 +90,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
   const topbar = createElement({ tagName: "div", attributes: { class: "topbar" } });
   topbar.getBoundingClientRect = () => ({ top: 8, bottom: 70, height: 62 });
 
-  const screens = new Map(pageIds.map((id) => [
+  const screens = new Map(appPageIds.map((id) => [
     id,
     createElement({
       tagName: id === "home" ? "header" : "section",
@@ -100,7 +102,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     tagName: "footer",
     attributes: { "data-app-screen-extra": "building" },
   });
-  const tabs = new Map(pageIds.map((id) => [
+  const tabs = new Map(primaryPageIds.map((id) => [
     id,
     createElement({
       tagName: "a",
@@ -111,11 +113,19 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
       },
     }),
   ]));
-  const siteLinks = new Map(pageIds.slice(1).map((id) => [
+  const siteLinks = new Map(primaryPageIds.slice(1).map((id) => [
     id,
     createElement({ tagName: "a", attributes: { href: `#${id}` } }),
   ]));
   const sectionLinks = [...siteLinks.values(), ...tabs.values()];
+  const settingsLink = createElement({
+    tagName: "a",
+    attributes: { href: "#settings", "data-app-settings-link": "" },
+  });
+  const settingsBack = createElement({
+    tagName: "button",
+    attributes: { type: "button", "data-app-settings-back": "" },
+  });
 
   const location = { hash };
   const appMedia = {
@@ -148,7 +158,9 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
       documentListeners.get(type).push(listener);
     },
   };
-  for (const element of [...screens.values(), footer, ...sectionLinks]) element.parentNode = document;
+  for (const element of [...screens.values(), footer, ...sectionLinks, settingsLink, settingsBack]) {
+    element.parentNode = document;
+  }
 
   const requestAnimationFrame = (callback) => {
     const id = nextFrameId++;
@@ -161,15 +173,21 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     location,
     pageYOffset: 0,
     history: {
+      state: null,
       pushState(state, title, url) {
         historyPushes.push({ state, title, url });
+        this.state = state;
         const index = url.indexOf("#");
         location.hash = index >= 0 ? url.slice(index) : "";
       },
       replaceState(state, title, url) {
         historyReplaces.push({ state, title, url });
+        this.state = state;
         const index = url.indexOf("#");
         location.hash = index >= 0 ? url.slice(index) : "";
+      },
+      back() {
+        historyBacks.push({ state: this.state, hash: location.hash });
       },
     },
     matchMedia(query) {
@@ -242,6 +260,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     dispatchWindow,
     flushFrames,
     footer,
+    historyBacks,
     historyPushes,
     historyReplaces,
     location,
@@ -250,6 +269,8 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     scrollCalls,
     setMobile,
     setScroll,
+    settingsBack,
+    settingsLink,
     siteLinks,
     tabs,
     topbar,
@@ -268,8 +289,10 @@ function assertPartState(part, visible, description) {
 function assertActivePage(harness, activeId) {
   assert.equal(harness.root.classList.contains("app-mode"), true);
   assert.equal(harness.root.getAttribute("data-app-page"), activeId);
-  for (const id of pageIds) {
+  for (const id of appPageIds) {
     assertPartState(harness.screens.get(id), id === activeId, `${id} screen`);
+  }
+  for (const id of primaryPageIds) {
     assert.equal(
       harness.tabs.get(id).getAttribute("aria-current"),
       id === activeId ? "page" : null,
@@ -279,23 +302,36 @@ function assertActivePage(harness, activeId) {
   assertPartState(harness.footer, activeId === "building", "Work footer");
 }
 
-test("mobile app markup exposes five ordered screens and tabs", async () => {
+test("mobile app markup exposes six ordered screens but only five primary tabs", async () => {
   const homepage = await readFile(new URL("index.html", rootUrl), "utf8");
   const screenTags = Array.from(
     homepage.matchAll(/<(?:header|section)\b[^>]*\bdata-app-screen=(['"])(.*?)\1[^>]*>/gi),
     (match) => ({ id: match[2], tag: match[0] }),
   );
-  assert.deepEqual(screenTags.map(({ id }) => id), pageIds);
+  assert.deepEqual(screenTags.map(({ id }) => id), appPageIds);
   for (const { id, tag } of screenTags) {
     assert.equal(attribute(tag, "id"), id, `${id} screen id must match its app route`);
-    assert.doesNotMatch(tag, /\s(?:hidden|inert)(?=\s|=|>)/i, `${id} must remain visible in the desktop/no-JS source`);
-    assert.equal(attribute(tag, "aria-hidden"), null, `${id} must not be hidden in the source`);
+    if (id !== "settings") {
+      assert.doesNotMatch(tag, /\s(?:hidden|inert)(?=\s|=|>)/i, `${id} must remain visible in the desktop/no-JS source`);
+      assert.equal(attribute(tag, "aria-hidden"), null, `${id} must not be hidden in the source`);
+    } else {
+      assert.match(attribute(tag, "class") || "", /\bapp-settings\b/, "Settings must remain an App-only screen");
+    }
   }
 
   const tabbar = homepage.match(/<nav class="mobile-tabbar"[\s\S]*?<\/nav>/)?.[0];
   assert.ok(tabbar, "mobile tabbar is missing");
   const tabTags = Array.from(tabbar.matchAll(/<a\b[^>]*\bdata-app-tab\b[^>]*>/gi), (match) => match[0]);
-  assert.deepEqual(tabTags.map((tag) => attribute(tag, "href")), pageIds.map((id) => `#${id}`));
+  assert.deepEqual(tabTags.map((tag) => attribute(tag, "href")), primaryPageIds.map((id) => `#${id}`));
+
+  const settingsLink = homepage.match(/<a\b[^>]*\bdata-app-settings-link\b[^>]*>/i)?.[0];
+  const settingsBack = homepage.match(/<button\b[^>]*\bdata-app-settings-back\b[^>]*>/i)?.[0];
+  assert.ok(settingsLink, "App Settings trigger is missing");
+  assert.equal(attribute(settingsLink, "href"), "#settings");
+  assert.ok(attribute(settingsLink, "aria-label"), "App Settings trigger needs an accessible name");
+  assert.ok(settingsBack, "App Settings back control is missing");
+  assert.equal(attribute(settingsBack, "type"), "button");
+  assert.ok(attribute(settingsBack, "aria-label"), "App Settings back control needs an accessible name");
 });
 
 test("App mode covers phones and iPads without capturing a fine-only desktop", async () => {
@@ -309,6 +345,20 @@ test("App mode covers phones and iPads without capturing a fine-only desktop", a
   assert.match(homepage, /html\.app-mode \.wrap\{width:min\(1080px,calc\(100% - 48px\)\)\}/);
   assert.match(homepage, /html\.app-mode \.facts\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}/);
   assert.match(homepage, /\.mobile-tabbar a\{[\s\S]{0,220}min-height:56px/);
+  assert.match(homepage, /html\.app-mode body\{[\s\S]{0,80}min-height:100vh;[\s\S]{0,40}min-height:100svh;/);
+  assert.match(
+    homepage,
+    /html\.app-mode \.wrap\{[\s\S]{0,240}safe-area-inset-right[\s\S]{0,120}safe-area-inset-left/,
+    "the full phone/iPad App shell must reserve both horizontal safe areas",
+  );
+  assert.match(
+    homepage,
+    /html\.app-mode \.topbar,\s*html\.app-mode\.is-scrolled \.topbar\{[\s\S]{0,120}position:relative;[\s\S]{0,40}top:auto/,
+    "App chrome must scroll in normal flow instead of covering the active screen",
+  );
+  assert.match(homepage, /html\.app-mode \.app-settings-trigger\{[\s\S]{0,100}width:44px;[\s\S]{0,40}height:44px/);
+  assert.match(homepage, /\.app-settings-back\{[\s\S]{0,100}width:44px;[\s\S]{0,40}height:44px/);
+  assert.match(homepage, /html\.app-mode\[data-app-page="settings"\] \.mobile-tabbar/);
   assert.match(homepage, /html\.app-mode:not\(\[data-app-direction\]\) \[data-app-screen\]:not\(\[hidden\]\)\{\s*animation:hx-app-launch-screen/);
   assert.match(homepage, /html\.app-mode \[data-app-screen\]:not\(\[hidden\]\)\{[\s\S]{0,220}animation:hx-app-page-switch-in/);
   assert.match(homepage, /html\.app-mode:not\(\[data-app-direction\]\) \.topbar\{\s*animation:hx-app-launch-topbar/);
@@ -413,6 +463,106 @@ test("mobile links activate one page and push history once", async () => {
   assert.equal(harness.root.getAttribute("data-app-direction"), "forward");
   harness.flushFrames();
   assert.equal(harness.screens.get("building").heading.focusCount, 1, "new page heading should be announced");
+});
+
+test("Settings opens from the current page without becoming a sixth primary tab", async () => {
+  const harness = await createAppHarness({ hash: "#about" });
+  harness.flushFrames();
+  harness.setScroll(237);
+
+  const event = harness.click("settings", harness.settingsLink);
+  assert.equal(event.defaultPrevented, true);
+  assert.equal(harness.historyPushes.length, 1);
+  assert.equal(harness.historyPushes[0].state.appPage, "settings");
+  assert.equal(harness.historyPushes[0].state.fromAppPage, "about");
+  assert.equal(harness.historyPushes[0].title, "");
+  assert.equal(harness.historyPushes[0].url, "#settings");
+  assertActivePage(harness, "settings");
+  for (const id of primaryPageIds) {
+    assert.equal(harness.tabs.get(id).getAttribute("aria-current"), null, `${id} must not stay current in Settings`);
+  }
+  harness.flushFrames();
+  assert.deepEqual(harness.scrollCalls.at(-1), [0, 0]);
+  assert.equal(harness.screens.get("settings").heading.focusCount, 1, "Settings heading should be announced");
+});
+
+test("Settings back uses browser history and restores the origin scroll and focus", async () => {
+  const harness = await createAppHarness({ hash: "#about" });
+  harness.flushFrames();
+  harness.setScroll(237);
+  harness.click("settings", harness.settingsLink);
+  harness.flushFrames();
+
+  const back = harness.click("settings-back", harness.settingsBack);
+  assert.equal(back.defaultPrevented, true);
+  assert.equal(harness.historyBacks.length, 1, "Settings back should traverse the entry it pushed");
+  assert.equal(harness.historyPushes.length, 1, "Settings back must not push another entry");
+
+  const originState = { appPage: "about" };
+  harness.window.history.state = originState;
+  harness.location.hash = "#about";
+  harness.dispatchWindow("popstate", { type: "popstate", state: originState });
+  assertActivePage(harness, "about");
+  harness.flushFrames();
+  assert.deepEqual(harness.scrollCalls.at(-1), [0, 237]);
+  assert.equal(harness.screens.get("about").heading.focusCount, 1, "origin heading should regain focus");
+});
+
+test("a direct Settings deep link falls back to Home without leaving the site", async () => {
+  const harness = await createAppHarness({ hash: "#settings" });
+  assertActivePage(harness, "settings");
+  harness.flushFrames();
+
+  const back = harness.click("settings-back", harness.settingsBack);
+  assert.equal(back.defaultPrevented, true);
+  assert.equal(harness.historyBacks.length, 0, "a direct Settings load has no in-site entry to traverse");
+  assert.equal(harness.historyReplaces.at(-1).url, "#home");
+  assert.equal(harness.location.hash, "#home");
+  assertActivePage(harness, "home");
+  harness.flushFrames();
+  assert.equal(harness.screens.get("home").heading.focusCount, 1);
+});
+
+test("leaving App mode from Settings canonicalizes to its desktop origin", async () => {
+  const harness = await createAppHarness({ hash: "#now" });
+  harness.flushFrames();
+  harness.setScroll(190);
+  harness.click("settings", harness.settingsLink);
+  harness.flushFrames();
+  assertActivePage(harness, "settings");
+
+  harness.setMobile(false);
+  assert.equal(harness.root.classList.contains("app-mode"), false);
+  assert.equal(harness.location.hash, "#now");
+  assert.equal(harness.historyReplaces.at(-1).url, "#now");
+  for (const id of primaryPageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  assertPartState(harness.screens.get("settings"), false, "desktop Settings screen");
+  assertPartState(harness.footer, true, "desktop footer");
+});
+
+test("a fine-only desktop canonicalizes a Settings hash to Home", async () => {
+  const harness = await createAppHarness({ hash: "#settings", mobile: false });
+  assert.equal(harness.root.classList.contains("app-mode"), false);
+  assert.equal(harness.location.hash, "#home");
+  assert.equal(harness.historyReplaces.at(-1).url, "#home");
+  for (const id of primaryPageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  assertPartState(harness.screens.get("settings"), false, "desktop Settings screen");
+});
+
+test("desktop Settings canonicalization is unconditional instead of transition-only", async () => {
+  const homepage = await readFile(new URL("index.html", rootUrl), "utf8");
+  const syncStart = homepage.indexOf("    var syncAppMode = function(){");
+  const syncEnd = homepage.indexOf("    var syncAppHistory = function", syncStart);
+  assert.ok(syncStart >= 0 && syncEnd > syncStart, "App mode synchronizer is missing");
+  const syncSource = homepage.slice(syncStart, syncEnd);
+  assert.match(syncSource, /window\.location\.hash === '#settings'/);
+  const desktopBranch = syncSource.slice(syncSource.indexOf("      } else {"));
+  assert.match(
+    desktopBranch,
+    /if \(window\.location\.hash === '#settings' && window\.history\.replaceState\)/,
+    "desktop #settings cleanup must run directly in the desktop branch",
+  );
+  assert.doesNotMatch(desktopBranch, /if \(entering[^)]*\)/);
 });
 
 test("popstate and hashchange restore pages without adding history", async () => {
@@ -559,7 +709,8 @@ test("leaving the iPad App breakpoint restores the full desktop document", async
   harness.setMobile(false);
   assert.equal(harness.root.classList.contains("app-mode"), false);
   assert.equal(harness.root.getAttribute("data-app-page"), null);
-  for (const id of pageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  for (const id of primaryPageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  assertPartState(harness.screens.get("settings"), false, "desktop Settings screen");
   assertPartState(harness.footer, true, "desktop footer");
 
   const pushesBeforeDesktopClick = harness.historyPushes.length;
@@ -576,7 +727,8 @@ test("a fine-only desktop starts without App motion or mounted-screen side effec
   assert.equal(harness.root.classList.contains("app-mode"), false);
   assert.equal(harness.root.getAttribute("data-app-page"), null);
   assert.equal(harness.root.getAttribute("data-app-direction"), null);
-  for (const id of pageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  for (const id of primaryPageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  assertPartState(harness.screens.get("settings"), false, "desktop Settings screen");
   assertPartState(harness.footer, true, "desktop footer");
   const event = harness.click("about");
   assert.equal(event.defaultPrevented, false);
@@ -608,7 +760,8 @@ test("leaving App mode cancels a pending mobile scroll frame", async () => {
   harness.flushFrames();
   assert.equal(harness.scrollCalls.length, 0);
   assert.equal(harness.root.classList.contains("app-mode"), false);
-  for (const id of pageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  for (const id of primaryPageIds) assertPartState(harness.screens.get(id), true, `${id} desktop screen`);
+  assertPartState(harness.screens.get("settings"), false, "desktop Settings screen");
 });
 
 test("orientation changes preserve the reading offset inside the active page", async () => {
@@ -640,7 +793,7 @@ test("re-entering App mode follows the desktop section instead of a stale hash",
 });
 
 test("the footer is mounted only on the Work app screen", async () => {
-  for (const id of pageIds) {
+  for (const id of appPageIds) {
     const harness = await createAppHarness({ hash: `#${id}` });
     assertPartState(harness.footer, id === "building", `${id} footer`);
   }
