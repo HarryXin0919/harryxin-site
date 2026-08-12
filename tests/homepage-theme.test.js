@@ -84,7 +84,7 @@ test("daylight palette and both optical logo masters are present", async () => {
   assert.match(dayLogo, /fill="#2f7818"/);
 });
 
-test("daylight switches both IronPulse placements to the black-on-white master", async () => {
+test("daylight switches both IronPulse placements to the transparent black master", async () => {
   const [homepage, nightLogo, dayLogo, dayStat] = await Promise.all([
     readFile(homepageUrl, "utf8"),
     readFile(ironPulseNightUrl, "utf8"),
@@ -99,14 +99,17 @@ test("daylight switches both IronPulse placements to the black-on-white master",
   for (const image of ironPulseImages) {
     assert.equal(attribute(image, "src"), "/assets/ironpulse-logo.svg");
     assert.equal(attribute(image, "data-logo-night"), "/assets/ironpulse-logo.svg");
-    assert.equal(attribute(image, "data-logo-day"), "/assets/ironpulse-logo-day.svg");
+    assert.equal(attribute(image, "data-logo-day"), "/assets/ironpulse-logo-day.svg?v=2");
   }
 
   assert.match(nightLogo, /fill="#FFFFFF"/);
   assert.match(nightLogo, /fill="#61C4E3"/);
-  assert.match(dayLogo, /<rect\b[^>]*fill="#FFFFFF"/);
+  assert.doesNotMatch(dayLogo, /<rect\b/);
+  assert.doesNotMatch(dayLogo, /fill="#FFFFFF"/);
   assert.equal((dayLogo.match(/<path\b[^>]*fill="#0A0F0C"/g) || []).length, 4);
   assert.doesNotMatch(dayLogo, /fill="#61C4E3"/);
+  assert.match(homepage, /html\[data-theme="light"\] \.about-robotics-mark\{[\s\S]*?background:transparent/);
+  assert.match(homepage, /html\[data-theme="light"\] \.fact-ironpulse \.ironpulse-icon\{background:transparent\}/);
 });
 
 test("daylight player uses paper chrome in rest, hover, and compact layouts", async () => {
