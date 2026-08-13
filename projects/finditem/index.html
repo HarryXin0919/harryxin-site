@@ -48,6 +48,8 @@
         })();
     </script>
     <script src="/assets/site-theme.js" defer></script>
+    <script src="/assets/work-back.js" defer></script>
+    <link rel="stylesheet" href="/assets/detail-entry.css" />
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: auto; scroll-padding-top: 52px; }  /* snap removed: inertia smooth-scroll handles motion */
@@ -1016,7 +1018,7 @@
     <nav>
         <div class="nav-inner">
             <div class="nav-identity">
-                <a href="/#building" class="parent-site-link" aria-label="返回 Harry Xin 项目列表"><b>← HX</b><span>Projects</span></a>
+                <a href="/#building" class="parent-site-link" data-work-back aria-label="返回 Harry Xin 项目列表"><b>← HX</b><span>Projects</span></a>
                 <a href="#main" class="nav-brand">Find<span class="it">Item</span> <span class="cn-name">寻<span class="it">物</span></span></a>
             </div>
             <div class="nav-right">
@@ -1043,7 +1045,7 @@
 
     <!-- Mobile menu — a designed drawer, not a hidden desktop bar -->
     <div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true" inert>
-        <a class="mobile-parent-link" href="/#building" data-i18n="nav_parent">← Harry Xin / 项目</a>
+        <a class="mobile-parent-link" href="/#building" data-work-back data-i18n="nav_parent">← Harry Xin / 项目</a>
         <a href="#how" data-i18n="nav_how">原理</a>
         <a href="#features" data-i18n="nav_features">功能</a>
         <a href="#architecture" data-i18n="nav_architecture">架构</a>
@@ -1452,7 +1454,7 @@
     <!-- Footer -->
     <footer>
         <div class="footer-inner">
-            <a href="/#building" data-i18n="footer_projects">← Harry Xin / 项目</a>
+            <a href="/#building" data-work-back data-i18n="footer_projects">← Harry Xin / 项目</a>
             <span class="footer-dot">·</span>
             <a href="https://github.com/HarryXin0919/FindItem#readme" target="_blank" rel="noopener" data-i18n="footer_docs">项目文档</a>
             <span class="footer-dot">·</span>

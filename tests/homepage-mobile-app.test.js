@@ -28,6 +28,7 @@ function createElement({ tagName = "div", attributes = {}, heading = null } = {}
   const element = {
     tagName: tagName.toUpperCase(),
     parentNode: null,
+    style: {},
     hidden: values.has("hidden"),
     inert: values.has("inert"),
     heading,
@@ -51,8 +52,22 @@ function createElement({ tagName = "div", attributes = {}, heading = null } = {}
       if (!listeners.has(type)) listeners.set(type, []);
       listeners.get(type).push(listener);
     },
+    dispatch(type, event = {}) {
+      for (const listener of listeners.get(type) || []) listener.call(this, { currentTarget: this, preventDefault() {}, ...event });
+    },
     querySelector(selector) {
       return selector === "h1,h2" ? heading : null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+    contains(candidate) {
+      let current = candidate;
+      while (current) {
+        if (current === this) return true;
+        current = current.parentNode;
+      }
+      return false;
     },
   };
   return element;
@@ -65,7 +80,7 @@ function createHeading() {
   return heading;
 }
 
-async function createAppHarness({ hash = "", mobile = true } = {}) {
+async function createAppHarness({ hash = "", mobile = true, navPreview = null, workScroll = null } = {}) {
   const homepage = await readFile(new URL("index.html", rootUrl), "utf8");
   const start = homepage.indexOf("  /* Wayfinding remains functional even when motion is reduced. */");
   const endMarker = "  /* HX_MOBILE_APP_ROUTER_END */";
@@ -126,6 +141,44 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     tagName: "button",
     attributes: { type: "button", "data-app-settings-back": "" },
   });
+  const workDetailLink = createElement({
+    tagName: "a",
+    attributes: { href: "/projects/viralens", "data-work-detail": "" },
+  });
+  const menuLinks = new Map(appPageIds.map((id) => [
+    id,
+    createElement({
+      tagName: "a",
+      attributes: {
+        href: `#${id}`,
+        "data-app-menu-item": "",
+        ...(id === "settings" ? { "data-app-settings-link": "" } : {}),
+        ...(id === "home" ? { "aria-current": "page" } : {}),
+      },
+    }),
+  ]));
+  const menuTrigger = createElement({
+    tagName: "button",
+    attributes: { type: "button", "data-app-menu-trigger": "", "aria-expanded": "false" },
+  });
+  const menuLayer = createElement({
+    attributes: { "data-app-menu-layer": "", hidden: "", inert: "", "aria-hidden": "true" },
+  });
+  const menuDrawer = createElement({ attributes: { class: "app-menu-drawer" } });
+  const menuClose = createElement({ tagName: "button", attributes: { type: "button", class: "app-menu-close", "data-app-menu-close": "" } });
+  const navGroup = { querySelectorAll: () => navChoices };
+  const navChoices = ["tabs", "menu"].map((mode) => {
+    const choice = createElement({
+      tagName: "button",
+      attributes: { role: "radio", "data-setnav": mode },
+    });
+    choice.parentNode = navGroup;
+    return choice;
+  });
+  menuDrawer.querySelectorAll = () => [menuClose, ...menuLinks.values()];
+  menuClose.parentNode = menuDrawer;
+  for (const link of menuLinks.values()) link.parentNode = menuDrawer;
+  menuDrawer.parentNode = menuLayer;
 
   const location = { hash };
   const appMedia = {
@@ -142,14 +195,22 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
 
   const document = {
     documentElement: root,
+    body: { style: { overflow: "" } },
+    activeElement: null,
     querySelectorAll(selector) {
       if (selector === '.site-nav a[href^="#"], .mobile-tabbar a[href^="#"]') return sectionLinks;
       if (selector === "[data-app-screen]") return [...screens.values()];
       if (selector === "[data-app-screen-extra]") return [footer];
+      if (selector === "[data-setnav]") return navChoices;
+      if (selector === "[data-app-menu-item]") return [...menuLinks.values()];
       return [];
     },
     querySelector(selector) {
       if (selector === ".topbar") return topbar;
+      if (selector === "[data-app-menu-trigger]") return menuTrigger;
+      if (selector === "[data-app-menu-layer]") return menuLayer;
+      if (selector === ".app-menu-drawer") return menuDrawer;
+      if (selector === ".app-menu-close") return menuClose;
       const match = selector.match(/^\[data-app-screen="([^"]+)"\]$/);
       return match ? screens.get(match[1]) || null : null;
     },
@@ -158,8 +219,15 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
       documentListeners.get(type).push(listener);
     },
   };
-  for (const element of [...screens.values(), footer, ...sectionLinks, settingsLink, settingsBack]) {
+  for (const element of [...screens.values(), footer, ...sectionLinks, settingsLink, settingsBack, workDetailLink, menuTrigger, menuLayer]) {
     element.parentNode = document;
+  }
+  for (const element of [menuTrigger, menuClose, ...menuLinks.values(), ...navChoices]) {
+    element.focusCount = 0;
+    element.focus = () => {
+      element.focusCount += 1;
+      document.activeElement = element;
+    };
   }
 
   const requestAnimationFrame = (callback) => {
@@ -203,8 +271,19 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
       this.pageYOffset = y;
       root.scrollTop = y;
     },
+    setTimeout(callback) {
+      return requestAnimationFrame(callback);
+    },
     requestAnimationFrame,
     cancelAnimationFrame,
+  };
+  const sessionValues = new Map();
+  if (navPreview !== null) sessionValues.set("harryxin-nav-preview", navPreview);
+  if (workScroll !== null) sessionValues.set("harryxin-work-scroll", String(workScroll));
+  const sessionStorage = {
+    getItem: (key) => sessionValues.get(key) ?? null,
+    setItem: (key, value) => sessionValues.set(key, String(value)),
+    removeItem: (key) => sessionValues.delete(key),
   };
 
   vm.runInContext(source, vm.createContext({
@@ -213,6 +292,7 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     document,
     requestAnimationFrame,
     root,
+    sessionStorage,
     window,
   }));
 
@@ -264,6 +344,12 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     historyPushes,
     historyReplaces,
     location,
+    menuClose,
+    menuDrawer,
+    menuLayer,
+    menuLinks,
+    menuTrigger,
+    navChoices,
     root,
     screens,
     scrollCalls,
@@ -271,10 +357,12 @@ async function createAppHarness({ hash = "", mobile = true } = {}) {
     setScroll,
     settingsBack,
     settingsLink,
+    sessionValues,
     siteLinks,
     tabs,
     topbar,
     window,
+    workDetailLink,
   };
 }
 
@@ -297,6 +385,13 @@ function assertActivePage(harness, activeId) {
       harness.tabs.get(id).getAttribute("aria-current"),
       id === activeId ? "page" : null,
       `${id} tab current-page state is wrong`,
+    );
+  }
+  for (const id of appPageIds) {
+    assert.equal(
+      harness.menuLinks.get(id).getAttribute("aria-current"),
+      id === activeId ? "page" : null,
+      `${id} menu item current-page state is wrong`,
     );
   }
   assertPartState(harness.footer, activeId === "building", "Work footer");
@@ -332,6 +427,166 @@ test("mobile app markup exposes six ordered screens but only five primary tabs",
   assert.ok(settingsBack, "App Settings back control is missing");
   assert.equal(attribute(settingsBack, "type"), "button");
   assert.ok(attribute(settingsBack, "aria-label"), "App Settings back control needs an accessible name");
+});
+
+test("Navigation Preview exposes five-page Tab Bar and Menu variants without creating a sixth primary page", async () => {
+  const homepage = await readFile(new URL("index.html", rootUrl), "utf8");
+  assert.match(homepage, /harryxin-nav-preview/);
+  assert.match(homepage, /sessionStorage\.getItem\('harryxin-nav-preview'\) \|\| 'tabs'/);
+  assert.match(homepage, /if \(navPreview !== 'tabs' && navPreview !== 'menu'\) navPreview = 'tabs'/);
+
+  const trigger = homepage.match(/<button\b[^>]*\bdata-app-menu-trigger\b[^>]*>/i)?.[0];
+  assert.ok(trigger, "Menu mode needs a top-right trigger");
+  assert.equal(attribute(trigger, "type"), "button");
+  assert.equal(attribute(trigger, "aria-expanded"), "false");
+  assert.equal(attribute(trigger, "aria-controls"), "app-menu-drawer");
+  assert.ok(attribute(trigger, "aria-label"));
+
+  const layer = homepage.match(/<div\b[^>]*\bdata-app-menu-layer\b[^>]*>[\s\S]*?<\/aside>\s*<\/div>/i)?.[0];
+  assert.ok(layer, "Menu drawer layer is missing");
+  assert.match(layer.match(/<aside\b[^>]*>/i)?.[0] || "", /\brole=["']dialog["']/i);
+  assert.match(layer.match(/<aside\b[^>]*>/i)?.[0] || "", /\baria-modal=["']true["']/i);
+  const menuItems = [...layer.matchAll(/<a\b[^>]*\bdata-app-menu-item\b[^>]*>/gi)].map((match) => match[0]);
+  assert.deepEqual(menuItems.map((tag) => attribute(tag, "href")), appPageIds.map((id) => `#${id}`));
+  assert.equal(menuItems.filter((tag) => /\bdata-app-settings-link\b/i.test(tag)).length, 1);
+
+  assert.match(homepage, /html\.app-mode\[data-app-nav="menu"\]/i);
+  assert.match(homepage, /html\.app-mode\[data-app-nav="menu"\] \.app-menu-trigger\{display:grid\}/);
+  assert.match(homepage, /html\.app-mode\[data-app-nav="menu"\]\.app-menu-open \.app-menu-layer:not\(\[hidden\]\)\{pointer-events:auto\}/);
+  assert.match(homepage, /\.mobile-tabbar a>span\{[\s\S]{0,100}font:650 10px\/1/);
+  assert.match(homepage, /\.app-menu-drawer\{[\s\S]{0,340}safe-area-inset-top[\s\S]{0,180}safe-area-inset-right[\s\S]{0,180}safe-area-inset-bottom/);
+});
+
+test("Navigation Preview is session-scoped, keyboard-selectable, and defaults to Tab Bar", async () => {
+  const harness = await createAppHarness();
+  assert.equal(harness.root.getAttribute("data-app-nav"), "tabs");
+  assert.equal(harness.navChoices[0].getAttribute("aria-checked"), "true");
+  assert.equal(harness.navChoices[1].getAttribute("aria-checked"), "false");
+
+  harness.navChoices[1].dispatch("click");
+  assert.equal(harness.root.getAttribute("data-app-nav"), "menu");
+  assert.equal(harness.sessionValues.get("harryxin-nav-preview"), "menu");
+  assert.equal(harness.navChoices[1].getAttribute("tabindex"), "0");
+
+  let prevented = 0;
+  harness.navChoices[1].dispatch("keydown", {
+    key: "ArrowRight",
+    preventDefault: () => { prevented += 1; },
+  });
+  assert.equal(prevented, 1);
+  assert.equal(harness.root.getAttribute("data-app-nav"), "tabs", "ArrowRight should wrap Menu to Tab Bar");
+  assert.equal(harness.sessionValues.get("harryxin-nav-preview"), "tabs");
+  assert.equal(harness.navChoices[0].focusCount, 1);
+
+  const restored = await createAppHarness({ navPreview: "menu" });
+  assert.equal(restored.root.getAttribute("data-app-nav"), "menu");
+  assert.equal(restored.navChoices[1].getAttribute("aria-checked"), "true");
+});
+
+test("Menu drawer traps focus, closes with Escape, and returns focus to its trigger", async () => {
+  const harness = await createAppHarness({ navPreview: "menu" });
+  harness.menuTrigger.focus();
+  const opened = harness.click("menu-open", harness.menuTrigger);
+  assert.equal(opened.defaultPrevented, true);
+  assert.equal(harness.root.classList.contains("app-menu-open"), true);
+  assert.equal(harness.menuTrigger.getAttribute("aria-expanded"), "true");
+  assert.equal(harness.menuLayer.hidden, false);
+  assert.equal(harness.menuLayer.inert, false);
+  assert.equal(harness.window.pageYOffset, 0);
+  harness.flushFrames();
+  assert.equal(harness.menuClose.focusCount, 1, "opening the drawer should focus its close control");
+
+  let trapped = 0;
+  harness.dispatchDocument("keydown", {
+    key: "Tab",
+    shiftKey: true,
+    preventDefault: () => { trapped += 1; },
+  });
+  assert.equal(trapped, 1);
+  assert.equal(harness.menuLinks.get("settings").focusCount, 1, "Shift+Tab from the first control must wrap to the last");
+
+  let escaped = 0;
+  harness.dispatchDocument("keydown", {
+    key: "Escape",
+    preventDefault: () => { escaped += 1; },
+    stopPropagation() {},
+  });
+  assert.equal(escaped, 1);
+  assert.equal(harness.root.classList.contains("app-menu-open"), false);
+  assert.equal(harness.menuTrigger.getAttribute("aria-expanded"), "false");
+  assert.equal(harness.menuLayer.getAttribute("aria-hidden"), "true");
+  assert.equal(harness.menuLayer.inert, true);
+  assert.equal(harness.menuTrigger.focusCount, 2, "closing the drawer should return focus to its trigger");
+});
+
+test("Menu items use the same App history, screen activation, and scroll state as Tab Bar items", async () => {
+  const harness = await createAppHarness({ hash: "#about", navPreview: "menu" });
+  harness.flushFrames();
+  harness.setScroll(164);
+  harness.menuTrigger.focus();
+  harness.click("menu-open", harness.menuTrigger);
+  harness.flushFrames();
+
+  const selected = harness.click("building", harness.menuLinks.get("building"));
+  assert.equal(selected.defaultPrevented, true);
+  assert.equal(harness.historyPushes.length, 1);
+  assert.equal(harness.historyPushes[0].state.appPage, "building");
+  assert.equal(harness.historyPushes[0].title, "");
+  assert.equal(harness.historyPushes[0].url, "#building");
+  assertActivePage(harness, "building");
+  assert.equal(harness.root.classList.contains("app-menu-open"), false);
+  assert.equal(harness.menuLayer.getAttribute("aria-hidden"), "true");
+  harness.flushFrames();
+  assert.equal(harness.screens.get("building").heading.focusCount, 1);
+
+  harness.click("about", harness.menuLinks.get("about"));
+  harness.flushFrames();
+  assert.deepEqual(harness.scrollCalls.at(-1), [0, 164]);
+});
+
+test("reselecting the current Menu page closes the drawer and restores focus", async () => {
+  const harness = await createAppHarness({ hash: "#about", navPreview: "menu" });
+  harness.flushFrames();
+  harness.menuTrigger.focus();
+  harness.click("menu-open", harness.menuTrigger);
+  harness.flushFrames();
+
+  const selected = harness.click("about", harness.menuLinks.get("about"));
+  assert.equal(selected.defaultPrevented, true);
+  assert.equal(harness.root.classList.contains("app-menu-open"), false);
+  assert.equal(harness.menuLayer.inert, true);
+  assert.equal(harness.menuTrigger.focusCount, 2, "focus must leave the inert drawer and return to its trigger");
+  harness.flushFrames();
+  assert.deepEqual(harness.scrollCalls.at(-1), [0, 0]);
+});
+
+test("Work detail navigation survives a non-bfcache return with its scroll intact", async () => {
+  const leaving = await createAppHarness({ hash: "#building" });
+  leaving.flushFrames();
+  leaving.setScroll(386);
+  const detailClick = leaving.click("detail", leaving.workDetailLink);
+  assert.equal(detailClick.defaultPrevented, false, "detail navigation must remain immediate on App devices");
+  assert.equal(leaving.sessionValues.get("harryxin-work-scroll"), "386");
+
+  const restored = await createAppHarness({ hash: "#building", workScroll: 386 });
+  restored.flushFrames();
+  assertActivePage(restored, "building");
+  assert.deepEqual(restored.scrollCalls.at(-1), [0, 386]);
+  assert.equal(restored.sessionValues.has("harryxin-work-scroll"), false, "the handoff offset must be consumed once");
+  restored.dispatchWindow("load");
+  restored.flushFrames();
+  assert.deepEqual(restored.scrollCalls.at(-1), [0, 386], "load settling must not erase a restored Work position");
+});
+
+test("a bfcache Work return consumes the pending handoff before a later reload", async () => {
+  const harness = await createAppHarness({ hash: "#building" });
+  harness.flushFrames();
+  harness.setScroll(244);
+  harness.click("detail", harness.workDetailLink);
+  assert.equal(harness.sessionValues.get("harryxin-work-scroll"), "244");
+
+  harness.dispatchWindow("pageshow", { type: "pageshow", persisted: true });
+  assert.equal(harness.sessionValues.has("harryxin-work-scroll"), false);
 });
 
 test("App mode covers phones and iPads without capturing a fine-only desktop", async () => {
@@ -746,6 +1001,9 @@ test("reduced motion disables every App launch and page-plane animation", async 
     "html.app-mode .topbar",
     "html.app-mode .mobile-tabbar",
     "html.app-mode .brand-mark",
+    "html.app-mode .app-menu-trigger",
+    "html.app-mode .app-menu-drawer",
+    "html.app-mode .app-menu-nav a",
     "html.app-mode .mobile-tabbar a[aria-current]::after",
     "html.app-mode [data-app-screen]:not([hidden])",
   ]) {

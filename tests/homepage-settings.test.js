@@ -34,7 +34,7 @@ function fakeNode(initial = {}) {
   };
 }
 
-test("Settings is an App-only screen with three appearance modes and two language choices", async () => {
+test("Settings is an App-only screen with appearance, navigation preview, and language choices", async () => {
   const homepage = await readFile(new URL("index.html", rootUrl), "utf8");
   const settings = homepage.match(/<section\b[^>]*\bid=["']settings["'][^>]*>[\s\S]*?<\/section>/i)?.[0];
   assert.ok(settings, "Settings screen is missing");
@@ -48,12 +48,12 @@ test("Settings is an App-only screen with three appearance modes and two languag
   assert.ok(attribute(back, "aria-label"));
 
   const groups = [...settings.matchAll(/<fieldset\b[^>]*\brole=["']radiogroup["'][^>]*>/gi)].map((match) => match[0]);
-  assert.equal(groups.length, 2, "Appearance and Language must be separate radio groups");
+  assert.equal(groups.length, 3, "Appearance, Navigation Preview, and Language must be separate radio groups");
   for (const group of groups) assert.ok(attribute(group, "aria-label"), "each Settings group needs a name");
 
   const choiceTags = [...settings.matchAll(/<button\b[^>]*\bclass=["'][^"']*settings-choice[^"']*["'][^>]*>/gi)]
     .map((match) => match[0]);
-  assert.equal(choiceTags.length, 5);
+  assert.equal(choiceTags.length, 7);
   for (const choice of choiceTags) {
     assert.equal(attribute(choice, "type"), "button");
     assert.equal(attribute(choice, "role"), "radio");
@@ -64,6 +64,10 @@ test("Settings is an App-only screen with three appearance modes and two languag
     ["system", "light", "dark"],
   );
   assert.deepEqual(
+    choiceTags.filter((tag) => attribute(tag, "data-setnav")).map((tag) => attribute(tag, "data-setnav")),
+    ["tabs", "menu"],
+  );
+  assert.deepEqual(
     choiceTags.filter((tag) => attribute(tag, "data-setlang")).map((tag) => attribute(tag, "data-setlang")),
     ["en", "zh"],
   );
@@ -71,7 +75,7 @@ test("Settings is an App-only screen with three appearance modes and two languag
 
 test("App chrome reserves iOS safe areas and never pins Settings over page content", async () => {
   const homepage = await readFile(new URL("index.html", rootUrl), "utf8");
-  assert.match(homepage, /\.app-settings-trigger,\.app-settings\{display:none\}/);
+  assert.match(homepage, /\.app-settings-trigger,\.app-menu-trigger,\.app-menu-layer,\.app-settings\{display:none\}/);
   assert.match(
     homepage,
     /html\.app-mode \.topbar,\s*html\.app-mode\.is-scrolled \.topbar\{[\s\S]{0,120}position:relative;[\s\S]{0,40}top:auto/,
@@ -84,6 +88,7 @@ test("App chrome reserves iOS safe areas and never pins Settings over page conte
   );
   assert.match(homepage, /html\.app-mode\[data-app-page="settings"\] \.topbar,[\s\S]{0,100}\.mobile-tabbar/);
   assert.match(homepage, /\.app-settings-trigger\{[\s\S]{0,100}width:44px;[\s\S]{0,40}height:44px/);
+  assert.match(homepage, /\.app-menu-trigger\{[\s\S]{0,100}width:44px;[\s\S]{0,40}height:44px/);
   assert.match(homepage, /\.app-settings-back\{[\s\S]{0,100}width:44px;[\s\S]{0,40}height:44px/);
   assert.match(homepage, /\.settings-choice\{[\s\S]{0,180}min-height:56px/);
 });

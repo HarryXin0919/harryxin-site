@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ViraLens — Creator research without growth-hack folklore</title>
+  <meta name="description" content="A bilingual case study of Harry Xin's open-source ViraLens project: public creator data, cross-zone hypothesis testing, visible reversals, and clearly bounded observational findings.">
+  <meta name="author" content="Harry Xin">
+  <meta id="theme-color" name="theme-color" content="#0a0d0c" data-theme-dark="#0a0d0c" data-theme-light="#f7f5ef">
+  <meta name="color-scheme" content="light dark">
+  <link rel="canonical" href="https://harryxin.com/projects/viralens">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ViraLens — Creator research without growth-hack folklore">
+  <meta property="og:description" content="An open-source creator-analysis toolkit that tests patterns across creators and keeps failed hypotheses visible.">
+  <meta property="og:url" content="https://harryxin.com/projects/viralens">
+  <meta property="og:image" content="https://harryxin.com/projects/viralens/assets/viralens-overview-light.png">
+  <meta property="og:site_name" content="Harry Xin">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=7">
+  <link id="site-favicon" rel="icon" type="image/svg+xml" sizes="any" href="/assets/hx-logo-icon-v6-xbridge.svg?v=7" data-theme-dark="/assets/hx-logo-icon-v6-xbridge.svg?v=7" data-theme-light="/assets/hx-logo-icon-v6-xbridge-day.svg?v=7">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=7">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=7">
+  <link rel="manifest" href="/site.webmanifest?v=7">
+  <script>
+    (function () {
+      var key = 'harryxin-theme';
+      var saved = null;
+      try { saved = localStorage.getItem(key); } catch (error) {}
+      if (saved !== 'system' && saved !== 'light' && saved !== 'dark') saved = 'system';
+      var systemLight = false;
+      try { systemLight = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches); } catch (error) {}
+      var theme = saved === 'system' ? (systemLight ? 'light' : 'dark') : saved;
+      var root = document.documentElement;
+      root.setAttribute('data-theme', theme);
+      root.setAttribute('data-theme-mode', saved);
+      root.style.colorScheme = theme;
+      var savedLang = null;
+      try { savedLang = localStorage.getItem('lang'); } catch (error) {}
+      if (savedLang !== 'en' && savedLang !== 'zh') {
+        savedLang = /^zh\b/i.test(navigator.language || '') ? 'zh' : 'en';
+      }
+      root.setAttribute('lang', savedLang === 'zh' ? 'zh-Hans' : 'en');
+      var color = document.getElementById('theme-color');
+      var icon = document.getElementById('site-favicon');
+      if (color) color.setAttribute('content', theme === 'light' ? '#f7f5ef' : '#0a0d0c');
+      if (icon) icon.setAttribute('href', theme === 'light' ? '/assets/hx-logo-icon-v6-xbridge-day.svg?v=7' : '/assets/hx-logo-icon-v6-xbridge.svg?v=7');
+    })();
+  </script>
+  <link rel="stylesheet" href="/projects/viralens/styles.css">
+  <script src="/assets/site-theme.js" defer></script>
+  <script src="/assets/work-back.js" defer></script>
+  <script src="/projects/viralens/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content"><span data-lang="en">Skip to case study</span><span data-lang="zh">跳到案例正文</span></a>
+
+  <header class="site-header">
+    <a class="back-link" href="/#building" data-work-back aria-label="Back to Work / 返回项目">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+      <span data-lang="en">Work</span><span data-lang="zh">项目</span>
+    </a>
+
+    <a class="brand" href="/" aria-label="Harry Xin home / Harry Xin 首页">
+      <img src="/assets/hx-logo-mark-v6-xbridge.svg" data-logo-night="/assets/hx-logo-mark-v6-xbridge.svg" data-logo-day="/assets/hx-logo-mark-v6-xbridge-day.svg" width="38" height="38" alt="">
+      <span><b>ViraLens</b><small>CASE / 05</small></span>
+    </a>
+
+    <div class="header-actions">
+      <button class="icon-control language-control" type="button" data-lang-toggle aria-label="切换到简体中文" aria-pressed="false">
+        <span class="language-current" aria-hidden="true">中</span>
+      </button>
+      <button class="icon-control" type="button" data-theme-toggle aria-label="Night theme. Switch to daylight / 夜间模式，切换到白昼" aria-pressed="false">
+        <svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.3 8.3 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z"></path></svg>
+        <svg data-theme-icon="sun" viewBox="0 0 24 24" aria-hidden="true" hidden><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="content">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span>05</span> OPEN-SOURCE RESEARCH TOOL</p>
+        <h1 id="page-title">
+          <span data-lang="en">Test the pattern.<br><em>Publish the reversal.</em></span>
+          <span data-lang="zh">检验规律，<br><em>也公开推翻。</em></span>
+        </h1>
+        <p class="hero-lede">
+          <span data-lang="en">ViraLens is the creator-analysis toolkit I built to collect public Bilibili and YouTube metadata, compare hypotheses across creators and content zones, and keep negative results visible.</span>
+          <span data-lang="zh">ViraLens 是我制作的开源创作者分析工具：获取 B 站与 YouTube 公开元数据，跨创作者、跨分区检验假设，也把没有成立的结果公开保留下来。</span>
+        </p>
+        <div class="hero-actions">
+          <a class="primary-cta" href="https://github.com/HarryXin0919/viralens" rel="noopener">
+            <span data-lang="en">View source</span><span data-lang="zh">查看源码</span><span aria-hidden="true">↗</span>
+          </a>
+          <a class="text-cta" href="#method"><span data-lang="en">Read the method</span><span data-lang="zh">查看方法</span><span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+
+      <aside class="role-note" aria-label="Project role and status">
+        <p class="note-label"><span data-lang="en">MY ROLE</span><span data-lang="zh">我的工作</span></p>
+        <p><span data-lang="en">Research framing · data pipeline · analysis · report design</span><span data-lang="zh">研究问题 · 数据管线 · 分析方法 · 报告设计</span></p>
+        <div class="note-rule"></div>
+        <p class="note-label"><span data-lang="en">OUTPUT</span><span data-lang="zh">输出</span></p>
+        <p>CSV · JSON · INTERACTIVE HTML</p>
+        <span class="status-chip"><span aria-hidden="true"></span> OPEN SOURCE · v1.0.0</span>
+      </aside>
+    </section>
+
+    <figure class="overview-figure">
+      <div class="overview-frame">
+        <img class="overview-image" width="1600" height="900" alt="ViraLens interface overview showing the local creator diagnosis report" data-logo-night="/projects/viralens/assets/viralens-overview-dark.png" data-logo-day="/projects/viralens/assets/viralens-overview-light.png">
+      </div>
+      <figcaption>
+        <span data-lang="en">The local-first interface compares a video with the same creator's own reference set instead of a generic viral score.</span>
+        <span data-lang="zh">本地优先的界面把单条视频与同一创作者自己的参考样本比较，而不是给出泛化的“爆款分数”。</span>
+      </figcaption>
+    </figure>
+
+    <section class="sample-ledger" aria-labelledby="sample-title">
+      <div class="section-heading">
+        <p class="eyebrow"><span>DATA</span> OBSERVED SAMPLE</p>
+        <h2 id="sample-title"><span data-lang="en">One question, tested wider.</span><span data-lang="zh">同一个问题，放到更宽的样本里。</span></h2>
+      </div>
+      <div class="metric-grid">
+        <article><strong>14</strong><span data-lang="en">Bilibili creators</span><span data-lang="zh">位 B 站创作者</span></article>
+        <article><strong>5</strong><span data-lang="en">content zones</span><span data-lang="zh">个内容分区</span></article>
+        <article><strong>549</strong><span data-lang="en">Bilibili videos</span><span data-lang="zh">条 B 站视频</span></article>
+        <article><strong>4</strong><span data-lang="en">English YouTube creators</span><span data-lang="zh">位英文 YouTube 创作者</span></article>
+        <article><strong>160</strong><span data-lang="en">long-form YouTube videos</span><span data-lang="zh">条 YouTube 长视频</span></article>
+      </div>
+      <p class="scope-line"><span data-lang="en">Public platform metadata · observational comparisons · no randomized intervention</span><span data-lang="zh">公开平台元数据 · 观察性比较 · 没有随机干预</span></p>
+    </section>
+
+    <section class="question-grid" aria-labelledby="question-title">
+      <div class="section-heading">
+        <p class="eyebrow"><span>01</span> THE QUESTION</p>
+        <h2 id="question-title"><span data-lang="en">Which patterns remain after leaving one creator or one zone?</span><span data-lang="zh">离开单个创作者、单个分区后，哪些规律还站得住？</span></h2>
+      </div>
+      <div class="question-copy">
+        <p><span data-lang="en">Creator advice often begins with one successful channel and stops there. I wanted a workflow that could repeat the same comparison across different creators, label reversals, and distinguish a useful observation from a universal claim.</span><span data-lang="zh">很多创作建议从一个成功账号出发，也停在一个账号。我想建立一套可以把同一比较重复到不同创作者、标记反例，并区分“值得观察”与“普遍规律”的工作流。</span></p>
+        <blockquote><span data-lang="en">The report is allowed to say “inconclusive.”</span><span data-lang="zh">报告必须允许自己写下“无法下结论”。</span></blockquote>
+      </div>
+    </section>
+
+    <section class="method" id="method" aria-labelledby="method-title">
+      <div class="section-heading">
+        <p class="eyebrow"><span>02</span> METHOD</p>
+        <h2 id="method-title"><span data-lang="en">A repeatable path from API to verdict.</span><span data-lang="zh">从 API 到判断，过程可以复现。</span></h2>
+      </div>
+      <ol class="method-flow">
+        <li><b>01</b><h3><span data-lang="en">Collect</span><span data-lang="zh">获取</span></h3><p><span data-lang="en">Pull public video metadata from Bilibili and YouTube, then save clean CSV and JSON.</span><span data-lang="zh">获取 B 站与 YouTube 公开视频元数据，并保存为整洁的 CSV 与 JSON。</span></p></li>
+        <li><b>02</b><h3><span data-lang="en">Compare within creator</span><span data-lang="zh">创作者内比较</span></h3><p><span data-lang="en">Compare each creator with their own top and bottom reference videos before looking across zones.</span><span data-lang="zh">先在同一创作者内部比较头部与尾部参考视频，再跨分区观察方向。</span></p></li>
+        <li><b>03</b><h3><span data-lang="en">Stress-test</span><span data-lang="zh">扩大检验</span></h3><p><span data-lang="en">Repeat the same hypothesis across creators, platforms, and content zones; record counterexamples.</span><span data-lang="zh">把同一假设重复到不同创作者、平台与分区，并记录反例。</span></p></li>
+        <li><b>04</b><h3><span data-lang="en">Publish the verdict</span><span data-lang="zh">公开判断</span></h3><p><span data-lang="en">Mark each hypothesis supported, falsified, or inconclusive, with the underlying charts.</span><span data-lang="zh">把假设标为支持、推翻或无法判断，并附上对应图表。</span></p></li>
+      </ol>
+    </section>
+
+    <section class="finding finding--form" aria-labelledby="form-title">
+      <div class="finding-copy">
+        <p class="eyebrow"><span>03</span> OBSERVED ASSOCIATION</p>
+        <h2 id="form-title"><span data-lang="en">The most consistent separation appeared around each creator's signature form.</span><span data-lang="zh">最稳定的分离，出现在每位创作者自己的标志性形式附近。</span></h2>
+        <p><span data-lang="en">Within the selected samples, the top-five and bottom-five groups were separated by 3.7×–109× on Bilibili. The English YouTube extension showed a 3.5×–8.8× separation across four creators.</span><span data-lang="zh">在所选样本中，B 站创作者头部 5 条与尾部 5 条之间出现 3.7×–109× 的差距；四位英文 YouTube 创作者的扩展样本中，差距为 3.5×–8.8×。</span></p>
+        <p class="boundary"><span data-lang="en"><b>Boundary:</b> this is an observed within-creator association. It does not establish that format produced the performance difference.</span><span data-lang="zh"><b>边界：</b>这只是创作者内部观察到的关联，不能证明视频形式产生了播放表现差异。</span></p>
+      </div>
+      <figure class="chart-figure chart-figure--cropped-title">
+        <div class="chart-frame"><img src="/projects/viralens/assets/form-spread.png" width="1584" height="1320" loading="lazy" alt="Observed top-five versus bottom-five play-count separations across the creator sample"></div>
+        <figcaption><span data-lang="en">Original project chart; the older headline is cropped so the case study presents the result strictly as an association.</span><span data-lang="zh">项目原始图表；这里裁去旧标题，并严格按相关性呈现结果。</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="reversal" aria-labelledby="reversal-title">
+      <div class="reversal-head">
+        <p class="eyebrow"><span>04</span> THE REVERSAL</p>
+        <h2 id="reversal-title"><span data-lang="en">The title-with-“you” hypothesis did not survive the wider sample.</span><span data-lang="zh">标题含“你”的假设，没有通过更宽样本的检验。</span></h2>
+        <p><span data-lang="en">The first knowledge-zone comparisons looked favorable. After the same test expanded across zones and platforms, creator-level directions appeared on both sides and the geometric-mean ratio was 0.91×. I retracted the universal claim instead of hiding the reversal.</span><span data-lang="zh">最初在知识区的比较看起来偏正向；当同一测试扩展到更多分区和平台后，不同创作者的方向分布在基准线两侧，几何平均比值为 0.91×。我撤回了普遍性结论，而不是隐藏反转。</span></p>
+      </div>
+      <figure class="chart-figure chart-figure--wide chart-figure--data">
+        <div class="chart-frame" tabindex="0" role="region" aria-label="Scrollable chart / 可横向滚动图表"><img src="/projects/viralens/assets/second-person-falsified.png" width="1411" height="855" loading="lazy" alt="Creator-level title-with-you ratios appearing on both sides of the neutral baseline"></div>
+        <figcaption><span data-lang="en">A promising local pattern became a falsified universal hypothesis after broader comparison.</span><span data-lang="zh">一个局部看似成立的规律，在扩大比较后被判定为不具普遍性。</span></figcaption>
+      </figure>
+      <div class="reversal-stats" aria-label="Hypothesis revision summary">
+        <div><small><span data-lang="en">EARLY SIGNAL</span><span data-lang="zh">早期信号</span></small><strong>1.86×</strong><p><span data-lang="en">knowledge-zone average</span><span data-lang="zh">知识区初始平均</span></p></div>
+        <span class="revision-arrow" aria-hidden="true">→</span>
+        <div><small><span data-lang="en">WIDER CHECK</span><span data-lang="zh">扩大检验</span></small><strong>0.91×</strong><p><span data-lang="en">geometric-mean ratio</span><span data-lang="zh">几何平均比值</span></p></div>
+        <div class="verdict"><small>VERDICT</small><strong><span data-lang="en">FALSIFIED AS UNIVERSAL</span><span data-lang="zh">不具普遍性</span></strong></div>
+      </div>
+    </section>
+
+    <section class="negative-result" aria-labelledby="negative-title">
+      <div class="section-heading">
+        <p class="eyebrow"><span>05</span> NEGATIVE RESULTS STAY</p>
+        <h2 id="negative-title"><span data-lang="en">A clean report also shows what failed.</span><span data-lang="zh">可信的报告，也要展示没成立的假设。</span></h2>
+      </div>
+      <div class="negative-grid">
+        <figure class="chart-figure chart-figure--data">
+          <div class="chart-frame" tabindex="0" role="region" aria-label="Scrollable chart / 可横向滚动图表"><img src="/projects/viralens/assets/meme-falsified.png" width="1411" height="855" loading="lazy" alt="Comment-style comparison with counterexamples in two of three creator samples"></div>
+          <figcaption><span data-lang="en">The playful-comment hypothesis reversed in two of three creator comparisons.</span><span data-lang="zh">“玩梗评论”假设在三位创作者中的两位出现反向结果。</span></figcaption>
+        </figure>
+        <div class="negative-copy">
+          <p><span data-lang="en">ViraLens does not compress every chart into a success story. Its report vocabulary has three states:</span><span data-lang="zh">ViraLens 不会把每张图都包装成成功故事。报告只使用三种判断：</span></p>
+          <ul>
+            <li><b>SUPPORTED</b><span data-lang="en"> — the tested pattern remained consistent in the stated sample</span><span data-lang="zh"> — 在明确范围内方向保持一致</span></li>
+            <li><b>FALSIFIED</b><span data-lang="en"> — counterexamples broke the proposed generalization</span><span data-lang="zh"> — 反例推翻了原先的普遍化说法</span></li>
+            <li><b>INCONCLUSIVE</b><span data-lang="en"> — the available data could not separate the alternatives</span><span data-lang="zh"> — 现有数据不足以区分不同解释</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="limitations" aria-labelledby="limitations-title">
+      <div class="section-heading">
+        <p class="eyebrow"><span>06</span> LIMITS</p>
+        <h2 id="limitations-title"><span data-lang="en">What this study cannot claim.</span><span data-lang="zh">这项研究不能声称什么。</span></h2>
+      </div>
+      <div class="limit-grid">
+        <article><span>01</span><h3><span data-lang="en">No causality</span><span data-lang="zh">没有因果结论</span></h3><p><span data-lang="en">Public metadata is observational. Topic, timing, audience, distribution, and production quality can all vary together.</span><span data-lang="zh">公开元数据属于观察数据；选题、时间、受众、分发与制作质量可能同时变化。</span></p></article>
+        <article><span>02</span><h3><span data-lang="en">Selected samples</span><span data-lang="zh">样本经过选择</span></h3><p><span data-lang="en">Top-five and bottom-five comparisons are interpretable but small, and do not represent every upload or creator.</span><span data-lang="zh">头部 5 条与尾部 5 条容易理解，但样本很小，也不代表所有视频或所有创作者。</span></p></article>
+        <article><span>03</span><h3><span data-lang="en">Missing private signals</span><span data-lang="zh">缺少私域指标</span></h3><p><span data-lang="en">Public APIs do not expose every creator's impressions, click-through rate, or audience-retention curve.</span><span data-lang="zh">公开 API 不会提供所有创作者的曝光、点击率或观众留存曲线。</span></p></article>
+        <article><span>04</span><h3><span data-lang="en">A map, not a recipe</span><span data-lang="zh">是地图，不是配方</span></h3><p><span data-lang="en">The findings identify patterns worth investigating; they are not guaranteed recommendations for future videos.</span><span data-lang="zh">这些结果只标出值得继续调查的规律，不是对未来视频表现的保证。</span></p></article>
+      </div>
+    </section>
+
+    <section class="source-panel" aria-labelledby="source-title">
+      <div>
+        <p class="eyebrow"><span>OPEN</span> SOURCE</p>
+        <h2 id="source-title"><span data-lang="en">Inspect the method, not just the headline.</span><span data-lang="zh">不只看标题，也可以检查方法。</span></h2>
+        <p><span data-lang="en">The collector, analysis scripts, sample configuration, report generator, and documented negative results are public.</span><span data-lang="zh">数据获取、分析脚本、示例配置、报告生成器与负面结果说明均公开可查。</span></p>
+      </div>
+      <a class="source-link" href="https://github.com/HarryXin0919/viralens" rel="noopener"><span>github.com/HarryXin0919/viralens</span><b aria-hidden="true">↗</b></a>
+    </section>
+  </main>
+
+  <footer>
+    <a href="/#building" data-work-back><span data-lang="en">← Back to Work</span><span data-lang="zh">← 返回项目</span></a>
+    <p>HARRY XIN · ViraLens · 2026</p>
+  </footer>
+</body>
+</html>

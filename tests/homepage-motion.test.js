@@ -92,13 +92,6 @@ test("all destination surfaces and CTAs opt into the motion contract", async () 
       description: "linked fact",
     },
     {
-      className: "card",
-      count: 6,
-      contract: "data-motion-surface",
-      destinations: ["FACTLENS", "FINDITEM", "VIRALENS", "LOOMING", "SKILLTREE", "CTXTAX"],
-      description: "linked project card",
-    },
-    {
       className: "show-feature",
       count: 2,
       contract: "data-motion-surface",
@@ -396,24 +389,31 @@ test("the Bilibili cover follows the selected site language", async () => {
   );
 });
 
-test("project cards preserve public sources while FindItem opens its internal case study", async () => {
+test("featured project cards preserve internal case-study motion destinations", async () => {
   const homepage = await readFile(new URL("index.html", root), "utf8");
   const buildingMatch = homepage.match(/<section id="building"[\s\S]*?<\/section>/);
   assert.ok(buildingMatch, "Building section markup is missing");
 
-  const projectCards = tagsWithClass(buildingMatch[0], "card");
+  const projectCards = openingTags(buildingMatch[0]).filter(({ tag }) =>
+    /^\/projects\/(?:finditem|viralens)\/?$/i.test(attribute(tag, "href") || ""),
+  );
   assert.deepEqual(
     projectCards.map(({ tag }) => attribute(tag, "href")),
     [
-      "https://github.com/HarryXin0919/factlens",
       "/projects/finditem",
-      "https://github.com/HarryXin0919/viralens",
-      "https://github.com/HarryXin0919/looming",
-      "https://github.com/HarryXin0919/skilltree",
-      "https://github.com/HarryXin0919/ctxtax",
+      "/projects/viralens",
     ],
-    "only FindItem should route through the internal portfolio case study",
+    "FindItem and ViraLens should route through internal portfolio case studies",
   );
+  assert.deepEqual(
+    projectCards.map(({ tag }) => attribute(tag, "data-destination")),
+    ["FINDITEM", "VIRALENS"],
+    "featured case-study cards expose the wrong motion destinations",
+  );
+  for (const [index, { tag }] of projectCards.entries()) {
+    assert.ok(hasAttribute(tag, "data-motion-surface"), `featured case-study card ${index + 1} is missing data-motion-surface`);
+    assertDestinationLabel(tag, `featured case-study card ${index + 1}`);
+  }
 });
 
 test("informational panels do not advertise a false navigation affordance", async () => {
@@ -619,4 +619,21 @@ test("project cards do not render the legacy circular corner ornament", async ()
     /\.card::before\s*\{\s*content\s*:\s*none\s*;\s*\}/i,
     "the laboratory skin must suppress the inherited circular card ornament",
   );
+});
+
+test("desktop sections use a short layered reveal and decorative-only depth", async () => {
+  const homepage = await readFile(new URL("index.html", root), "utf8");
+
+  assert.match(homepage, /--motion-reveal\s*:\s*420ms/i, "desktop reveal must stay within the 360–460ms target");
+  assert.match(homepage, /reveal-complete['"]\)\s*;\s*\},\s*460\s*\+/i, "interaction motion should take over after the short reveal");
+
+  for (const id of ["about", "creating", "now", "building"]) {
+    const section = homepage.match(new RegExp(`<(?:section|header)\\b[^>]*id=["']${id}["'][^>]*>[\\s\\S]*?(?=<(?:section|header)\\b[^>]*id=|<section id=["']settings["'])`, "i"))?.[0] || "";
+    assert.match(section, /class=["'][^"']*\bshead\b[^"']*\brise\b/i, `${id} heading must join the layered reveal`);
+  }
+
+  assert.match(homepage, /@media\s*\(min-width:\s*821px\)\s*and\s*\(pointer:\s*fine\)[\s\S]*?html:not\(\.app-mode\)\s+section:not\(\.app-settings\)::after/i);
+  assert.match(homepage, /depthOffset\s*\*\s*-4/, "desktop decorative depth must be limited to four pixels");
+  assert.doesNotMatch(homepage, /\[data-app-screen\][^{]*\{[^}]*(?:--section-depth|translate3d\([^)]*section-depth)/i, "App page planes must never receive continuous parallax");
+  assert.match(homepage, /prefers-reduced-motion:\s*reduce[\s\S]*?html:not\(\.app-mode\)\s+section:not\(\.app-settings\)::after\s*\{[^}]*transform:\s*none\s*!important/i);
 });
