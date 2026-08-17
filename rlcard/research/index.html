@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta
+      id="pageDescription"
       name="description"
       content="一份面向普通读者的 RLCard 研究报告：把奖励缩小 7 倍，并没有让 Leduc Hold'em 策略学得更好。"
     />
@@ -15,8 +16,9 @@
       data-theme-dark="#08100b"
       data-theme-light="#f3f5ef"
     />
-    <meta property="og:title" content="缩小奖励，没有让扑克 AI 学得更好 · Harry Xin" />
+    <meta id="openGraphTitle" property="og:title" content="缩小奖励，没有让扑克 AI 学得更好 · Harry Xin" />
     <meta
+      id="openGraphDescription"
       property="og:description"
       content="20 组训练、600 万局：缩放奖励在 10/10 个随机起点的最终表现都更差。"
     />
@@ -61,7 +63,7 @@
     <title>缩小奖励，没有让扑克 AI 学得更好 · RLCard 研究报告</title>
   </head>
   <body>
-    <a class="skip-link" href="#content">跳到研究结论</a>
+    <a class="skip-link" href="#content">跳到研究内容</a>
 
     <header class="site-header">
       <a class="brand" href="/" aria-label="返回 Harry Xin 首页">
@@ -70,9 +72,9 @@
       </a>
       <div class="header-actions">
         <nav aria-label="页面导航">
-          <a href="#summary">结论</a>
-          <a href="#comparison">对比</a>
-          <a href="#evidence">方法与数据</a>
+          <a id="navSummary" href="#summary">结论</a>
+          <a id="navComparison" href="#comparison">对比</a>
+          <a id="navEvidence" href="#evidence">方法与数据</a>
         </nav>
         <button
           class="theme-toggle"
@@ -97,13 +99,13 @@
     <main id="content">
       <section class="hero" aria-labelledby="page-title">
         <div class="hero-copy">
-          <p class="kicker">RLCard · LEDUC HOLD'EM · PUBLIC REPORT</p>
-          <p class="boundary">看过前期结果后追加的探索 · 不是预先设定的验证</p>
+          <p class="kicker" id="heroKicker">RLCard · LEDUC HOLD'EM · PUBLIC REPORT</p>
+          <p class="boundary" id="heroBoundary">看过前期结果后追加的探索 · 不是预先设定的验证</p>
           <h1 id="page-title">
-            把奖励缩小 7 倍，<br />
+            <span id="pageTitle">把奖励缩小 7 倍，</span><br />
             <em>没有让扑克 AI 学得更好。</em>
           </h1>
-          <p class="lede">
+          <p class="lede" id="pageLede">
             我让两组策略用相同的 10 个随机起点各训练 30 万局。结果很一致：使用原始奖励的策略更不容易被对手针对。
           </p>
         </div>
@@ -116,6 +118,170 @@
           </div>
         </div>
       </section>
+
+      <div id="mechanismView" class="mechanism-view" hidden>
+        <section id="mechanism-question" class="section mechanism-question" aria-labelledby="mechanism-question-title">
+          <header class="section-heading split-heading">
+            <div>
+              <p class="section-label">THE QUESTION</p>
+              <h2 id="mechanism-question-title">奖励变差，是公式的问题，还是因为整体变小了？</h2>
+            </div>
+            <p class="plain-definition">
+              <strong>可以把它想成调音量。</strong><br />
+              上次我们既换了“内容”，又把整体音量调小。现在分别测试，避免把两种影响混在一起。
+            </p>
+          </header>
+
+          <div class="mechanism-matrix" role="group" aria-label="奖励大小与 CFR 引导的四种组合">
+            <div class="matrix-corner" aria-hidden="true">
+              <span>两个开关</span>
+              <strong>2 × 2</strong>
+            </div>
+            <div class="matrix-axis matrix-axis-top"><span>不加引导</span><small>只看奖励大小</small></div>
+            <div class="matrix-axis matrix-axis-top"><span>加入 CFR 引导</span><small>测试奖励公式</small></div>
+            <div class="matrix-axis matrix-axis-side"><span>原始大小</span><small>保持原来的量级</small></div>
+            <article class="matrix-cell matrix-control">
+              <span>A · 对照</span>
+              <strong>原始奖励</strong>
+              <code>R</code>
+            </article>
+            <article class="matrix-cell">
+              <span>D · 测试</span>
+              <strong>原始大小 + 引导</strong>
+              <code>R + 1.75ΔΦ</code>
+            </article>
+            <div class="matrix-axis matrix-axis-side"><span>缩小到 1/7</span><small>整体一起变小</small></div>
+            <article class="matrix-cell">
+              <span>B · 已知对照</span>
+              <strong>奖励 ÷ 7</strong>
+              <code>R / 7</code>
+            </article>
+            <article class="matrix-cell matrix-focus">
+              <span>C · 测试</span>
+              <strong>缩小奖励 + 引导</strong>
+              <code>R / 7 + 0.25ΔΦ</code>
+            </article>
+          </div>
+
+          <p class="matrix-note">
+            四种设置使用相同的 8 个随机起点。这样既能比较“奖励变小”的影响，也能比较“加入 CFR 引导”的影响。
+          </p>
+        </section>
+
+        <section id="mechanism-live" class="section mechanism-live" aria-labelledby="mechanism-live-title">
+          <header class="section-heading split-heading">
+            <div>
+              <p class="section-label">LIVE STUDY</p>
+              <h2 id="mechanism-live-title">现在做到哪一步？</h2>
+            </div>
+            <p class="plain-definition">
+              <strong>一共 32 次独立训练。</strong><br />
+              四种设置各跑 8 次，每次训练 100,000 局。页面每 3 秒读取一次公开状态。
+            </p>
+          </header>
+
+          <div id="mechanismProgressShell" class="mechanism-progress-shell" data-state="queued">
+            <div class="mechanism-progress-head">
+              <div>
+                <span id="mechanismPhase">PHASE 08 / 09</span>
+                <strong id="mechanismProgressText">0 / 32 组完成</strong>
+              </div>
+              <strong id="mechanismRuns">0 / 32</strong>
+            </div>
+            <div class="mechanism-progress-track" aria-hidden="true"><i id="mechanismProgressBar"></i></div>
+            <div class="mechanism-arm-progress" aria-label="四种设置的完成进度">
+              <div><span>A</span><p>原始奖励</p><strong id="mechanismArmTerminal">0 / 8</strong></div>
+              <div><span>B</span><p>奖励 ÷ 7</p><strong id="mechanismArmScaled">0 / 8</strong></div>
+              <div><span>C</span><p>缩小 + 引导</p><strong id="mechanismArmScaledPbrs">0 / 8</strong></div>
+              <div><span>D</span><p>原始 + 引导</p><strong id="mechanismArmUnscaledPbrs">0 / 8</strong></div>
+            </div>
+          </div>
+
+          <figure class="mechanism-run-card" aria-labelledby="mechanism-run-heading">
+            <div class="mechanism-run-heading">
+              <div>
+                <p class="section-label">ONE REAL RUN · 单次真实数据</p>
+                <h3 id="mechanism-run-heading"><span id="mechanismRunArm">等待下一次运行</span></h3>
+              </div>
+              <p>这条线只代表当前一个设置和一个随机起点，不是 8 组平均。</p>
+            </div>
+            <div class="run-meta mechanism-run-meta">
+              <div><span>随机起点</span><strong id="mechanismRunSeed">—</strong></div>
+              <div><span>训练进度</span><strong id="mechanismRunProgress">—</strong></div>
+              <div><span>容易被针对</span><strong id="mechanismRunExploitability">—</strong></div>
+              <div><span>对随机对手收益</span><strong id="mechanismRunPayoff">—</strong></div>
+            </div>
+            <div class="run-chart-shell mechanism-run-chart-shell">
+              <svg id="mechanismRunChart" viewBox="0 0 900 280" role="img" aria-labelledby="mechanismRunChartTitle mechanismRunChartDescription" hidden>
+                <title id="mechanismRunChartTitle">当前运行的策略可利用度曲线</title>
+                <desc id="mechanismRunChartDescription">训练开始后，这里显示当前一个设置与随机起点的真实 CSV 曲线。</desc>
+                <g id="mechanismRunChartGrid"></g>
+                <path id="mechanismRunChartLine"></path>
+                <g id="mechanismRunChartPoints"></g>
+                <g id="mechanismRunChartLabels"></g>
+              </svg>
+              <p id="mechanismRunChartEmpty" class="run-chart-empty">训练尚未开始。启动后，10,000 局处会出现第一个真实指标点。</p>
+            </div>
+            <figcaption>纵轴数字越低，表示策略越不容易被对手针对。曲线只用于观察过程，是否晋级必须等 32 组全部完成后按预先规则判断。</figcaption>
+          </figure>
+        </section>
+
+        <section id="mechanismReport" class="section mechanism-report" aria-labelledby="mechanism-report-title" hidden>
+          <header class="section-heading">
+            <p class="section-label">FROZEN RESULT</p>
+            <h2 id="mechanismReportTitle">最终报告尚未生成。</h2>
+          </header>
+          <div class="mechanism-report-card">
+            <span>预注册筛选决定</span>
+            <strong id="mechanismReportDecision">等待 32 组完成</strong>
+            <p id="mechanismReportPlain">这里不会根据中途曲线提前宣布胜负。</p>
+            <a class="data-link" href="/rlcard/research/mechanism-report-v1.json">下载机器可读的机制筛查报告 JSON →</a>
+          </div>
+        </section>
+
+        <section id="mechanism-expert" class="section mechanism-expert" aria-labelledby="mechanism-expert-title">
+          <header class="section-heading">
+            <p class="section-label">FOR CURIOUS READERS</p>
+            <h2 id="mechanism-expert-title">想看技术细节？这里再展开。</h2>
+          </header>
+          <details class="evidence-details">
+            <summary>
+              <span>实验设计、判断规则与运行诊断</span>
+              <small>默认折叠，不影响普通读者理解</small>
+            </summary>
+            <div class="details-body">
+              <div class="method-grid">
+                <article>
+                  <h3>怎样保证比较公平</h3>
+                  <ul>
+                    <li>4 种设置共享 8 个全新随机起点，每种设置训练 100,000 局。</li>
+                    <li>运行顺序提前平衡，减少时间、温度和设备状态带来的偏差。</li>
+                    <li>每 10,000 局计算一次“容易被针对”，每 25,000 局保存恢复点。</li>
+                    <li>本研究看过此前结果后才设计，因此明确不是确认性实验。</li>
+                  </ul>
+                </article>
+                <article>
+                  <h3>怎样决定是否值得继续</h3>
+                  <p>主要比较训练全过程的平均“容易被针对”数值，同时检查最终表现和策略是否异常变得单一。</p>
+                  <p>只有满足预先写下的全部门槛，PBRS 方案才有资格进入另一项使用全新数据的正式验证。</p>
+                  <p>如果没有方案过线，这条路线就停止，不会用同一批结果继续调参数。</p>
+                </article>
+              </div>
+              <div class="diagnostic-strip">
+                <div><span>当前速度</span><strong id="mechanismRunSpeed">—</strong></div>
+                <div><span>当前运行预计剩余</span><strong id="mechanismRunEta">—</strong></div>
+                <div><span>优化诊断</span><strong>完成后随报告公开</strong></div>
+              </div>
+            </div>
+          </details>
+          <aside class="integrity-note mechanism-integrity">
+            <strong>研究边界</strong>
+            <p>这项研究只能帮助解释“为什么之前的方案变差”。即使有方案过线，也只代表值得做下一次独立验证，不代表已经证明有效。</p>
+          </aside>
+        </section>
+      </div>
+
+      <div id="exploratoryArchive">
 
       <section id="summary" class="section summary" aria-labelledby="summary-title">
         <header class="section-heading">
@@ -349,11 +515,12 @@
         <strong>研究诚信说明</strong>
         <p>负面结果和例外都保留可见；原始 Pilot 结论仍是“没有候选方案晋级”，没有被这次追加探索改写。</p>
       </aside>
+      </div>
     </main>
 
     <footer class="page-footer">
-      <span>RLCard Leduc Reward Study · 2026</span>
-      <span>数据：20 次运行 · 6,000,000 局</span>
+      <span id="footerStudy">RLCard Leduc Reward Study · 2026</span>
+      <span id="footerData">数据：20 次运行 · 6,000,000 局</span>
       <a href="/rlcard/">查看 RLCard 项目档案 →</a>
     </footer>
 

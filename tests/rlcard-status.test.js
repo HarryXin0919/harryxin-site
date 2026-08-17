@@ -386,6 +386,104 @@ test("exploratory cohort rejects incomplete or differently scoped contracts", ()
   );
 });
 
+test("research sanitizer accepts the non-confirmatory mechanism screening contract", () => {
+  const input = validStatus();
+  const arm = (id, completedRuns = 0) => ({
+    id,
+    label: id.toUpperCase(),
+    status: completedRuns === 8 ? "complete" : "running",
+    completedRuns,
+    totalRuns: 8,
+    progress: completedRuns * 100000,
+    target: 800000,
+    fraction: completedRuns / 8,
+    latestExploitability: completedRuns ? 1.1 : null,
+    latestPayoff: completedRuns ? 0.4 : null,
+    localPath: `D:\\private\\${id}`,
+  });
+  input.research = {
+    ...input.research,
+    studyId: "leduc-reward-mechanism-scale-pbrs-v1",
+    cohort: "mechanism",
+    protocolMode: "post_outcome_mechanism_screening",
+    confirmatory: false,
+    sourceStudyId: "leduc-reward-exploratory-scaled-v1",
+    phase: 8,
+    phaseLabel: "REWARD-SCALE MECHANISM STUDY",
+    state: "paused",
+    completedRuns: 3,
+    totalRuns: 32,
+    currentRun: {
+      cohort: "mechanism",
+      arm: "scaled-pbrs-cfr-a025",
+      seed: 47982,
+      progress: 50000,
+      target: 100000,
+      fraction: 0.5,
+      speed: 62.4,
+      etaSeconds: 801,
+      latestExploitability: 1.14,
+      latestPayoff: 0.37,
+      status: "paused",
+      checkpoint: "D:\\private\\checkpoint.pt",
+    },
+    arms: [
+      arm("terminal", 1),
+      arm("scaled", 1),
+      arm("scaled-pbrs-cfr-a025", 0),
+      arm("unscaled-pbrs-cfr-a175", 1),
+    ],
+    series: [
+      {
+        arm: "scaled-pbrs-cfr-a025",
+        seed: 47982,
+        progress: 50000,
+        exploitability: 1.14,
+        payoff: 0.37,
+        localCsv: "D:\\private\\metrics.csv",
+      },
+    ],
+    milestones: [
+      ...input.research.milestones,
+      { id: "08", label: "REWARD-SCALE MECHANISM STUDY", status: "active" },
+      { id: "09", label: "REPORT MECHANISM RESULTS", status: "pending" },
+    ],
+    diagnostics: { qValues: "private" },
+  };
+
+  const result = sanitizeStatus(input);
+
+  assert.equal(result.schemaVersion, 1);
+  assert.equal(result.research.cohort, "mechanism");
+  assert.equal(result.research.protocolMode, "post_outcome_mechanism_screening");
+  assert.equal(result.research.confirmatory, false);
+  assert.equal(result.research.phase, 8);
+  assert.equal(result.research.state, "paused");
+  assert.equal(result.research.currentRun.arm, "scaled-pbrs-cfr-a025");
+  assert.equal(result.research.arms[3].id, "unscaled-pbrs-cfr-a175");
+  assert.equal(result.research.milestones.at(-1).id, "09");
+  assert.equal(result.research.diagnostics, undefined);
+  assert.equal(JSON.stringify(result).includes("D:\\private"), false);
+});
+
+test("mechanism screening rejects a confirmatory claim or the wrong protocol mode", () => {
+  const input = validStatus();
+  input.research.cohort = "mechanism";
+  input.research.protocolMode = "post_outcome_mechanism_screening";
+  input.research.confirmatory = true;
+  assert.throws(
+    () => sanitizeStatus(input),
+    /mechanism cohort requires research\.confirmatory to equal false/,
+  );
+
+  input.research.confirmatory = false;
+  input.research.protocolMode = "post_outcome_exploratory";
+  assert.throws(
+    () => sanitizeStatus(input),
+    /mechanism cohort requires post_outcome_mechanism_screening protocol mode/,
+  );
+});
+
 test("narrow layouts keep the completed study status readable", () => {
   assert.match(
     researchStyles,
@@ -460,6 +558,51 @@ test("legacy completed payload remains COMPLETE without research telemetry", () 
       },
     }),
   );
+  assert.equal(
+    decorateStatus(status, new Date("2026-08-01T11:00:00Z")).connectionState,
+    "COMPLETE",
+  );
+});
+
+test("the mechanism matrix and long arm labels remain contained on narrow screens", () => {
+  assert.match(
+    researchStyles,
+    /\.mechanism-matrix\s*\{[\s\S]*?grid-template-columns:[\s\S]*?overflow:\s*hidden;/,
+  );
+  assert.match(
+    researchStyles,
+    /\.matrix-cell code\s*\{[\s\S]*?overflow-wrap:\s*anywhere;/,
+  );
+  assert.match(
+    researchStyles,
+    /@media \(max-width: 680px\)[\s\S]*?\.mechanism-matrix\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);[\s\S]*?overflow:\s*hidden;/,
+  );
+  assert.match(
+    researchStyles,
+    /@media \(max-width: 680px\)[\s\S]*?\.matrix-axis-top\s*\{[\s\S]*?display:\s*none;/,
+  );
+  assert.match(
+    researchStyles,
+    /@media \(max-width: 680px\)[\s\S]*?\.mechanism-arm-progress,[\s\S]*?grid-template-columns:\s*1fr;/,
+  );
+});
+
+test("a frozen Phase 9 mechanism report is decorated as COMPLETE", () => {
+  const input = validStatus();
+  input.training.alive = false;
+  input.research = {
+    ...input.research,
+    studyId: "leduc-reward-mechanism-scale-pbrs-v1",
+    cohort: "mechanism",
+    protocolMode: "post_outcome_mechanism_screening",
+    confirmatory: false,
+    phase: 9,
+    phaseLabel: "REPORT MECHANISM RESULTS",
+    state: "complete",
+    completedRuns: 32,
+    totalRuns: 32,
+  };
+  const status = sanitizeStatus(input);
   assert.equal(
     decorateStatus(status, new Date("2026-08-01T11:00:00Z")).connectionState,
     "COMPLETE",

@@ -1885,7 +1885,15 @@
   .card-rlcard[data-research-state="blocked"] .rlcard-project-kicker::before{background:#d06b5f}
   .card-rlcard .pt{
     margin:0;
-    font-size:clamp(48px,6.2vw,92px);
+    font-size:clamp(42px,5vw,72px);
+    line-height:.96;
+  }
+  .rlcard-project-summary{
+    max-width:470px;
+    margin:24px 0 34px;
+    color:var(--paper-dim);
+    font:15px/1.65 Georgia,"Times New Roman",serif;
+    letter-spacing:0;
   }
   .rlcard-project-links{
     display:flex;
@@ -1937,7 +1945,7 @@
   }
   .research-readout-grid{
     display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(2,minmax(0,1fr));
     border-top:1px solid var(--line);
     border-left:1px solid var(--line);
   }
@@ -4082,7 +4090,8 @@
             <p class="rlcard-project-kicker" id="research-card-state">
               COMPLETE · 研究报告已保存
             </p>
-            <h3 class="pt">RLCard Reward Study · Complete</h3>
+            <h3 class="pt" id="research-card-title">RLCard Reward Study · Complete</h3>
+            <p class="rlcard-project-summary" id="research-card-summary">缩小奖励没有改善结果；完整探索报告已保存。</p>
             <div class="rlcard-project-links">
               <a href="/rlcard/research/" data-motion-cta data-destination="RLCARD PHASE II"><span data-lang="en">Read the public report</span><span data-lang="zh">阅读公众研究报告</span> ↗</a>
               <a href="/rlcard/" data-motion-cta data-destination="RLCARD PHASE I"><span data-lang="en">Phase I archive</span><span data-lang="zh">第一阶段归档</span> ↗</a>
@@ -4093,15 +4102,11 @@
             <div class="research-readout-grid">
               <div>
                 <span>PHASE / 阶段</span>
-                <strong id="research-card-phase">07 / 07</strong>
+                <strong id="research-card-phase">07 / 09</strong>
               </div>
               <div>
                 <span id="research-card-runs-label">EXPLORATORY RUNS / 探索</span>
                 <strong id="research-card-runs">20 / 20</strong>
-              </div>
-              <div>
-                <span>STATE / 状态</span>
-                <strong id="research-card-state-short">COMPLETE</strong>
               </div>
               <div class="research-current">
                 <span id="research-card-current-label">LAST SAVED RUN / 最后运行</span>
@@ -4115,24 +4120,17 @@
               <strong id="research-card-progress">20 / 20 RUNS</strong>
             </div>
 
-            <div class="research-run-meta">
-              <div>
-                <span>ARM · SEED</span>
-                <strong id="research-card-context">—</strong>
-              </div>
-              <div>
-                <span id="research-card-speed-label">THROUGHPUT</span>
-                <strong id="research-card-speed">—</strong>
-              </div>
-              <div>
-                <span id="research-card-eta-label">ETA</span>
-                <strong id="research-card-eta">—</strong>
-              </div>
-            </div>
-
             <p class="research-updated" id="research-card-updated">
               FINAL REPORT SAVED · 6,000,000 EPISODES
             </p>
+            <div hidden aria-hidden="true">
+              <strong id="research-card-state-short">COMPLETE</strong>
+              <strong id="research-card-context">—</strong>
+              <span id="research-card-speed-label">THROUGHPUT</span>
+              <strong id="research-card-speed">—</strong>
+              <span id="research-card-eta-label">ETA</span>
+              <strong id="research-card-eta">—</strong>
+            </div>
           </div>
         </div>
       </article>
@@ -4773,6 +4771,8 @@
     var updatedEl = document.getElementById('signal-updated');
     var researchPanel = document.getElementById('rlcard-research-project');
     var researchStateEl = document.getElementById('research-card-state');
+    var researchTitleEl = document.getElementById('research-card-title');
+    var researchSummaryEl = document.getElementById('research-card-summary');
     var researchStateShortEl = document.getElementById('research-card-state-short');
     var researchPhaseEl = document.getElementById('research-card-phase');
     var researchRunsLabelEl = document.getElementById('research-card-runs-label');
@@ -4793,7 +4793,9 @@
       'terminal':'TERMINAL',
       'scaled':'SCALED',
       'pbrs-cfr-a010':'PBRS · LOW',
-      'pbrs-cfr-a025':'PBRS · MID'
+      'pbrs-cfr-a025':'PBRS · MID',
+      'scaled-pbrs-cfr-a025':'SCALED + PBRS',
+      'unscaled-pbrs-cfr-a175':'UNSCALED + PBRS'
     };
     var integer = function(value){
       return Number.isFinite(Number(value)) ? Math.round(Number(value)).toLocaleString('en-US') : '--';
@@ -4812,8 +4814,12 @@
       if (!researchPanel) return;
       researchPanel.setAttribute('data-research-state', offline ? 'offline' : 'idle');
       researchStateEl.textContent = offline ? 'OFFLINE · 无法确认' : 'IDLE · 尚未启动';
+      researchTitleEl.textContent = 'RLCard Reward Study';
+      researchSummaryEl.textContent = offline
+        ? '实时状态暂不可用；已保存的探索报告仍可阅读。'
+        : '等待下一阶段公开状态。';
       researchStateShortEl.textContent = offline ? 'OFFLINE' : 'IDLE';
-      researchPhaseEl.textContent = '— / 07';
+      researchPhaseEl.textContent = '— / 09';
       researchRunsLabelEl.textContent = 'EXPLORATORY RUNS / 探索';
       researchRunsEl.textContent = '0 / 20';
       researchCurrentLabelEl.textContent = 'CURRENT RUN / 当前任务';
@@ -4848,18 +4854,23 @@
       var isExploratory =
         research.cohort === 'exploratory' ||
         research.protocolMode === 'post_outcome_exploratory';
+      var isMechanism =
+        research.cohort === 'mechanism' ||
+        research.protocolMode === 'post_outcome_mechanism_screening';
       var completedSnapshot = !!run && runState === 'complete';
       var blocked = rawState === 'blocked';
       var queued = !blocked && (rawState === 'queued' || runState === 'pending');
-      var paused = runState === 'paused';
+      var paused = rawState === 'paused' || runState === 'paused';
       var reporting =
-        isExploratory && phase === 7 && rawState === 'running';
+        rawState === 'reporting' ||
+        (isExploratory && phase === 7 && rawState === 'running') ||
+        (isMechanism && phase === 9 && rawState === 'running');
       var cohortComplete =
         totalRuns > 0 &&
         completedRuns >= totalRuns &&
         rawState !== 'queued' &&
-        !(rawState === 'running' && phase < 7);
-      var pilotComplete = !isExploratory && cohortComplete;
+        !(rawState === 'running' && phase < (isMechanism ? 9 : 7));
+      var pilotComplete = !isExploratory && !isMechanism && cohortComplete;
       var exploratoryComplete =
         isExploratory && cohortComplete && rawState === 'complete';
       var reportBlocked =
@@ -4899,6 +4910,18 @@
               : queued
                 ? 'QUEUED · AWAITING GPU'
                 : 'POST-OUTCOME EXPLORATORY · RUNNING';
+      } else if (connection === 'LIVE' && isMechanism) {
+        stateText = blocked
+          ? 'MECHANISM SCREEN · BLOCKED'
+          : reporting
+            ? 'MECHANISM SCREEN · REPORTING'
+            : cohortComplete && rawState === 'complete'
+              ? 'MECHANISM SCREEN · COMPLETE'
+              : paused
+                ? 'MECHANISM SCREEN · PAUSED'
+                : queued
+                  ? 'MECHANISM SCREEN · QUEUED'
+                  : 'MECHANISM SCREEN · LIVE';
       } else if (connection === 'LIVE' && blocked) {
         stateText = 'BLOCKED · DATA INVALID';
       } else if (connection === 'LIVE' && pilotComplete) {
@@ -4910,6 +4933,12 @@
       if (connection === 'OFFLINE') stateText = 'OFFLINE · 数据已过期';
       researchPanel.setAttribute('data-research-state', visualState);
       researchStateEl.textContent = stateText;
+      researchTitleEl.textContent = isMechanism
+        ? 'RLCard · Reward Mechanism Screen'
+        : 'RLCard Reward Study · Complete';
+      researchSummaryEl.textContent = isMechanism
+        ? '奖励变差，究竟是公式的问题，还是因为整体缩小了？'
+        : '缩小奖励没有改善结果；完整探索报告已保存。';
       researchStateShortEl.textContent =
         connection === 'LIVE'
           ? blocked
@@ -4924,13 +4953,15 @@
           : connection;
 
       researchPhaseEl.textContent = Number.isInteger(phase)
-        ? String(phase).padStart(2, '0') + ' / 07'
-        : '— / 07';
+        ? String(phase).padStart(2, '0') + ' / 09'
+        : '— / 09';
       researchRunsEl.textContent =
         integer(completedRuns) + ' / ' + integer(totalRuns);
-      researchRunsLabelEl.textContent = isExploratory
-        ? 'EXPLORATORY RUNS / 探索'
-        : 'PILOT RUNS / 实验';
+      researchRunsLabelEl.textContent = isMechanism
+        ? 'MECHANISM RUNS / 机制筛查'
+        : isExploratory
+          ? 'EXPLORATORY RUNS / 探索'
+          : 'PILOT RUNS / 实验';
 
       var fraction = totalRuns > 0 ? completedRuns / totalRuns : 0;
       researchCurrentLabelEl.textContent = 'CURRENT RUN / 当前任务';
@@ -4971,7 +5002,9 @@
         researchCurrentEl.textContent = armName + ' · SEED ' + seed;
         researchProgressLabelEl.textContent = completedSnapshot
           ? 'LAST COMPLETED RUN'
-          : isExploratory
+          : isMechanism
+            ? 'CURRENT 100K MECHANISM RUN'
+            : isExploratory
             ? 'CURRENT 300K EXPLORATORY RUN'
             : 'CURRENT RUN';
         researchProgressEl.textContent =
@@ -4982,7 +5015,9 @@
             ? Number(run.progress) / Number(run.target)
             : 0;
         researchContextEl.textContent =
-          isExploratory
+          isMechanism
+            ? 'POST-OUTCOME MECHANISM · ' + armName
+            : isExploratory
             ? 'POST-OUTCOME EXPLORATORY · ' + armName
             : String(run.cohort || 'pilot').toUpperCase() + ' · ' + armName;
         researchSpeedEl.textContent = blocked
@@ -5020,16 +5055,22 @@
           ? '20 / 20 · REPORT BLOCKED'
           : blocked
             ? 'BLOCKED · DATA INVALID'
+          : isMechanism
+            ? reporting
+              ? integer(completedRuns) + ' / ' + integer(totalRuns) + ' · REPORTING'
+              : integer(completedRuns) + ' / ' + integer(totalRuns) + ' · SCREEN COMPLETE'
+            : isExploratory
+              ? reporting
+                ? '20 / 20 · REPORTING'
+                : '20 / 20 · EXPLORATORY COMPLETE'
+              : awaitingSelection
+                ? 'PILOT COMPLETE · 等待选组'
+                : 'PILOT COMPLETE';
+        researchProgressLabelEl.textContent = isMechanism
+          ? 'MECHANISM SCREEN COMPLETION'
           : isExploratory
-          ? reporting
-            ? '20 / 20 · REPORTING'
-            : '20 / 20 · EXPLORATORY COMPLETE'
-          : awaitingSelection
-            ? 'PILOT COMPLETE · 等待选组'
-            : 'PILOT COMPLETE';
-        researchProgressLabelEl.textContent = isExploratory
-          ? 'EXPLORATORY COMPLETION'
-          : 'PILOT COMPLETION';
+            ? 'EXPLORATORY COMPLETION'
+            : 'PILOT COMPLETION';
         researchProgressEl.textContent =
           integer(completedRuns) + ' / ' + integer(totalRuns) + ' RUNS';
         researchContextEl.textContent = 'AWAITING SNAPSHOT';
@@ -5055,21 +5096,31 @@
             : 'SNAPSHOT PENDING';
       } else {
         researchCurrentEl.textContent =
-          isExploratory && rawState === 'queued'
+          (isExploratory || isMechanism) && rawState === 'queued'
             ? 'NEXT RUN SNAPSHOT PENDING'
             : rawState === 'running'
             ? 'STARTING · 正在分配任务'
             : completedRuns > 0
               ? 'NO ACTIVE RUN · 当前空闲'
               : '尚未启动';
-        researchProgressLabelEl.textContent = isExploratory
-          ? 'EXPLORATORY COMPLETION'
-          : 'PILOT COMPLETION';
+        researchProgressLabelEl.textContent = isMechanism
+          ? 'MECHANISM SCREEN COMPLETION'
+          : isExploratory
+            ? 'EXPLORATORY COMPLETION'
+            : 'PILOT COMPLETION';
         researchProgressEl.textContent =
           integer(completedRuns) + ' / ' + integer(totalRuns) + ' RUNS';
         researchContextEl.textContent = '—';
         researchSpeedEl.textContent = '—';
         researchEtaEl.textContent = '—';
+      }
+      if (isMechanism) {
+        var activeFraction = run && !completedSnapshot && finite(run.fraction)
+          ? Math.max(0, Math.min(1, Number(run.fraction)))
+          : 0;
+        fraction = totalRuns > 0 ? (completedRuns + activeFraction) / totalRuns : 0;
+        researchProgressLabelEl.textContent = 'TOTAL MECHANISM PROGRESS';
+        researchProgressEl.textContent = integer(completedRuns) + ' / ' + integer(totalRuns) + ' RUNS';
       }
       fraction = Math.max(0, Math.min(1, Number(fraction) || 0));
       researchBarEl.style.width = (fraction * 100).toFixed(2) + '%';

@@ -52,6 +52,7 @@ html[data-theme="light"] {
 body {
   margin: 0;
   min-width: 320px;
+  overflow-x: clip;
   color: var(--text);
   background:
     radial-gradient(circle at 15% 0%, rgba(79, 194, 105, 0.11), transparent 34rem),
@@ -858,6 +859,409 @@ tbody td:last-child {
   font-size: 12px;
 }
 
+[hidden] {
+  display: none !important;
+}
+
+.mechanism-view {
+  min-width: 0;
+  max-width: 100%;
+  animation: mechanism-reveal 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.mechanism-question,
+.mechanism-live,
+.mechanism-expert,
+.mechanism-report {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@keyframes mechanism-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mechanism-matrix {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: minmax(145px, 0.58fr) repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line-strong);
+  border-left: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(237, 242, 237, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(237, 242, 237, 0.022) 1px, transparent 1px),
+    rgba(8, 17, 11, 0.82);
+  background-size: 44px 44px;
+}
+
+.mechanism-matrix > * {
+  min-width: 0;
+  min-height: 132px;
+  padding: clamp(20px, 3vw, 32px);
+  border-right: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.matrix-corner,
+.matrix-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.matrix-corner {
+  color: var(--faint);
+  background: rgba(255, 255, 255, 0.018);
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+
+.matrix-corner span {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.matrix-corner strong {
+  margin-top: 9px;
+  color: var(--green-soft);
+  font-size: 31px;
+  letter-spacing: -0.06em;
+}
+
+.matrix-axis {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.matrix-axis span,
+.matrix-axis small {
+  display: block;
+}
+
+.matrix-axis span {
+  font-size: 16px;
+  font-weight: 760;
+}
+
+.matrix-axis small {
+  margin-top: 6px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.matrix-axis-side {
+  background: rgba(140, 244, 62, 0.035);
+}
+
+.matrix-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(145deg, rgba(17, 34, 22, 0.74), rgba(8, 17, 11, 0.72));
+}
+
+.matrix-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--green);
+  opacity: 0.28;
+}
+
+.matrix-cell > span {
+  color: var(--green-soft);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.matrix-cell strong {
+  font-size: clamp(19px, 2.5vw, 29px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.matrix-cell code {
+  width: fit-content;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.matrix-control {
+  background: linear-gradient(145deg, rgba(24, 48, 29, 0.9), rgba(10, 24, 14, 0.84));
+}
+
+.matrix-focus {
+  background: linear-gradient(145deg, rgba(50, 37, 17, 0.56), rgba(19, 21, 12, 0.8));
+}
+
+.matrix-focus::before {
+  background: var(--amber);
+  opacity: 0.58;
+}
+
+.matrix-note {
+  max-width: 820px;
+  margin: 26px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mechanism-progress-shell {
+  padding: clamp(25px, 4vw, 42px);
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.mechanism-progress-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.mechanism-progress-head span,
+.mechanism-progress-head strong {
+  display: block;
+}
+
+.mechanism-progress-head div > span {
+  color: var(--green-soft);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.mechanism-progress-head div > strong {
+  margin-top: 9px;
+  font-size: clamp(18px, 2.4vw, 27px);
+}
+
+.mechanism-progress-head > strong {
+  color: var(--green-soft);
+  font-family: var(--mono);
+  font-size: clamp(32px, 5.5vw, 66px);
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+}
+
+.mechanism-progress-track {
+  height: 5px;
+  margin: 34px 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.mechanism-progress-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), #a8ff71);
+  box-shadow: 0 0 22px rgba(140, 244, 62, 0.35);
+  transition: width 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.mechanism-progress-shell[data-state="paused"] .mechanism-progress-track i,
+.mechanism-progress-shell[data-state="queued"] .mechanism-progress-track i,
+.mechanism-progress-shell[data-state="reporting"] .mechanism-progress-track i {
+  background: var(--amber);
+  box-shadow: 0 0 22px rgba(240, 174, 74, 0.22);
+}
+
+.mechanism-arm-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.mechanism-arm-progress > div {
+  min-width: 0;
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.mechanism-arm-progress span,
+.mechanism-arm-progress p,
+.mechanism-arm-progress strong {
+  display: block;
+}
+
+.mechanism-arm-progress span {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.mechanism-arm-progress p {
+  min-height: 36px;
+  margin: 9px 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mechanism-arm-progress strong {
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  font-size: clamp(16px, 2vw, 23px);
+}
+
+.mechanism-run-card {
+  margin: 20px 0 0;
+  padding: clamp(25px, 4vw, 42px);
+  background: rgba(8, 17, 11, 0.78);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.mechanism-run-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
+  align-items: end;
+  gap: 50px;
+}
+
+.mechanism-run-heading h3 {
+  margin: 0;
+  font-size: clamp(27px, 4vw, 46px);
+  line-height: 1.06;
+  letter-spacing: -0.045em;
+}
+
+.mechanism-run-heading > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mechanism-run-card figcaption {
+  margin-top: 17px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+#mechanismRunChart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 280px;
+  overflow: visible;
+}
+
+#mechanismRunChartGrid line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+#mechanismRunChartLine {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+#mechanismRunChartPoints circle {
+  fill: var(--bg-deep);
+  stroke: var(--green-soft);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+#mechanismRunChartLabels text {
+  fill: var(--faint);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.mechanism-report-card {
+  padding: clamp(30px, 5vw, 58px);
+  background: linear-gradient(145deg, rgba(20, 43, 26, 0.88), rgba(8, 17, 11, 0.82));
+  border: 1px solid rgba(140, 244, 62, 0.28);
+  border-radius: var(--radius);
+}
+
+.mechanism-report-card > span,
+.mechanism-report-card > strong {
+  display: block;
+}
+
+.mechanism-report-card > span {
+  color: var(--green-soft);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mechanism-report-card > strong {
+  margin-top: 18px;
+  font-size: clamp(30px, 5vw, 56px);
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+
+.mechanism-report-card p {
+  max-width: 760px;
+  margin: 22px 0 0;
+  color: var(--muted);
+}
+
+.diagnostic-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.diagnostic-strip > div {
+  min-width: 0;
+  padding: 20px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.diagnostic-strip span,
+.diagnostic-strip strong {
+  display: block;
+}
+
+.diagnostic-strip span {
+  margin-bottom: 9px;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.diagnostic-strip strong {
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.mechanism-integrity {
+  margin: 28px 0 0;
+}
+
 .integrity-note {
   margin: 0 0 100px;
   padding: 25px 28px;
@@ -990,6 +1394,29 @@ html[data-theme="light"] .run-chart-shell {
   background: rgba(233, 237, 229, 0.78);
 }
 
+html[data-theme="light"] .mechanism-matrix,
+html[data-theme="light"] .mechanism-run-card,
+html[data-theme="light"] .mechanism-progress-shell {
+  background-color: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 20px 58px rgba(31, 44, 34, 0.07);
+}
+
+html[data-theme="light"] .matrix-cell,
+html[data-theme="light"] .matrix-control,
+html[data-theme="light"] .matrix-focus {
+  background: rgba(255, 255, 255, 0.76);
+}
+
+html[data-theme="light"] .matrix-axis,
+html[data-theme="light"] .matrix-corner {
+  background: rgba(10, 15, 12, 0.035);
+}
+
+html[data-theme="light"] .mechanism-report-card {
+  background: linear-gradient(145deg, rgba(240, 250, 234, 0.96), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 22px 64px rgba(31, 44, 34, 0.08);
+}
+
 html[data-theme="light"] .integrity-note {
   background: rgba(255, 247, 231, 0.68);
   border-color: rgba(161, 88, 0, 0.24);
@@ -1055,6 +1482,20 @@ html.theme-transition .theme-toggle {
 
   .run-meta {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mechanism-matrix {
+    grid-template-columns: 135px repeat(2, minmax(230px, 1fr));
+    overflow-x: auto;
+  }
+
+  .mechanism-arm-progress {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mechanism-run-heading {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
 
   .run-meta div:nth-child(3) {
@@ -1124,6 +1565,8 @@ html.theme-transition .theme-toggle {
   h1 {
     font-size: clamp(42px, 11.5vw, 54px);
     line-height: 1.06;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .lede {
@@ -1227,8 +1670,58 @@ html.theme-transition .theme-toggle {
     padding: 4px;
   }
 
-  #runChart {
+  #runChart,
+  #mechanismRunChart {
     min-height: 230px;
+  }
+
+  .mechanism-matrix {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .mechanism-matrix > * {
+    min-height: 142px;
+    padding: 17px;
+  }
+
+  .matrix-corner,
+  .matrix-axis-side {
+    grid-column: 1 / -1;
+    min-height: 78px;
+  }
+
+  .matrix-axis-top {
+    display: none;
+  }
+
+  .matrix-cell strong {
+    font-size: 19px;
+  }
+
+  .mechanism-progress-shell,
+  .mechanism-run-card {
+    padding: 24px 20px;
+  }
+
+  .mechanism-progress-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mechanism-progress-head > strong {
+    font-size: 48px;
+  }
+
+  .mechanism-arm-progress,
+  .diagnostic-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .mechanism-arm-progress p {
+    min-height: 0;
   }
 
   .integrity-note {

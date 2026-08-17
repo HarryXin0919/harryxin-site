@@ -63,6 +63,61 @@ test("technical language is explained before it is placed in collapsed evidence"
   assert.doesNotMatch(page, /\b300K CONFIRMATION\b/);
 });
 
+test("mechanism screening adds a plain-language 2 by 2 live view without replacing Phase 7", async () => {
+  const page = await fixture("rlcard/research/index.html");
+
+  assert.match(page, /id="mechanismView"[\s\S]*?hidden/);
+  assert.match(page, /奖励变差，是公式的问题，还是因为整体变小了/);
+  assert.match(page, /可以把它想成调音量/);
+  assert.match(page, /两个开关/);
+  assert.match(page, /2 × 2/);
+  assert.match(page, /R \/ 7 \+ 0\.25ΔΦ/);
+  assert.match(page, /R \+ 1\.75ΔΦ/);
+  assert.match(page, /0 \/ 32 组完成/);
+  assert.match(page, /单次真实数据/);
+  assert.match(page, /不是 8 组平均/);
+  assert.match(page, /实验设计、判断规则与运行诊断/);
+  assert.match(page, /默认折叠，不影响普通读者理解/);
+  assert.match(page, /不是确认性实验/);
+  assert.match(page, /不代表已经证明有效/);
+
+  assert.match(page, /id="exploratoryArchive"/);
+  assert.match(page, /20 次运行、6,000,000 局/);
+});
+
+test("mechanism UI prepares live polling and a frozen report without inventing results", async () => {
+  const app = await fixture("rlcard/research/app.js");
+
+  assert.match(app, /mechanism-report-v1\.json/);
+  assert.match(app, /post_outcome_mechanism_screening/);
+  assert.match(app, /leduc-reward-mechanism-scale-pbrs-v1/);
+  assert.match(app, /scaled-pbrs-cfr-a025/);
+  assert.match(app, /unscaled-pbrs-cfr-a175/);
+  assert.match(app, /statusTimer = globalThis\.setTimeout/);
+  assert.match(app, /}, 3000\);/);
+  assert.match(app, /训练完成 · 等待冻结报告/);
+  assert.match(app, /有一个方案.*还没有被正式确认/);
+  assert.doesNotMatch(app, /自动.*Confirmation|automaticConfirmationAuthorized\s*=\s*true/i);
+});
+
+test("homepage mechanism card stays compact and reports total rather than per-run progress", async () => {
+  const homepage = await fixture("index.html");
+  const cardMarker = homepage.indexOf('id="rlcard-research-project"');
+  const cardStart = homepage.lastIndexOf("<article", cardMarker);
+  const cardEnd = homepage.indexOf("</article>", cardMarker);
+  const card = homepage.slice(cardStart, cardEnd + "</article>".length);
+
+  assert.match(card, /id="research-card-summary"/);
+  assert.match(card, /id="research-card-phase">07 \/ 09/);
+  assert.doesNotMatch(card, /class="research-run-meta"/);
+  assert.match(homepage, /Reward Mechanism Screen/);
+  assert.match(homepage, /MECHANISM RUNS \/ 机制筛查/);
+  assert.match(homepage, /TOTAL MECHANISM PROGRESS/);
+  assert.match(homepage, /completedRuns \+ activeFraction/);
+  assert.match(homepage, /scaled-pbrs-cfr-a025/);
+  assert.match(homepage, /unscaled-pbrs-cfr-a175/);
+});
+
 test("versioned report asset is complete, exploratory, and contains no private fields", async () => {
   const source = await fixture("rlcard/research/exploratory-report-v1.json");
   const report = JSON.parse(source);
