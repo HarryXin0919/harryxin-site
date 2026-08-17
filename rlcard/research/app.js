@@ -12,12 +12,20 @@
     "scaled-pbrs-cfr-a025",
     "unscaled-pbrs-cfr-a175",
   ];
+  const MECHANISM_SEEDS = [47982, 81425, 45579, 34975, 86195, 68642, 31659, 54386];
+  const MECHANISM_PUBLIC_REPORT_FIELDS = new Set([
+    "schemaVersion", "studyId", "sourceStudyId", "analysisType", "confirmatory",
+    "generatedAt", "arms", "seeds", "completedRuns", "totalEpisodes",
+    "primaryEndpoint", "metrics", "promotion", "claimLimit",
+  ]);
+  const PRIVATE_REPORT_KEY = /(path|checkpoint|provenance|revision|sha256|hash|stderr|stdout|(?:^|_)(?:pid|log|logs)(?:$|_))/i;
 
   let reportSummary = null;
   let mechanismReportSummary = null;
   let latestStatus = null;
   let renderedTelemetrySeries = false;
   let statusTimer = null;
+  let reportTimer = null;
 
   const byId = (id) => document.getElementById(id);
   const finite = (value) =>
@@ -30,6 +38,31 @@
   function assertFinite(value, label) {
     if (!finite(value)) throw new TypeError(`${label} must be finite`);
     return number(value);
+  }
+
+  function assertPublicReportTree(value, label, seen = new Set()) {
+    if (value === null && label === "promotion.selectedArm") return seen;
+    if (value === null || value === undefined) {
+      throw new TypeError(`${label} cannot contain null values`);
+    }
+    if (typeof value === "number") {
+      assertFinite(value, label);
+      seen.add("number");
+      return seen;
+    }
+    if (["string", "boolean"].includes(typeof value)) return seen;
+    if (Array.isArray(value)) {
+      value.forEach((entry, index) => assertPublicReportTree(entry, `${label}[${index}]`, seen));
+      return seen;
+    }
+    if (typeof value !== "object") throw new TypeError(`${label} has an unsupported value`);
+    Object.entries(value).forEach(([key, entry]) => {
+      if (PRIVATE_REPORT_KEY.test(key)) {
+        throw new TypeError(`${label} contains a private field`);
+      }
+      assertPublicReportTree(entry, `${label}.${key}`, seen);
+    });
+    return seen;
   }
 
   function text(id, value) {
@@ -129,10 +162,17 @@
     }
     if (
       report.studyId !== "leduc-reward-mechanism-scale-pbrs-v1" ||
+      report.sourceStudyId !== "leduc-reward-exploratory-scaled-v1" ||
       report.analysisType !== "post_outcome_mechanism_screening" ||
       report.confirmatory !== false
     ) {
       throw new TypeError("This page only accepts the frozen non-confirmatory mechanism report");
+    }
+    const unexpected = Object.keys(report).filter(
+      (field) => !MECHANISM_PUBLIC_REPORT_FIELDS.has(field),
+    );
+    if (unexpected.length) {
+      throw new TypeError("The mechanism report contains non-public fields");
     }
     if (
       !Array.isArray(report.arms) ||
@@ -143,9 +183,10 @@
     }
     if (
       !Array.isArray(report.seeds) ||
-      report.seeds.length !== 8 ||
+      report.seeds.length !== MECHANISM_SEEDS.length ||
       new Set(report.seeds).size !== report.seeds.length ||
-      report.seeds.some((seed) => !Number.isInteger(seed))
+      report.seeds.some((seed) => !Number.isInteger(seed)) ||
+      MECHANISM_SEEDS.some((seed) => !report.seeds.includes(seed))
     ) {
       throw new TypeError("The mechanism report must contain eight unique integer seeds");
     }
@@ -164,6 +205,18 @@
     }
     if (promotion.status === "no_candidate_advanced" && promotion.selectedArm !== null) {
       throw new TypeError("A no-advance decision cannot name a selected arm");
+    }
+    if (promotion.automaticConfirmationAuthorized !== false) {
+      throw new TypeError("The mechanism report cannot authorize automatic confirmation");
+    }
+    const numericMetrics = assertPublicReportTree(report.metrics, "metrics");
+    if (!numericMetrics.has("number")) {
+      throw new TypeError("The mechanism report must contain finite public metrics");
+    }
+    assertPublicReportTree(report.primaryEndpoint, "primaryEndpoint");
+    assertPublicReportTree(promotion, "promotion");
+    if (typeof report.claimLimit !== "string" || !report.claimLimit.trim()) {
+      throw new TypeError("The mechanism report must state its claim limit");
     }
     return {
       completedRuns: report.completedRuns,
@@ -256,7 +309,7 @@
         queued: "机制筛查等待开始",
         paused: "训练已暂停 · 恢复点已保存",
         reporting: "训练完成 · 正在整理报告",
-        blocked: "机制筛查受阻",
+        blocked: research.phase === 9 ? "报告生成受阻" : "机制筛查启动受阻",
         offline: "机制筛查状态暂不可用",
       };
       const runCount = finite(research.completedRuns) && finite(research.totalRuns)
@@ -548,6 +601,8 @@
         ? "这次运行还没有保存可绘制的指标点；恢复后会继续更新。"
         : displayState === "reporting" || displayState === "complete"
           ? "当前没有单次曲线；最终结论只会来自冻结的 32 组汇总报告。"
+          : displayState === "blocked"
+            ? "研究流程已受阻；排除问题前不会生成新的指标点。"
           : mechanismChartIds.emptyMessage;
     const ids = { ...mechanismChartIds, emptyMessage: emptyCopy };
     return run ? renderSeriesInto(chartPoints, run, ids) : (showEmptyChart(ids, emptyCopy), false);
@@ -600,6 +655,10 @@
   function renderMechanismReport(report) {
     const summary = summarizeMechanismReport(report);
     mechanismReportSummary = summary;
+    if (reportTimer !== null && typeof globalThis.clearTimeout === "function") {
+      globalThis.clearTimeout(reportTimer);
+      reportTimer = null;
+    }
     activateMechanismView(true);
     hidden("mechanismReport", false);
     const advanced = summary.status === "candidate_advanced";
@@ -677,14 +736,51 @@
     }
   }
 
+  function shouldPollMechanismReport(research) {
+    const state = String((research && research.state) || "").toLowerCase();
+    return !mechanismReportSummary && isMechanismResearch(research) &&
+      ["reporting", "complete"].includes(state);
+  }
+
+  async function loadMechanismReport() {
+    try {
+      const report = await fetchJson(MECHANISM_REPORT_URL, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+      renderMechanismReport(report);
+      return report;
+    } catch {
+      return null;
+    }
+  }
+
+  function scheduleMechanismReportRefresh() {
+    const research = latestStatus && latestStatus.research;
+    if (
+      reportTimer !== null ||
+      typeof globalThis.setTimeout !== "function" ||
+      !shouldPollMechanismReport(research)
+    ) return;
+    reportTimer = globalThis.setTimeout(async () => {
+      reportTimer = null;
+      await loadMechanismReport();
+      scheduleMechanismReportRefresh();
+    }, 15000);
+  }
+
   function scheduleStatusRefresh() {
     if (statusTimer !== null || typeof globalThis.setTimeout !== "function") return;
     const research = latestStatus && latestStatus.research;
     if (mechanismReportSummary) return;
-    if (isMechanismResearch(research) && String(research.state || "") === "complete") return;
+    if (isMechanismResearch(research) && String(research.state || "") === "complete") {
+      scheduleMechanismReportRefresh();
+      return;
+    }
     statusTimer = globalThis.setTimeout(async () => {
       statusTimer = null;
       await loadStatus();
+      scheduleMechanismReportRefresh();
       scheduleStatusRefresh();
     }, 3000);
   }
@@ -693,9 +789,7 @@
     const reportPromise = fetchJson(EXPLORATORY_REPORT_URL, { headers: { Accept: "application/json" }, cache: "force-cache" })
       .then(renderReport)
       .catch(() => null);
-    const mechanismReportPromise = fetchJson(MECHANISM_REPORT_URL, { headers: { Accept: "application/json" }, cache: "no-store" })
-      .then(renderMechanismReport)
-      .catch(() => null);
+    const mechanismReportPromise = loadMechanismReport();
     const statusPromise = loadStatus().then((result) => {
       scheduleStatusRefresh();
       return result;
@@ -718,6 +812,8 @@
     renderStatus,
     renderRunSeries,
     validateRunSnapshot,
+    shouldPollMechanismReport,
+    loadMechanismReport,
   });
 
   if (document.readyState === "loading") {

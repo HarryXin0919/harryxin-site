@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test --test-isolation=none",
     "check": "npm test",
+    "build:mechanism-report": "node scripts/build-mechanism-public-report.js",
     "dev:fixture": "node scripts/dev-server.js"
   },
   "dependencies": {

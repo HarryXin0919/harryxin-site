@@ -4874,7 +4874,8 @@
       var exploratoryComplete =
         isExploratory && cohortComplete && rawState === 'complete';
       var reportBlocked =
-        isExploratory && phase === 7 && cohortComplete && blocked;
+        ((isExploratory && phase === 7) || (isMechanism && phase === 9)) &&
+        cohortComplete && blocked;
       var awaitingSelection = pilotComplete && phase === 5;
       var visualState = (connection === 'OFFLINE' || connection === 'DELAYED')
         ? connection.toLowerCase()
@@ -4912,7 +4913,9 @@
                 : 'POST-OUTCOME EXPLORATORY · RUNNING';
       } else if (connection === 'LIVE' && isMechanism) {
         stateText = blocked
-          ? 'MECHANISM SCREEN · BLOCKED'
+          ? reportBlocked
+            ? 'MECHANISM REPORT · BLOCKED'
+            : 'MECHANISM PREFLIGHT · BLOCKED'
           : reporting
             ? 'MECHANISM SCREEN · REPORTING'
             : cohortComplete && rawState === 'complete'
@@ -4973,17 +4976,17 @@
         if (blocked) {
           researchCurrentLabelEl.textContent = reportBlocked
             ? 'REPORT BLOCKED / 报告受阻'
-            : isExploratory
+            : isExploratory || isMechanism
               ? 'BLOCKED RUN / 启动受阻'
               : 'DATA BLOCKED / 数据受阻';
           researchSpeedLabelEl.textContent = reportBlocked
             ? 'REPORT STATUS'
-            : isExploratory
+            : isExploratory || isMechanism
               ? 'PREFLIGHT STATUS'
               : 'DATA STATUS';
           researchEtaLabelEl.textContent = reportBlocked
             ? 'REPORT ARTIFACT'
-            : isExploratory
+            : isExploratory || isMechanism
               ? 'GPU STATUS'
               : 'DATA CONTRACT';
         } else if (completedSnapshot) {
@@ -5023,7 +5026,7 @@
         researchSpeedEl.textContent = blocked
           ? reportBlocked
             ? 'REPORT BLOCKED'
-            : isExploratory
+            : isExploratory || isMechanism
               ? 'BLOCKED'
               : 'DATA INVALID'
           : completedSnapshot
@@ -5039,7 +5042,7 @@
         if (blocked) {
           researchEtaEl.textContent = reportBlocked
             ? 'REPORT NOT SAVED'
-            : isExploratory
+            : isExploratory || isMechanism
               ? 'NO GPU START'
               : 'NOT COMPLETE';
         }

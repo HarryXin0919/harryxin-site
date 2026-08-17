@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
+import { buildPublicMechanismReport } from "../scripts/build-mechanism-public-report.js";
 
 const root = new URL("../", import.meta.url);
 const appSource = await readFile(new URL("rlcard/research/app.js", root), "utf8");
@@ -12,7 +13,7 @@ const frozenRun = JSON.parse(
   await readFile(new URL("rlcard/research/latest-run-v1.json", root), "utf8"),
 );
 
-function createApi() {
+function createApi({ fetchImpl } = {}) {
   const document = {
     readyState: "loading",
     addEventListener: () => undefined,
@@ -30,9 +31,9 @@ function createApi() {
     Set,
     TypeError,
     console,
-    fetch: async () => {
+    fetch: fetchImpl || (async () => {
       throw new Error("boot must not run in the pure-function harness");
-    },
+    }),
   });
   vm.runInContext(appSource, context);
   return context.RLCardPublicReport;
@@ -94,6 +95,33 @@ function mechanismPayload({
       arms: [],
       series: [],
     },
+  };
+}
+
+function mechanismReportPayload() {
+  return {
+    schemaVersion: 1,
+    studyId: "leduc-reward-mechanism-scale-pbrs-v1",
+    sourceStudyId: "leduc-reward-exploratory-scaled-v1",
+    analysisType: "post_outcome_mechanism_screening",
+    confirmatory: false,
+    arms: ["terminal", "scaled", "scaled-pbrs-cfr-a025", "unscaled-pbrs-cfr-a175"],
+    seeds: [47982, 81425, 45579, 34975, 86195, 68642, 31659, 54386],
+    completedRuns: 32,
+    totalEpisodes: 3200000,
+    primaryEndpoint: {
+      metric: "normalized_exact_exploitability_auc",
+      window: [10000, 100000],
+      normalization: "trapezoid_auc_divided_by_90000",
+      direction: "lower_is_better",
+    },
+    metrics: { perArm: { terminal: { normalizedAuc: { mean: 1.1, median: 1.0 } } } },
+    promotion: {
+      status: "no_candidate_advanced",
+      selectedArm: null,
+      automaticConfirmationAuthorized: false,
+    },
+    claimLimit: "Exploratory mechanism screening only.",
   };
 }
 
@@ -200,29 +228,7 @@ test("the frozen Phase 7 report never masks a live mechanism screening", () => {
 
 test("mechanism report contract stays complete, frozen, and non-confirmatory", () => {
   const api = createApi();
-  const report = {
-    schemaVersion: 1,
-    studyId: "leduc-reward-mechanism-scale-pbrs-v1",
-    sourceStudyId: "leduc-reward-exploratory-scaled-v1",
-    analysisType: "post_outcome_mechanism_screening",
-    confirmatory: false,
-    arms: [
-      "terminal",
-      "scaled",
-      "scaled-pbrs-cfr-a025",
-      "unscaled-pbrs-cfr-a175",
-    ],
-    seeds: [47982, 81425, 45579, 34975, 86195, 68642, 31659, 54386],
-    completedRuns: 32,
-    totalEpisodes: 3200000,
-    metrics: {},
-    promotion: {
-      status: "no_candidate_advanced",
-      selectedArm: null,
-      automaticConfirmationAuthorized: false,
-    },
-    claimLimit: "Exploratory mechanism screening only.",
-  };
+  const report = mechanismReportPayload();
 
   const summary = api.summarizeMechanismReport(report);
   assert.equal(summary.status, "no_candidate_advanced");
@@ -242,6 +248,98 @@ test("mechanism report contract stays complete, frozen, and non-confirmatory", (
     () => api.summarizeMechanismReport(incomplete),
     /all thirty-two runs/,
   );
+
+  const wrongSource = structuredClone(report);
+  wrongSource.sourceStudyId = "lookalike-source";
+  assert.throws(() => api.summarizeMechanismReport(wrongSource), /non-confirmatory mechanism report/);
+
+  const wrongSeeds = structuredClone(report);
+  wrongSeeds.seeds[0] = 12345;
+  assert.throws(() => api.summarizeMechanismReport(wrongSeeds), /eight unique integer seeds/);
+
+  const automaticConfirmation = structuredClone(report);
+  automaticConfirmation.promotion.automaticConfirmationAuthorized = true;
+  assert.throws(
+    () => api.summarizeMechanismReport(automaticConfirmation),
+    /cannot authorize automatic confirmation/,
+  );
+
+  const nonFinite = structuredClone(report);
+  nonFinite.metrics.perArm.terminal.normalizedAuc.mean = Number.POSITIVE_INFINITY;
+  assert.throws(() => api.summarizeMechanismReport(nonFinite), /must be finite/);
+
+  const privateReport = structuredClone(report);
+  privateReport.provenance = { config_sha256: "secret" };
+  assert.throws(() => api.summarizeMechanismReport(privateReport), /non-public fields/);
+
+  const privateMetric = structuredClone(report);
+  privateMetric.metrics.localPath = "D:\\private\\metrics.csv";
+  assert.throws(() => api.summarizeMechanismReport(privateMetric), /private field/);
+});
+
+test("public mechanism report adapter strips provenance and rejects private metric fields", () => {
+  const source = {
+    schemaVersion: 1,
+    studyId: "leduc-reward-mechanism-scale-pbrs-v1",
+    sourceStudyId: "leduc-reward-exploratory-scaled-v1",
+    analysisType: "post_outcome_mechanism_screening",
+    confirmatory: false,
+    generatedAt: "2026-08-17T12:00:00Z",
+    arms: ["terminal", "scaled", "scaled-pbrs-cfr-a025", "unscaled-pbrs-cfr-a175"],
+    seeds: [47982, 81425, 45579, 34975, 86195, 68642, 31659, 54386],
+    completedRuns: 32,
+    totalEpisodes: 3200000,
+    primaryEndpoint: { metric: "normalized_exact_exploitability_auc", window: [10000, 100000] },
+    metrics: { perArm: { terminal: { mean: 1.1 } } },
+    promotion: {
+      status: "no_candidate_advanced",
+      selectedArm: null,
+      selectionReason: "No PBRS arm passed every gate.",
+      automaticConfirmationAuthorized: false,
+    },
+    claimLimit: "Post-outcome mechanism-screen evidence only; not confirmatory.",
+    provenance: { config_sha256: "a".repeat(64), git_revision: "private" },
+  };
+  const publicReport = buildPublicMechanismReport(source);
+  assert.equal(publicReport.provenance, undefined);
+  assert.equal(JSON.stringify(publicReport).includes("git_revision"), false);
+
+  source.metrics.localPath = "D:\\private\\metrics.csv";
+  assert.throws(() => buildPublicMechanismReport(source), /private field/);
+});
+
+test("mechanism report polling remains enabled after telemetry completes", () => {
+  const api = createApi();
+  assert.equal(api.shouldPollMechanismReport(mechanismPayload({ state: "complete", phase: 9 }).research), true);
+  assert.equal(api.shouldPollMechanismReport(mechanismPayload({ state: "reporting", phase: 9 }).research), true);
+  assert.equal(api.shouldPollMechanismReport(mechanismPayload({ state: "running", phase: 8 }).research), false);
+});
+
+test("a frozen report that arrives after completion replaces the pending state without a reload", async () => {
+  let available = false;
+  const report = mechanismReportPayload();
+  const api = createApi({
+    fetchImpl: async () => available
+      ? { ok: true, status: 200, json: async () => report }
+      : { ok: false, status: 404, json: async () => ({}) },
+  });
+  const complete = mechanismPayload({
+    state: "complete", runStatus: "complete", completedRuns: 32, phase: 9, progress: 100000,
+  });
+  api.renderStatus(complete);
+  assert.equal(await api.loadMechanismReport(), null);
+  assert.equal(api.shouldPollMechanismReport(complete.research), true);
+  available = true;
+  assert.equal((await api.loadMechanismReport()).completedRuns, 32);
+  assert.equal(api.shouldPollMechanismReport(complete.research), false);
+});
+
+test("Phase 9 blocked copy identifies the report rather than training data", () => {
+  const api = createApi();
+  const blocked = mechanismPayload({
+    state: "blocked", runStatus: "complete", completedRuns: 32, phase: 9, progress: 100000,
+  });
+  assert.equal(api.statusCopy(blocked).label, "报告生成受阻");
 });
 
 test("without a final report the compact status remains truthful", () => {

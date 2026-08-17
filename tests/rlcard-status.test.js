@@ -484,6 +484,79 @@ test("mechanism screening rejects a confirmatory claim or the wrong protocol mod
   );
 });
 
+test("mechanism screening rejects a mismatched frozen study contract", () => {
+  const mechanism = () => {
+    const input = validStatus();
+    input.research = {
+      ...input.research,
+      studyId: "leduc-reward-mechanism-scale-pbrs-v1",
+      sourceStudyId: "leduc-reward-exploratory-scaled-v1",
+      cohort: "mechanism",
+      protocolMode: "post_outcome_mechanism_screening",
+      confirmatory: false,
+      phase: 8,
+      phaseLabel: "REWARD-SCALE MECHANISM STUDY",
+      state: "queued",
+      completedRuns: 0,
+      totalRuns: 32,
+      currentRun: {
+        cohort: "mechanism",
+        arm: "terminal",
+        seed: 47982,
+        progress: 0,
+        target: 100000,
+        fraction: 0,
+        speed: 0,
+        etaSeconds: null,
+        latestExploitability: null,
+        latestPayoff: null,
+        status: "pending",
+      },
+      arms: [
+        "terminal", "scaled", "scaled-pbrs-cfr-a025", "unscaled-pbrs-cfr-a175",
+      ].map((id) => ({
+        id, label: id, status: "pending", completedRuns: 0, totalRuns: 8,
+        progress: 0, target: 800000, fraction: 0,
+        latestExploitability: null, latestPayoff: null,
+      })),
+      series: [],
+    };
+    return input;
+  };
+
+  assert.doesNotThrow(() => sanitizeStatus(mechanism()));
+  const wrongStudy = mechanism();
+  wrongStudy.research.studyId = "lookalike-study";
+  assert.throws(() => sanitizeStatus(wrongStudy), /research\.studyId/);
+  const wrongSource = mechanism();
+  wrongSource.research.sourceStudyId = "lookalike-source";
+  assert.throws(() => sanitizeStatus(wrongSource), /research\.sourceStudyId/);
+  const wrongPhase = mechanism();
+  wrongPhase.research.phase = 7;
+  assert.throws(() => sanitizeStatus(wrongPhase), /phase to equal 8 or 9/);
+  const wrongLabel = mechanism();
+  wrongLabel.research.phaseLabel = "REPORT MECHANISM RESULTS";
+  assert.throws(() => sanitizeStatus(wrongLabel), /phaseLabel/);
+  const wrongTotal = mechanism();
+  wrongTotal.research.totalRuns = 31;
+  assert.throws(() => sanitizeStatus(wrongTotal), /totalRuns to equal 32/);
+  const duplicateArm = mechanism();
+  duplicateArm.research.arms[3] = { ...duplicateArm.research.arms[2] };
+  assert.throws(() => sanitizeStatus(duplicateArm), /four unique frozen arms/);
+  const wrongArmTotal = mechanism();
+  wrongArmTotal.research.arms[0].totalRuns = 7;
+  assert.throws(() => sanitizeStatus(wrongArmTotal), /eight runs each/);
+  const wrongRunCohort = mechanism();
+  wrongRunCohort.research.currentRun.cohort = "exploratory";
+  assert.throws(() => sanitizeStatus(wrongRunCohort), /currentRun requires.*cohort/);
+  const wrongRunTarget = mechanism();
+  wrongRunTarget.research.currentRun.target = 300000;
+  assert.throws(() => sanitizeStatus(wrongRunTarget), /target 100000/);
+  const wrongRunArm = mechanism();
+  wrongRunArm.research.currentRun.arm = "pbrs-cfr-a010";
+  assert.throws(() => sanitizeStatus(wrongRunArm), /frozen arm/);
+});
+
 test("narrow layouts keep the completed study status readable", () => {
   assert.match(
     researchStyles,
@@ -593,6 +666,7 @@ test("a frozen Phase 9 mechanism report is decorated as COMPLETE", () => {
   input.research = {
     ...input.research,
     studyId: "leduc-reward-mechanism-scale-pbrs-v1",
+    sourceStudyId: "leduc-reward-exploratory-scaled-v1",
     cohort: "mechanism",
     protocolMode: "post_outcome_mechanism_screening",
     confirmatory: false,
@@ -601,6 +675,13 @@ test("a frozen Phase 9 mechanism report is decorated as COMPLETE", () => {
     state: "complete",
     completedRuns: 32,
     totalRuns: 32,
+    arms: [
+      "terminal", "scaled", "scaled-pbrs-cfr-a025", "unscaled-pbrs-cfr-a175",
+    ].map((id) => ({
+      id, label: id, status: "complete", completedRuns: 8, totalRuns: 8,
+      progress: 800000, target: 800000, fraction: 1,
+      latestExploitability: 1, latestPayoff: 0.2,
+    })),
   };
   const status = sanitizeStatus(input);
   assert.equal(

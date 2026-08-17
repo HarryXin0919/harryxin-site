@@ -111,6 +111,8 @@ test("homepage mechanism card stays compact and reports total rather than per-ru
   assert.match(card, /id="research-card-phase">07 \/ 09/);
   assert.doesNotMatch(card, /class="research-run-meta"/);
   assert.match(homepage, /Reward Mechanism Screen/);
+  assert.match(homepage, /MECHANISM REPORT · BLOCKED/);
+  assert.match(homepage, /REPORT NOT SAVED/);
   assert.match(homepage, /MECHANISM RUNS \/ 机制筛查/);
   assert.match(homepage, /TOTAL MECHANISM PROGRESS/);
   assert.match(homepage, /completedRuns \+ activeFraction/);
