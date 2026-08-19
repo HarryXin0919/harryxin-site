@@ -575,6 +575,73 @@
     return `${(value / 3600).toFixed(1)} 小时`;
   }
 
+  function csvRowsForRun(rawPoints, run = {}) {
+    if (!run || !Array.isArray(rawPoints)) return [];
+    return rawPoints
+      .filter((point) => point && point.arm === run.arm && number(point.seed) === number(run.seed))
+      .filter((point) => finite(point.progress) && (finite(point.exploitability) || finite(point.payoff)))
+      .map((point) => ({
+        arm: point.arm,
+        seed: number(point.seed),
+        progress: number(point.progress),
+        exploitability: finite(point.exploitability) ? number(point.exploitability) : null,
+        payoff: finite(point.payoff) ? number(point.payoff) : null,
+      }))
+      .sort((a, b) => a.progress - b.progress);
+  }
+
+  function csvMetric(value, { signed = false } = {}) {
+    if (!finite(value)) return "—";
+    const numeric = number(value);
+    const prefix = signed && numeric > 0 ? "+" : "";
+    return `${prefix}${numeric.toFixed(6)}`;
+  }
+
+  function renderMechanismCsv(run, series, displayState) {
+    const body = byId("mechanismCsvBody");
+    const rows = csvRowsForRun(series, run || {});
+    text("mechanismCsvCount", `${rows.length} ${rows.length === 1 ? "ROW" : "ROWS"}`);
+    if (!body || typeof document.createElement !== "function") return rows;
+
+    if (!rows.length) {
+      const row = document.createElement("tr");
+      row.className = "mechanism-csv-empty";
+      const cell = document.createElement("td");
+      cell.colSpan = 5;
+      cell.textContent = displayState === "queued"
+        ? "训练尚未开始；首个数据点将在 10,000 局后出现。"
+        : displayState === "paused"
+          ? "当前运行还没有已保存的数据行；恢复后会自动更新。"
+          : displayState === "blocked"
+            ? "研究流程受阻；排除问题前不会产生新的公开数据行。"
+            : "当前没有可公开的单次运行数据行。";
+      row.appendChild(cell);
+      body.replaceChildren(row);
+      return rows;
+    }
+
+    const nodes = rows.map((point, index) => {
+      const row = document.createElement("tr");
+      if (index === rows.length - 1) row.dataset.latest = "true";
+      const values = [
+        armLabel(point.arm),
+        String(point.seed),
+        formatInteger(point.progress),
+        csvMetric(point.exploitability),
+        csvMetric(point.payoff, { signed: true }),
+      ];
+      values.forEach((value, cellIndex) => {
+        const cell = document.createElement(cellIndex === 0 ? "th" : "td");
+        if (cellIndex === 0) cell.scope = "row";
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+      return row;
+    });
+    body.replaceChildren(...nodes);
+    return rows;
+  }
+
   function renderMechanismRun(run, series, displayState) {
     text("mechanismRunArm", run ? armLabel(run.arm) : "等待下一次运行");
     text("mechanismRunSeed", run && finite(run.seed) ? String(number(run.seed)) : "—");
@@ -605,6 +672,7 @@
             ? "研究流程已受阻；排除问题前不会生成新的指标点。"
           : mechanismChartIds.emptyMessage;
     const ids = { ...mechanismChartIds, emptyMessage: emptyCopy };
+    renderMechanismCsv(run, series, displayState);
     return run ? renderSeriesInto(chartPoints, run, ids) : (showEmptyChart(ids, emptyCopy), false);
   }
 
@@ -811,6 +879,7 @@
     statusCopy,
     renderStatus,
     renderRunSeries,
+    csvRowsForRun,
     validateRunSnapshot,
     shouldPollMechanismReport,
     loadMechanismReport,

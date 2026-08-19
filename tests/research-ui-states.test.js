@@ -226,6 +226,31 @@ test("the frozen Phase 7 report never masks a live mechanism screening", () => {
   );
 });
 
+test("mechanism CSV rows expose only the current arm and seed in progress order", () => {
+  const api = createApi();
+  const run = {
+    arm: "terminal",
+    seed: 54386,
+    progress: 30000,
+    target: 100000,
+  };
+  const rows = api.csvRowsForRun([
+    { arm: "terminal", seed: 54386, progress: 30000, exploitability: 1.1, payoff: 0.2 },
+    { arm: "scaled", seed: 54386, progress: 10000, exploitability: 9, payoff: 9 },
+    { arm: "terminal", seed: 54386, progress: 10000, exploitability: 1.3, payoff: -0.1 },
+    { arm: "terminal", seed: 12345, progress: 20000, exploitability: 8, payoff: 8 },
+    { arm: "terminal", seed: 54386, progress: "bad", exploitability: 1.2, payoff: 0 },
+  ], run);
+
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(rows)),
+    [
+      { arm: "terminal", seed: 54386, progress: 10000, exploitability: 1.3, payoff: -0.1 },
+      { arm: "terminal", seed: 54386, progress: 30000, exploitability: 1.1, payoff: 0.2 },
+    ],
+  );
+});
+
 test("mechanism report contract stays complete, frozen, and non-confirmatory", () => {
   const api = createApi();
   const report = mechanismReportPayload();

@@ -1159,6 +1159,75 @@ tbody td:last-child {
   font-size: 12px;
 }
 
+.mechanism-csv-ledger {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.mechanism-csv-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.mechanism-csv-head h4 {
+  margin: 0;
+  font-size: clamp(20px, 2.5vw, 30px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.mechanism-csv-head > strong {
+  color: var(--green-soft);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  white-space: nowrap;
+}
+
+.mechanism-csv-note {
+  max-width: 800px;
+  margin: 14px 0 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mechanism-csv-wrap {
+  background: rgba(2, 10, 5, 0.46);
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.mechanism-csv-wrap:focus-visible {
+  outline: 2px solid var(--green-soft);
+  outline-offset: 3px;
+}
+
+.mechanism-csv-table {
+  min-width: 790px;
+}
+
+.mechanism-csv-table th:first-child,
+.mechanism-csv-table td:first-child {
+  min-width: 210px;
+}
+
+.mechanism-csv-table tbody tr[data-latest="true"] {
+  background: rgba(140, 244, 62, 0.055);
+}
+
+.mechanism-csv-table tbody tr[data-latest="true"] > * {
+  color: var(--green-soft);
+}
+
+.mechanism-csv-empty td {
+  padding: 28px 20px;
+  color: var(--faint) !important;
+  text-align: center !important;
+  white-space: normal;
+}
+
 #mechanismRunChart {
   display: block;
   width: 100%;
@@ -1704,6 +1773,16 @@ html.theme-transition .theme-toggle {
   .mechanism-progress-shell,
   .mechanism-run-card {
     padding: 24px 20px;
+  }
+
+  .mechanism-csv-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mechanism-csv-note {
+    margin-bottom: 14px;
   }
 
   .mechanism-progress-head {

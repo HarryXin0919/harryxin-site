@@ -222,6 +222,32 @@
               </svg>
               <p id="mechanismRunChartEmpty" class="run-chart-empty">训练尚未开始。启动后，10,000 局处会出现第一个真实指标点。</p>
             </div>
+            <section class="mechanism-csv-ledger" aria-labelledby="mechanism-csv-title">
+              <div class="mechanism-csv-head">
+                <div>
+                  <p class="section-label">SANITIZED CSV · 公开数据行</p>
+                  <h4 id="mechanism-csv-title">曲线背后的真实数值</h4>
+                </div>
+                <strong id="mechanismCsvCount">0 ROWS</strong>
+              </div>
+              <p class="mechanism-csv-note">每一行对应当前 arm / seed 的一个真实评估点。网页只公开训练局数、策略可利用度与随机对手收益；本机路径和原始诊断不会上传。</p>
+              <div class="table-wrap mechanism-csv-wrap" tabindex="0" role="region" aria-label="当前运行的真实 CSV 数据表">
+                <table class="mechanism-csv-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">设置</th>
+                      <th scope="col">Seed</th>
+                      <th scope="col">训练局数</th>
+                      <th scope="col">容易被针对 ↓</th>
+                      <th scope="col">对随机对手收益</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mechanismCsvBody">
+                    <tr class="mechanism-csv-empty"><td colspan="5">首个数据点将在 10,000 局后出现。</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
             <figcaption>纵轴数字越低，表示策略越不容易被对手针对。曲线只用于观察过程，是否晋级必须等 32 组全部完成后按预先规则判断。</figcaption>
           </figure>
         </section>

@@ -67,6 +67,9 @@ test("mechanism screening adds a plain-language 2 by 2 live view without replaci
   const page = await fixture("rlcard/research/index.html");
 
   assert.match(page, /id="mechanismView"[\s\S]*?hidden/);
+  assert.match(page, /id="mechanismCsvBody"/);
+  assert.match(page, /曲线背后的真实数值/);
+  assert.match(page, /当前运行的真实 CSV 数据表/);
   assert.match(page, /奖励变差，是公式的问题，还是因为整体变小了/);
   assert.match(page, /可以把它想成调音量/);
   assert.match(page, /两个开关/);
