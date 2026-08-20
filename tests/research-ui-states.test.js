@@ -120,6 +120,32 @@ function mechanismReportPayload() {
       status: "no_candidate_advanced",
       selectedArm: null,
       automaticConfirmationAuthorized: false,
+      perCandidate: {
+        "scaled-pbrs-cfr-a025": {
+          passed: false,
+          gates: {
+            terminalAuc: {
+              passed: false,
+              medianImprovementPercent: -12.968904787635,
+              improvedSeeds: 0,
+              requiredImprovementPercent: 5,
+              requiredImprovedSeeds: 6,
+            },
+          },
+        },
+        "unscaled-pbrs-cfr-a175": {
+          passed: false,
+          gates: {
+            terminalAuc: {
+              passed: false,
+              medianImprovementPercent: 1.94090602106436,
+              improvedSeeds: 6,
+              requiredImprovementPercent: 5,
+              requiredImprovedSeeds: 6,
+            },
+          },
+        },
+      },
     },
     claimLimit: "Exploratory mechanism screening only.",
   };
@@ -259,6 +285,16 @@ test("mechanism report contract stays complete, frozen, and non-confirmatory", (
   assert.equal(summary.status, "no_candidate_advanced");
   assert.equal(summary.selectedArm, null);
   assert.equal(summary.totalEpisodes, 3200000);
+  assert.equal(summary.unscaledPbrsImprovementPercent, 1.94090602106436);
+  assert.equal(summary.unscaledPbrsImprovedSeeds, 6);
+  assert.equal(summary.scaledPbrsImprovementPercent, -12.968904787635);
+
+  const copy = api.mechanismReportCopy(summary);
+  assert.match(copy.title, /奖励整体缩小/);
+  assert.match(copy.detail, /1\.9%/);
+  assert.match(copy.detail, /6\/8/);
+  assert.match(copy.detail, /5%/);
+  assert.match(copy.detail, /13\.0%/);
 
   const confirmatory = structuredClone(report);
   confirmatory.confirmatory = true;

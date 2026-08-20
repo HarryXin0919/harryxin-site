@@ -209,6 +209,27 @@
     if (promotion.automaticConfirmationAuthorized !== false) {
       throw new TypeError("The mechanism report cannot authorize automatic confirmation");
     }
+    const candidateGates = promotion.perCandidate;
+    const scaledGate = candidateGates && candidateGates["scaled-pbrs-cfr-a025"] &&
+      candidateGates["scaled-pbrs-cfr-a025"].gates &&
+      candidateGates["scaled-pbrs-cfr-a025"].gates.terminalAuc;
+    const unscaledGate = candidateGates && candidateGates["unscaled-pbrs-cfr-a175"] &&
+      candidateGates["unscaled-pbrs-cfr-a175"].gates &&
+      candidateGates["unscaled-pbrs-cfr-a175"].gates.terminalAuc;
+    for (const [label, gate] of [["scaled PBRS", scaledGate], ["unscaled PBRS", unscaledGate]]) {
+      if (!gate) throw new TypeError(`${label} promotion gate is missing`);
+      assertFinite(gate.medianImprovementPercent, `${label} median improvement`);
+      assertFinite(gate.improvedSeeds, `${label} improved seed count`);
+      assertFinite(gate.requiredImprovementPercent, `${label} required improvement`);
+      assertFinite(gate.requiredImprovedSeeds, `${label} required seed count`);
+      if (
+        !Number.isInteger(number(gate.improvedSeeds)) || number(gate.improvedSeeds) < 0 ||
+        number(gate.improvedSeeds) > 8 || number(gate.requiredImprovementPercent) !== 5 ||
+        number(gate.requiredImprovedSeeds) !== 6
+      ) {
+        throw new TypeError(`${label} promotion gate does not match the frozen rule`);
+      }
+    }
     const numericMetrics = assertPublicReportTree(report.metrics, "metrics");
     if (!numericMetrics.has("number")) {
       throw new TypeError("The mechanism report must contain finite public metrics");
@@ -224,6 +245,29 @@
       status: promotion.status,
       selectedArm: promotion.selectedArm,
       claimLimit: typeof report.claimLimit === "string" ? report.claimLimit : "",
+      scaledPbrsImprovementPercent: number(scaledGate.medianImprovementPercent),
+      scaledPbrsImprovedSeeds: number(scaledGate.improvedSeeds),
+      unscaledPbrsImprovementPercent: number(unscaledGate.medianImprovementPercent),
+      unscaledPbrsImprovedSeeds: number(unscaledGate.improvedSeeds),
+      requiredImprovementPercent: number(unscaledGate.requiredImprovementPercent),
+    };
+  }
+
+  function mechanismReportCopy(summary) {
+    const advanced = summary.status === "candidate_advanced";
+    if (advanced) {
+      return {
+        title: "有一个方案达到预先门槛，但还没有被正式确认。",
+        decision: armLabel(summary.selectedArm),
+        detail: "它只获得了进入下一项独立验证的资格，不能写成已经有效。",
+      };
+    }
+    const slightGain = Math.max(0, summary.unscaledPbrsImprovementPercent).toFixed(1);
+    const scaledLoss = Math.abs(Math.min(0, summary.scaledPbrsImprovementPercent)).toFixed(1);
+    return {
+      title: "结果更像是：奖励整体缩小造成了主要损失。",
+      decision: "没有方案晋级",
+      detail: `保留原始奖励并加入 CFR 引导时，中位表现改善 ${slightGain}%（${summary.unscaledPbrsImprovedSeeds}/8 个随机起点改善），低于预先设定的 ${summary.requiredImprovementPercent}% 门槛；把奖励缩小 7 倍后，加入引导仍比原始奖励差 ${scaledLoss}%。因此研究停在这里，不会自动开始确认实验。`,
     };
   }
 
@@ -722,6 +766,7 @@
 
   function renderMechanismReport(report) {
     const summary = summarizeMechanismReport(report);
+    const copy = mechanismReportCopy(summary);
     mechanismReportSummary = summary;
     if (reportTimer !== null && typeof globalThis.clearTimeout === "function") {
       globalThis.clearTimeout(reportTimer);
@@ -729,15 +774,9 @@
     }
     activateMechanismView(true);
     hidden("mechanismReport", false);
-    const advanced = summary.status === "candidate_advanced";
-    text("mechanismReportTitle", advanced ? "有一个方案达到预先门槛，但还没有被正式确认。" : "没有方案达到预先门槛。");
-    text("mechanismReportDecision", advanced ? armLabel(summary.selectedArm) : "没有方案晋级");
-    text(
-      "mechanismReportPlain",
-      advanced
-        ? "它只获得了进入下一项独立验证的资格，不能写成已经有效。"
-        : "这条奖励塑形路线到此停止，不会用同一批数据继续调参数。",
-    );
+    text("mechanismReportTitle", copy.title);
+    text("mechanismReportDecision", copy.decision);
+    text("mechanismReportPlain", copy.detail);
     text("mechanismPhase", "PHASE 09 / 09");
     text("mechanismRuns", "32 / 32");
     text("mechanismProgressText", "32 / 32 组完成");
@@ -874,6 +913,7 @@
   globalThis.RLCardPublicReport = Object.freeze({
     summarizeReport,
     summarizeMechanismReport,
+    mechanismReportCopy,
     renderReport,
     renderMechanismReport,
     statusCopy,
