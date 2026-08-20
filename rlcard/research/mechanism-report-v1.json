@@ -1,0 +1,1027 @@
+{
+  "schemaVersion": 1,
+  "studyId": "leduc-reward-mechanism-scale-pbrs-v1",
+  "sourceStudyId": "leduc-reward-exploratory-scaled-v1",
+  "analysisType": "post_outcome_mechanism_screening",
+  "confirmatory": false,
+  "generatedAt": "2026-08-19T21:50:33.744417+00:00",
+  "arms": [
+    "terminal",
+    "scaled",
+    "scaled-pbrs-cfr-a025",
+    "unscaled-pbrs-cfr-a175"
+  ],
+  "seeds": [
+    47982,
+    81425,
+    45579,
+    34975,
+    86195,
+    68642,
+    31659,
+    54386
+  ],
+  "completedRuns": 32,
+  "totalEpisodes": 3200000,
+  "primaryEndpoint": {
+    "metric": "normalized_exact_exploitability_auc",
+    "window": [
+      10000,
+      100000
+    ],
+    "normalization": "trapezoid_auc_divided_by_90000",
+    "direction": "lower_is_better"
+  },
+  "metrics": {
+    "perArm": {
+      "terminal": {
+        "normalizedAuc": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 1.1642525993743518
+            },
+            {
+              "seed": 81425,
+              "value": 1.2197539266765942
+            },
+            {
+              "seed": 45579,
+              "value": 1.2356085111302484
+            },
+            {
+              "seed": 34975,
+              "value": 1.1279896229220556
+            },
+            {
+              "seed": 86195,
+              "value": 1.2251957573446126
+            },
+            {
+              "seed": 68642,
+              "value": 1.1735252475381148
+            },
+            {
+              "seed": 31659,
+              "value": 1.2017428190251886
+            },
+            {
+              "seed": 54386,
+              "value": 1.1439916383685655
+            }
+          ],
+          "mean": 1.1865075152974665,
+          "median": 1.1876340332816517
+        },
+        "finalExploitability": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 1.1633051441643192
+            },
+            {
+              "seed": 81425,
+              "value": 1.1425578319681122
+            },
+            {
+              "seed": 45579,
+              "value": 1.1532562077345445
+            },
+            {
+              "seed": 34975,
+              "value": 1.152151663985961
+            },
+            {
+              "seed": 86195,
+              "value": 1.2247711354819946
+            },
+            {
+              "seed": 68642,
+              "value": 1.1464586858184336
+            },
+            {
+              "seed": 31659,
+              "value": 1.1722754024033302
+            },
+            {
+              "seed": 54386,
+              "value": 1.1890608364653212
+            }
+          ],
+          "mean": 1.167979613502752,
+          "median": 1.158280675949432
+        },
+        "finalPolicyEntropy": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 0.6319560573746443
+            },
+            {
+              "seed": 81425,
+              "value": 0.641344199516656
+            },
+            {
+              "seed": 45579,
+              "value": 0.6456543470675966
+            },
+            {
+              "seed": 34975,
+              "value": 0.6334618825914463
+            },
+            {
+              "seed": 86195,
+              "value": 0.6575531068310941
+            },
+            {
+              "seed": 68642,
+              "value": 0.6606503818995149
+            },
+            {
+              "seed": 31659,
+              "value": 0.6436776766843855
+            },
+            {
+              "seed": 54386,
+              "value": 0.637237653925317
+            }
+          ],
+          "mean": 0.6439419132363318,
+          "median": 0.6425109381005207
+        }
+      },
+      "scaled": {
+        "normalizedAuc": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 1.3304863776368292
+            },
+            {
+              "seed": 81425,
+              "value": 1.3229213019506547
+            },
+            {
+              "seed": 45579,
+              "value": 1.3487506930754034
+            },
+            {
+              "seed": 34975,
+              "value": 1.2457221458464365
+            },
+            {
+              "seed": 86195,
+              "value": 1.3307025690818854
+            },
+            {
+              "seed": 68642,
+              "value": 1.3179654583621037
+            },
+            {
+              "seed": 31659,
+              "value": 1.3513758600911578
+            },
+            {
+              "seed": 54386,
+              "value": 1.3882292455389063
+            }
+          ],
+          "mean": 1.3295192064479222,
+          "median": 1.3305944733593573
+        },
+        "finalExploitability": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 1.3059423611988772
+            },
+            {
+              "seed": 81425,
+              "value": 1.2985747249173067
+            },
+            {
+              "seed": 45579,
+              "value": 1.3321387673789036
+            },
+            {
+              "seed": 34975,
+              "value": 1.249074416784548
+            },
+            {
+              "seed": 86195,
+              "value": 1.3468187484086211
+            },
+            {
+              "seed": 68642,
+              "value": 1.3099208700468292
+            },
+            {
+              "seed": 31659,
+              "value": 1.3146389229913806
+            },
+            {
+              "seed": 54386,
+              "value": 1.352348561051955
+            }
+          ],
+          "mean": 1.3136821715973026,
+          "median": 1.312279896519105
+        },
+        "finalPolicyEntropy": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 0.7082363118499663
+            },
+            {
+              "seed": 81425,
+              "value": 0.7247864145446586
+            },
+            {
+              "seed": 45579,
+              "value": 0.7020574855251138
+            },
+            {
+              "seed": 34975,
+              "value": 0.695620488908225
+            },
+            {
+              "seed": 86195,
+              "value": 0.7057626471644267
+            },
+            {
+              "seed": 68642,
+              "value": 0.7122945181997576
+            },
+            {
+              "seed": 31659,
+              "value": 0.7105998614724114
+            },
+            {
+              "seed": 54386,
+              "value": 0.7007500592762417
+            }
+          ],
+          "mean": 0.7075134733676002,
+          "median": 0.7069994795071965
+        }
+      },
+      "scaled-pbrs-cfr-a025": {
+        "normalizedAuc": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 1.325330597800487
+            },
+            {
+              "seed": 81425,
+              "value": 1.3278856249289752
+            },
+            {
+              "seed": 45579,
+              "value": 1.2457192218581563
+            },
+            {
+              "seed": 34975,
+              "value": 1.3874777553228368
+            },
+            {
+              "seed": 86195,
+              "value": 1.4404053991219559
+            },
+            {
+              "seed": 68642,
+              "value": 1.3554286956380217
+            },
+            {
+              "seed": 31659,
+              "value": 1.3626638081430489
+            },
+            {
+              "seed": 54386,
+              "value": 1.3114889236521077
+            }
+          ],
+          "mean": 1.3445500033081985,
+          "median": 1.3416571602834986
+        },
+        "finalExploitability": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 1.27236897747984
+            },
+            {
+              "seed": 81425,
+              "value": 1.39437455580126
+            },
+            {
+              "seed": 45579,
+              "value": 1.2797618524220586
+            },
+            {
+              "seed": 34975,
+              "value": 1.3428586858791904
+            },
+            {
+              "seed": 86195,
+              "value": 1.341057860667468
+            },
+            {
+              "seed": 68642,
+              "value": 1.3168557124904
+            },
+            {
+              "seed": 31659,
+              "value": 1.3256961242474101
+            },
+            {
+              "seed": 54386,
+              "value": 1.3108803515427876
+            }
+          ],
+          "mean": 1.3229817650663018,
+          "median": 1.321275918368905
+        },
+        "finalPolicyEntropy": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 0.687011845228723
+            },
+            {
+              "seed": 81425,
+              "value": 0.7255432675333388
+            },
+            {
+              "seed": 45579,
+              "value": 0.6894820230557746
+            },
+            {
+              "seed": 34975,
+              "value": 0.6956801849749567
+            },
+            {
+              "seed": 86195,
+              "value": 0.7202431585298661
+            },
+            {
+              "seed": 68642,
+              "value": 0.7087802762740982
+            },
+            {
+              "seed": 31659,
+              "value": 0.7088654268671652
+            },
+            {
+              "seed": 54386,
+              "value": 0.7107758258440227
+            }
+          ],
+          "mean": 0.7057977510384932,
+          "median": 0.7088228515706317
+        }
+      },
+      "unscaled-pbrs-cfr-a175": {
+        "normalizedAuc": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 1.1255303309261926
+            },
+            {
+              "seed": 81425,
+              "value": 1.2348635246814128
+            },
+            {
+              "seed": 45579,
+              "value": 1.1743017466535641
+            },
+            {
+              "seed": 34975,
+              "value": 1.2162458389080577
+            },
+            {
+              "seed": 86195,
+              "value": 1.2075342440968193
+            },
+            {
+              "seed": 68642,
+              "value": 1.1157178534517138
+            },
+            {
+              "seed": 31659,
+              "value": 1.154864598989393
+            },
+            {
+              "seed": 54386,
+              "value": 1.1002268277557226
+            }
+          ],
+          "mean": 1.1661606206828594,
+          "median": 1.1645831728214786
+        },
+        "finalExploitability": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 1.142989087884855
+            },
+            {
+              "seed": 81425,
+              "value": 1.1886361973992912
+            },
+            {
+              "seed": 45579,
+              "value": 1.167043794021559
+            },
+            {
+              "seed": 34975,
+              "value": 1.2152815159775716
+            },
+            {
+              "seed": 86195,
+              "value": 1.1582327861728228
+            },
+            {
+              "seed": 68642,
+              "value": 1.108623467352845
+            },
+            {
+              "seed": 31659,
+              "value": 1.101688117402173
+            },
+            {
+              "seed": 54386,
+              "value": 1.1325770829139084
+            }
+          ],
+          "mean": 1.1518840061406284,
+          "median": 1.1506109370288389
+        },
+        "finalPolicyEntropy": {
+          "perSeed": [
+            {
+              "seed": 47982,
+              "value": 0.6377271705445785
+            },
+            {
+              "seed": 81425,
+              "value": 0.6383199575482049
+            },
+            {
+              "seed": 45579,
+              "value": 0.644783676484652
+            },
+            {
+              "seed": 34975,
+              "value": 0.6383824134078631
+            },
+            {
+              "seed": 86195,
+              "value": 0.6177527505444108
+            },
+            {
+              "seed": 68642,
+              "value": 0.6019818982920363
+            },
+            {
+              "seed": 31659,
+              "value": 0.6379222983992012
+            },
+            {
+              "seed": 54386,
+              "value": 0.6696672583177158
+            }
+          ],
+          "mean": 0.6358171779423328,
+          "median": 0.6381211279737031
+        }
+      }
+    },
+    "contrasts": {
+      "scaleMainEffect": {
+        "differenceDirection": "scaled_minus_unscaled_average",
+        "perSeed": [
+          {
+            "seed": 47982,
+            "difference": 0.18301702256838592
+          },
+          {
+            "seed": 81425,
+            "difference": 0.09809473776081146
+          },
+          {
+            "seed": 45579,
+            "difference": 0.0922798285748736
+          },
+          {
+            "seed": 34975,
+            "difference": 0.14448221966957997
+          },
+          {
+            "seed": 86195,
+            "difference": 0.1691889833812047
+          },
+          {
+            "seed": 68642,
+            "difference": 0.19207552650514836
+          },
+          {
+            "seed": 31659,
+            "difference": 0.1787161251098125
+          },
+          {
+            "seed": 54386,
+            "difference": 0.2277498515333629
+          }
+        ],
+        "meanDifference": 0.16070053688789743,
+        "medianDifference": 0.1739525542455086,
+        "bootstrap95CI": [
+          0.12956381687840426,
+          0.1899797948961909
+        ],
+        "exactPairedSignFlipP": 0.0078125,
+        "interpretation": "mechanism_screen_only",
+        "holmAdjustedP": 0.0234375,
+        "usedForPromotion": false
+      },
+      "pbrsMainEffect": {
+        "differenceDirection": "pbrs_minus_no_pbrs_average",
+        "perSeed": [
+          {
+            "seed": 47982,
+            "difference": -0.021939024142250685
+          },
+          {
+            "seed": 81425,
+            "difference": 0.010036960491569547
+          },
+          {
+            "seed": 45579,
+            "difference": -0.08216911784696568
+          },
+          {
+            "seed": 34975,
+            "difference": 0.1150059127312012
+          },
+          {
+            "seed": 86195,
+            "difference": 0.04602065839613856
+          },
+          {
+            "seed": 68642,
+            "difference": -0.01017207840524148
+          },
+          {
+            "seed": 31659,
+            "difference": -0.01779513599195226
+          },
+          {
+            "seed": 54386,
+            "difference": -0.06025256624982078
+          }
+        ],
+        "meanDifference": -0.0026580488771651978,
+        "medianDifference": -0.01398360719859687,
+        "bootstrap95CI": [
+          -0.039320661837737324,
+          0.03875364678577308
+        ],
+        "exactPairedSignFlipP": 0.921875,
+        "interpretation": "mechanism_screen_only",
+        "holmAdjustedP": 0.921875,
+        "usedForPromotion": false
+      },
+      "interaction": {
+        "differenceDirection": "difference_of_differences",
+        "perSeed": [
+          {
+            "seed": 47982,
+            "difference": 0.03356648861181699
+          },
+          {
+            "seed": 81425,
+            "difference": -0.01014527502649809
+          },
+          {
+            "seed": 45579,
+            "difference": -0.041724706740562834
+          },
+          {
+            "seed": 34975,
+            "difference": 0.05349939349039823
+          },
+          {
+            "seed": 86195,
+            "difference": 0.12736434328786372
+          },
+          {
+            "seed": 68642,
+            "difference": 0.09527063136231906
+          },
+          {
+            "seed": 31659,
+            "difference": 0.0581661680876866
+          },
+          {
+            "seed": 54386,
+            "difference": -0.03297551127395559
+          }
+        ],
+        "meanDifference": 0.03537769147488351,
+        "medianDifference": 0.04353294105110761,
+        "bootstrap95CI": [
+          -0.0027347208539747203,
+          0.07403530054470284
+        ],
+        "exactPairedSignFlipP": 0.1328125,
+        "interpretation": "mechanism_screen_only",
+        "holmAdjustedP": 0.265625,
+        "usedForPromotion": false
+      }
+    },
+    "candidateComparisons": {
+      "scaled-pbrs-cfr-a025": {
+        "normalizedAucVsTerminal": {
+          "differenceDirection": "scaled-pbrs-cfr-a025_minus_terminal",
+          "perSeed": [
+            {
+              "seed": 47982,
+              "left": 1.1642525993743518,
+              "right": 1.325330597800487,
+              "difference": 0.16107799842613524
+            },
+            {
+              "seed": 81425,
+              "left": 1.2197539266765942,
+              "right": 1.3278856249289752,
+              "difference": 0.108131698252381
+            },
+            {
+              "seed": 45579,
+              "left": 1.2356085111302484,
+              "right": 1.2457192218581563,
+              "difference": 0.010110710727907923
+            },
+            {
+              "seed": 34975,
+              "left": 1.1279896229220556,
+              "right": 1.3874777553228368,
+              "difference": 0.25948813240078117
+            },
+            {
+              "seed": 86195,
+              "left": 1.2251957573446126,
+              "right": 1.4404053991219559,
+              "difference": 0.21520964177734325
+            },
+            {
+              "seed": 68642,
+              "left": 1.1735252475381148,
+              "right": 1.3554286956380217,
+              "difference": 0.18190344809990688
+            },
+            {
+              "seed": 31659,
+              "left": 1.2017428190251886,
+              "right": 1.3626638081430489,
+              "difference": 0.16092098911786024
+            },
+            {
+              "seed": 54386,
+              "left": 1.1439916383685655,
+              "right": 1.3114889236521077,
+              "difference": 0.16749728528354213
+            }
+          ],
+          "meanDifference": 0.15804248801073223,
+          "medianDifference": 0.16428764185483868,
+          "bootstrap95CI": [
+            0.10693433322643271,
+            0.20196992645306844
+          ],
+          "exactPairedSignFlipP": 0.0078125,
+          "interpretation": "mechanism_screen_only"
+        },
+        "finalExploitabilityVsTerminal": {
+          "differenceDirection": "scaled-pbrs-cfr-a025_minus_terminal",
+          "perSeed": [
+            {
+              "seed": 47982,
+              "left": 1.1633051441643192,
+              "right": 1.27236897747984,
+              "difference": 0.10906383331552072
+            },
+            {
+              "seed": 81425,
+              "left": 1.1425578319681122,
+              "right": 1.39437455580126,
+              "difference": 0.2518167238331477
+            },
+            {
+              "seed": 45579,
+              "left": 1.1532562077345445,
+              "right": 1.2797618524220586,
+              "difference": 0.12650564468751413
+            },
+            {
+              "seed": 34975,
+              "left": 1.152151663985961,
+              "right": 1.3428586858791904,
+              "difference": 0.1907070218932294
+            },
+            {
+              "seed": 86195,
+              "left": 1.2247711354819946,
+              "right": 1.341057860667468,
+              "difference": 0.11628672518547334
+            },
+            {
+              "seed": 68642,
+              "left": 1.1464586858184336,
+              "right": 1.3168557124904,
+              "difference": 0.17039702667196632
+            },
+            {
+              "seed": 31659,
+              "left": 1.1722754024033302,
+              "right": 1.3256961242474101,
+              "difference": 0.15342072184407995
+            },
+            {
+              "seed": 54386,
+              "left": 1.1890608364653212,
+              "right": 1.3108803515427876,
+              "difference": 0.12181951507746636
+            }
+          ],
+          "meanDifference": 0.15500215156354974,
+          "medianDifference": 0.13996318326579704,
+          "bootstrap95CI": [
+            0.12701082999464616,
+            0.18822098891603511
+          ],
+          "exactPairedSignFlipP": 0.0078125,
+          "interpretation": "mechanism_screen_only"
+        },
+        "normalizedAucVsScaled": {
+          "differenceDirection": "scaled_pbrs_minus_scaled",
+          "perSeed": [
+            {
+              "seed": 47982,
+              "left": 1.3304863776368292,
+              "right": 1.325330597800487,
+              "difference": -0.005155779836342189
+            },
+            {
+              "seed": 81425,
+              "left": 1.3229213019506547,
+              "right": 1.3278856249289752,
+              "difference": 0.004964322978320501
+            },
+            {
+              "seed": 45579,
+              "left": 1.3487506930754034,
+              "right": 1.2457192218581563,
+              "difference": -0.1030314712172471
+            },
+            {
+              "seed": 34975,
+              "left": 1.2457221458464365,
+              "right": 1.3874777553228368,
+              "difference": 0.1417556094764003
+            },
+            {
+              "seed": 86195,
+              "left": 1.3307025690818854,
+              "right": 1.4404053991219559,
+              "difference": 0.10970283004007042
+            },
+            {
+              "seed": 68642,
+              "left": 1.3179654583621037,
+              "right": 1.3554286956380217,
+              "difference": 0.03746323727591805
+            },
+            {
+              "seed": 31659,
+              "left": 1.3513758600911578,
+              "right": 1.3626638081430489,
+              "difference": 0.011287948051891039
+            },
+            {
+              "seed": 54386,
+              "left": 1.3882292455389063,
+              "right": 1.3114889236521077,
+              "difference": -0.07674032188679858
+            }
+          ],
+          "meanDifference": 0.015030796860276557,
+          "medianDifference": 0.00812613551510577,
+          "bootstrap95CI": [
+            -0.03721512107880793,
+            0.06840593433319384
+          ],
+          "exactPairedSignFlipP": 0.609375,
+          "interpretation": "mechanism_screen_only"
+        }
+      },
+      "unscaled-pbrs-cfr-a175": {
+        "normalizedAucVsTerminal": {
+          "differenceDirection": "unscaled-pbrs-cfr-a175_minus_terminal",
+          "perSeed": [
+            {
+              "seed": 47982,
+              "left": 1.1642525993743518,
+              "right": 1.1255303309261926,
+              "difference": -0.03872226844815918
+            },
+            {
+              "seed": 81425,
+              "left": 1.2197539266765942,
+              "right": 1.2348635246814128,
+              "difference": 0.015109598004818592
+            },
+            {
+              "seed": 45579,
+              "left": 1.2356085111302484,
+              "right": 1.1743017466535641,
+              "difference": -0.06130676447668426
+            },
+            {
+              "seed": 34975,
+              "left": 1.1279896229220556,
+              "right": 1.2162458389080577,
+              "difference": 0.08825621598600208
+            },
+            {
+              "seed": 86195,
+              "left": 1.2251957573446126,
+              "right": 1.2075342440968193,
+              "difference": -0.017661513247793303
+            },
+            {
+              "seed": 68642,
+              "left": 1.1735252475381148,
+              "right": 1.1157178534517138,
+              "difference": -0.05780739408640101
+            },
+            {
+              "seed": 31659,
+              "left": 1.2017428190251886,
+              "right": 1.154864598989393,
+              "difference": -0.04687822003579556
+            },
+            {
+              "seed": 54386,
+              "left": 1.1439916383685655,
+              "right": 1.1002268277557226,
+              "difference": -0.043764810612842986
+            }
+          ],
+          "meanDifference": -0.020346894614606953,
+          "medianDifference": -0.04124353953050108,
+          "bootstrap95CI": [
+            -0.04810864606292886,
+            0.01480286114716814
+          ],
+          "exactPairedSignFlipP": 0.28125,
+          "interpretation": "mechanism_screen_only"
+        },
+        "finalExploitabilityVsTerminal": {
+          "differenceDirection": "unscaled-pbrs-cfr-a175_minus_terminal",
+          "perSeed": [
+            {
+              "seed": 47982,
+              "left": 1.1633051441643192,
+              "right": 1.142989087884855,
+              "difference": -0.0203160562794642
+            },
+            {
+              "seed": 81425,
+              "left": 1.1425578319681122,
+              "right": 1.1886361973992912,
+              "difference": 0.046078365431178936
+            },
+            {
+              "seed": 45579,
+              "left": 1.1532562077345445,
+              "right": 1.167043794021559,
+              "difference": 0.013787586287014486
+            },
+            {
+              "seed": 34975,
+              "left": 1.152151663985961,
+              "right": 1.2152815159775716,
+              "difference": 0.06312985199161059
+            },
+            {
+              "seed": 86195,
+              "left": 1.2247711354819946,
+              "right": 1.1582327861728228,
+              "difference": -0.0665383493091718
+            },
+            {
+              "seed": 68642,
+              "left": 1.1464586858184336,
+              "right": 1.108623467352845,
+              "difference": -0.03783521846558857
+            },
+            {
+              "seed": 31659,
+              "left": 1.1722754024033302,
+              "right": 1.101688117402173,
+              "difference": -0.07058728500115707
+            },
+            {
+              "seed": 54386,
+              "left": 1.1890608364653212,
+              "right": 1.1325770829139084,
+              "difference": -0.056483753551412885
+            }
+          ],
+          "meanDifference": -0.016095607362123815,
+          "medianDifference": -0.029075637372526386,
+          "bootstrap95CI": [
+            -0.04725349351387838,
+            0.017485206410820978
+          ],
+          "exactPairedSignFlipP": 0.390625,
+          "interpretation": "mechanism_screen_only"
+        }
+      }
+    }
+  },
+  "promotion": {
+    "status": "no_candidate_advanced",
+    "selectedArm": null,
+    "perCandidate": {
+      "scaled-pbrs-cfr-a025": {
+        "passed": false,
+        "gates": {
+          "terminalAuc": {
+            "passed": false,
+            "medianImprovementPercent": -12.968904787635005,
+            "improvedSeeds": 0,
+            "requiredImprovementPercent": 5,
+            "requiredImprovedSeeds": 6
+          },
+          "finalExploitability": {
+            "passed": false,
+            "medianDifference": 0.13996318326579704,
+            "seedsWorseByMoreThan5Percent": 8,
+            "maximumWorseSeeds": 2
+          },
+          "policyEntropy": {
+            "passed": true,
+            "seedsDroppingByMoreThan020": 0,
+            "maximumDropSeeds": 2
+          },
+          "technicalIntegrity": {
+            "passed": true
+          },
+          "scaledAuc": {
+            "passed": false,
+            "medianImprovementPercent": -0.8314093546632011,
+            "requiredImprovementPercent": 5
+          }
+        }
+      },
+      "unscaled-pbrs-cfr-a175": {
+        "passed": false,
+        "gates": {
+          "terminalAuc": {
+            "passed": false,
+            "medianImprovementPercent": 1.9409060210643638,
+            "improvedSeeds": 6,
+            "requiredImprovementPercent": 5,
+            "requiredImprovedSeeds": 6
+          },
+          "finalExploitability": {
+            "passed": true,
+            "medianDifference": -0.029075637372526386,
+            "seedsWorseByMoreThan5Percent": 1,
+            "maximumWorseSeeds": 2
+          },
+          "policyEntropy": {
+            "passed": true,
+            "seedsDroppingByMoreThan020": 0,
+            "maximumDropSeeds": 2
+          },
+          "technicalIntegrity": {
+            "passed": true
+          },
+          "scaledAuc": {
+            "passed": true,
+            "notApplicable": true
+          }
+        }
+      }
+    },
+    "selectionReason": "No PBRS arm passed every preregistered gate.",
+    "automaticConfirmationAuthorized": false
+  },
+  "claimLimit": "Post-outcome mechanism-screen evidence only; not confirmatory. Advancement, if any, does not authorize an automatic confirmation."
+}
